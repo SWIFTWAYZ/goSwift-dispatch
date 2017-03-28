@@ -6,13 +6,12 @@
  * redis servers. Also used to initialize config data for rabbitMQ
  */
 (function(){
-    var server_config;
+    var serverConfig;
 
     server_config = {
-        dispatch_port: 3000,
-        redis_port: 3245
+        port: '3000',
+        host: 'localhost'
     };
-    console.log("calling self invoked init.js");
 
     exports.serverConfig = server_config;
 }).call(this);

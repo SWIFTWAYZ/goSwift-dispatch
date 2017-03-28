@@ -27,7 +27,9 @@ var redis = require("ioredis");
 var serverConfig = require("./config/init");
 
 var app = express();
-app.set("port",process.env.PORT||3000);
+console.log(JSON.stringify(serverConfig));
+
+app.set("port",process.env.PORT||serverConfig['serverConfig']['port']);
 
 app.listen(app.get('port'),function(err,data){
 
