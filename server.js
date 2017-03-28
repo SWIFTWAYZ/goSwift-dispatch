@@ -36,7 +36,7 @@ app.listen(app.get('port'),function(err,data){
         console.error("error message ->" + err);
         return;
     }
-    console.log("running on port "  + app.get('port'));
+    console.log("server running on port:"  + app.get('port'));
 });
 
 app.all("*",function(req,res){
