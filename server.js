@@ -32,17 +32,16 @@ console.log(JSON.stringify(serverConfig));
 app.set("port",process.env.PORT||serverConfig['serverConfig']['port']);
 
 app.listen(app.get('port'),function(err,data){
-
     if(err){
         console.error("error message ->" + err);
         return;
     }
     console.log("running on port "  + app.get('port'));
-
 });
 
 app.all("*",function(req,res){
         console.log("request coming ...." + req);
-        res.sendStatus(200);
+        res.send("responding with text...." + JSON.stringify(serverConfig));
+        //res.sendStatus(200);
 });
 

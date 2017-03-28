@@ -10,7 +10,9 @@
 
     server_config = {
         port: '3000',
-        host: 'localhost'
+        host: 'localhost',
+        redis_port: '3001',
+        redis_host: 'localhost'
     };
 
     exports.serverConfig = server_config;
