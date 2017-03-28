@@ -41,7 +41,7 @@ app.listen(app.get('port'),function(err,data){
 
 app.all("*",function(req,res){
         console.log("request coming ...." + req);
-        res.send("responding with text...." + JSON.stringify(serverConfig));
+        res.send("responding with text....." + JSON.stringify(serverConfig));
         //res.sendStatus(200);
 });
 
