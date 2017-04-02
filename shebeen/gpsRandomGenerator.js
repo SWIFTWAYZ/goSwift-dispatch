@@ -23,7 +23,6 @@ var centerPoint = {
     //longitude: -0.178466
 };
 
-
 //generateMapPoints(centerPoint,21000,30);
 //randomGeo(centerPoint,4000);
 //Create random lat/long coordinates in a specified radius around a center point
