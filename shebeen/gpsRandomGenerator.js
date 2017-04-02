@@ -17,10 +17,10 @@ var addNumber = function(a){
 console.log("hello GPS script");
 
 var centerPoint = {
-    //latitude: -26.029613,
-    //longitude: 28.036167
-    latitude: 5.600254,
-    longitude: -0.178466
+    latitude: -26.029613,
+    longitude: 28.036167
+    //latitude: 5.600254,
+    //longitude: -0.178466
 };
 
 
@@ -72,5 +72,5 @@ function distance(lat1, lon1, lat2, lon2) {
         mappoints.push(randomGeo(centerpoint, distance));
     }
     return mappoints;
-})(centerPoint,21000,1000);
+})(centerPoint,21000,50);
 
