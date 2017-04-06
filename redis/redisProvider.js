@@ -5,8 +5,32 @@
 (function() {
 
     var redis = require("ioredis");
-    var client = new redis();
 
+    var client = new redis({
+      retryStrategy: function (times) {
+          //setTimeout(function(){
+              times++;
+              if (times === 500) {
+                 console.log("---i am giving up...");
+                 done();
+                return;
+                }
+          //},1000);
+          //console.log("attempting to connect...");
+          return 0;
+        }
+      });
+
+    var done = function(){};
+    client.on('error',function(err,data){
+        if(err.message.startsWith("connect ECONNREFUSED")){
+            console.log("server connection failed...");
+        };
+    });
+
+    client.on("connect",function(){
+        console.log("redis server connection succeeded...");
+    })
     var redisService,
         driver_hashset,
         riders_hashset,
