@@ -11,7 +11,7 @@ var DEFAULT_CELL_RESOLUTION = 10; /* 3km2 - 6km2*/
       retryStrategy: function (times) {
           //setTimeout(function(){
               times++;
-              if (times === 500) {
+              if (times === 200) {
                  console.log("---i am giving up...");
                  done();
                 return;

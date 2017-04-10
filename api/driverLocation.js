@@ -123,7 +123,9 @@ function listDriversInRadius(cust_latlng,radius) {
 
 
     var keys = redis.keys(function(data){
-        console.log(data + "length = " + data.length);
+        if(data != null) {
+            console.log(data + "length = " + data.length);
+        }
     });
 
 
@@ -198,18 +200,18 @@ function decimalToBinary(DecimalValue){
 //74.505182,-43.623446
 //-14.803729,-153.845548
 
-logDriverLocation(-14.803729,-153.845548,"00002345","0847849574");
+logDriverLocation(-26.166329,28.148618,"00002345","0847849574");
 /*console.log("--------->>>>>>>>>>>>----------")
 logDriverLocation(-26.104628,28.053901,"00002345","0847849574");*/
 var s2latlng = new s2.S2LatLng(-26.166329,28.148618);
 
 //should we use bluebird to promisify adddrivers
-addDrivers().then(function(){
+/*addDrivers().then(function(){
     var driver = redis.getDriverPositions();
-});
+});*/
 
 
-console.log("drivers all ==" + driver);
+//console.log("drivers all ==" + driver);
 //listDriversInRadius(s2latlng,18000);
 var radius_rect = calcS2CapSize(s2latlng,18000);
 console.log("size of rect " + radius_rect.size() + radius_rect.getVertex(0));

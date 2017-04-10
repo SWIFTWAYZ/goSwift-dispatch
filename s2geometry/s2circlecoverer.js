@@ -25,6 +25,9 @@ function EarthMetersToRadians(meters) {
     return (2 * Math.PI) * (meters / kEarthCircumferenceMeters);
 }
 
+function toRad(gps_point){
+    return gps_point * Math.PI / 180;
+}
 function getS2CapRadius(latLng,radius_in_meters){
     var s2cap_ts;
     if(latLng !== null && typeof(latLng) === 'object') {
@@ -87,14 +90,24 @@ function getS2CapRadius(latLng,radius_in_meters){
      * @returns {null}
      */
     S2CircleCoverer.getCovering = function(min,max,cells){
-        min_level = min;
-        max_level = max;
-        max_cells = cells;
+        var covering = new nodes2ts.S2RegionCoverer();
+        covering.setMinLevel(min);
+        covering.setMaxLevel(max);
+        covering.setMaxCells(cells);
 
-        if(s2cell === null || typeof(s2cell) !== 'object'){
-            throw new Error("getCovering can not be called on a null S2Cell");
-        }
-        return null;
+        var counter = 0;
+        var covering_area = 0;
+
+        var cap2 = getS2CapRadius(new nodes2ts.S2LatLng(toRad(-26.104628),toRad(28.053901)),2680);
+        var results = covering.getCoveringCells(cap2);
+        results.forEach(function(record){
+            counter++;
+            console.log("nodes2-ts results = " + record.id );//"---->"+record.toLatLng()
+            var cell = new nodes2ts.S2Cell(record);
+            covering_area += cell.approxArea();
+        });
+        var area_km = covering_area * kEarthCircumferenceMeters;
+        console.log("no. of cells in region = " + counter + "-> area = " +area_km);
     }
 
     /**
@@ -165,20 +178,10 @@ function getS2CapRadius(latLng,radius_in_meters){
     console.log("child sub-division " + divided[0].approxArea() * kEarthCircumferenceMeters +"........");
     //console.log(S2CircleCoverer.getCovering());
 
-    var res = nodes2ts.Utils.calcRegionFromCenterRadius(new nodes2ts.S2LatLng(-26.104628,28.053901),2.67,80);
+    //var res = nodes2ts.Utils.calcRegionFromCenterRadius(new nodes2ts.S2LatLng(-26.104628,28.053901),2.67,80);
 
     console.log("nodes2-ts results = " + res);
+    S2CircleCoverer.getCovering(12,26,100);
 
-    var covering = new nodes2ts.S2RegionCoverer();
-    covering.setMinLevel(12);
-    covering.setMaxLevel(26);
-    covering.setMaxCells(100);
-
-    //var point = new nodes2ts.S2Point();
-    //var s2cap_ts = new nodes2ts.S2Cap(point);
-    //new nodes2ts.S2Cap(new nodes2ts.S2Point(1, 1, 0),0.344)
-    var cap2 = getS2CapRadius(new nodes2ts.S2LatLng(-26.104628,28.053901),2600);
-    var results = covering.getCoveringCells(cap2);
-    console.log("nodes2-ts results = " + results);
 
 }).call(this);
