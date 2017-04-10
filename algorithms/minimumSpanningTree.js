@@ -32,9 +32,14 @@
 * @params time_window
 */
 
+var s2util = require("./s2GeometryUtility");
 var lineReader = require('line-reader');
 var Promise = require("bluebird");
 
+
+var line_counter = 0;
+var reached = [];
+var unreached = [];
 var gpsPoint = function(lat,lon,isDepart,name){
 	this.latitude = lat;
 	this.longitude = lon;
@@ -49,33 +54,6 @@ if(typeof(Number.prototype.toRad) === "undefined") {
         return this * Math.PI / 180;
     }
 }
-
-distanceCalc = function(start, end, decimals){
-	decimals = decimals || 2;
-    var earthRadius = 6371; // km
-    //console.log("GPS=latitude distanceCalc = " + start + "|" + end);
-    lat1 = parseFloat(start.latitude);
-    lat2 = parseFloat(end.latitude);
-    var lon1 = parseFloat(start.longitude);
-    var lon2 = parseFloat(end.longitude);
-
-    var dLat = (lat2 - lat1).toRad();
-    var dLon = (lon2 - lon1).toRad();
-    var lat1 = lat1.toRad();
-    var lat2 = lat2.toRad();
-
-    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
-    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    var d = earthRadius * c;
-    //Math.round(d,6);
-    return Math.round(d * Math.pow(10, decimals)) / Math.pow(10, decimals);
-
-}
-
-var line_counter = 0;
-var reached = [];
-var unreached = [];
 
 readDrivers = function(cb) {
     var readLine = Promise.promisify(lineReader.eachLine);
@@ -97,8 +75,9 @@ readDrivers = function(cb) {
 }
 
 /**
-* add distance of all edges in an array and return total distance
-* @param, array - array with edges to be summed
+ * move to s2GeometryUtil
+ * add distance of all edges in an array and return total distance
+ * @param, array - array with edges to be summed
 */
 var dist = function sumEdgeDistance(array){
 	var total_distance = 0;
@@ -106,7 +85,7 @@ var dist = function sumEdgeDistance(array){
 
 	unreached.forEach(function(d){
 		if(counter == array.length -1) return;
-		var dist = distanceCalc(array[counter],array[counter+1]);
+		var dist = s2util.distanceCalc(array[counter],array[counter+1]);
 		total_distance = total_distance+dist;
 		counter++;
 	});
@@ -149,7 +128,7 @@ var sortByMST = function(){
 				var v1 = reached[i];
 				var v2 = unreached[j];
 
-				var route_d = distanceCalc(v1,v2,2);
+				var route_d = s2util.distanceCalc(v1,v2,2);
 				if(route_d < record){
 
 					record = route_d;
@@ -175,7 +154,11 @@ var sortByMST = function(){
 
 //readDrivers(function(){});
 exports.readDrivers = readDrivers;
-exports.getDist = distanceCalc;
+exports.getDist = s2util.distanceCalc;
+
+readDrivers(function(results){
+	console.log("results length = "+results.length);
+});
 /**
 Algorithm strategies
 - take the longest trip by distance. calculate its bearing.
