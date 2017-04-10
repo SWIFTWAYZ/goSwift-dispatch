@@ -13,7 +13,7 @@ var riders_hashset = "RIDERS_HSET";
 var earth_radius = 1000 * 6378.1; // (km = 6378.1) - radius of the earth
 var default_dispatch_radius = 31885;    //meters
 var kEarthCircumferenceMeters = 1000 * 40075.017;
-var default_s2cell_level = 12;
+var default_cell_resolution = 12; /* 3km2 - 6km2*/
 var redis = redisService.redisService;
 
 /**
@@ -44,7 +44,7 @@ function logDriverLocation(lat,lon,driver_UUID,mobile_number){
         //s2cell_id:s2driverCellId.id() //initialize to cell_id of earth
     };
 
-    //console.log("log vehicle with ID=" + JSON.stringify(driver_data));
+    console.log("log vehicle with ID=" + JSON.stringify(driver_data));
     console.log(s2driverCellId.id() + "->level = " + s2driverCellId.level());
     console.log(decimalToBinary(s2driverCellId.id()));
 
@@ -73,44 +73,59 @@ function EarthMetersToRadians(meters) {
   return (2 * Math.PI) * (meters / kEarthCircumferenceMeters);
 }
 
+function addDrivers(){
+    mst.readDrivers(function(data){
+        data.forEach(function(each_driver) {
+            //console.log("each driver->"+JSON.stringify(each_driver));
+            var gps_driver = {
+                latitude: each_driver.latitude,
+                longitude: each_driver.longitude
+            };
+            lat = parseFloat(each_driver.latitude);
+            lon = parseFloat(each_driver.longitude);
+            var driver_s2latlng = new s2.S2LatLng(lat,lon);
+            var driver_s2cellid = new s2.S2CellId(driver_s2latlng);
+
+            redis.createCellPosition(driver_s2cellid);
+            redis.addDriverPosition(redis.driver_hashset,driver_s2cellid);
+        });
+    });
+}
 /**
  * list drivers within radius of customer centrepoint
  * @param cust_latlng
  * @param radius
  */
-function listDriversInRadius(cust_latlng,radius){
-    var cap = getS2CapAtLatLng(cust_latlng,radius);
-    var gps_customer = {latitude:-26.166329,longitude:28.148618};
+function listDriversInRadius(cust_latlng,radius) {
+    var cap = getS2CapAtLatLng(cust_latlng, radius);
 
-    mst.readDrivers(function(data){
-        data.forEach(function(each_driver){
-            //console.log("each driver->"+JSON.stringify(each_driver));
-            var gps_driver = {
-                latitude:each_driver.latitude,
-                longitude:each_driver.longitude
-            };
-            var distance = mst.getDist(gps_driver,gps_customer,2)*1000;
-            lat = parseFloat(each_driver.latitude);
-            lon = parseFloat(each_driver.longitude);
+    //get all drivers in every cell for now. in future, we must optimize to get only drivers
+    //in cells that intersect the customer spherical cap//use S2Region.getCovering() or similar
+    var driver = redis.getDriverPositions();
 
-            var driver_s2latlng = new s2.S2LatLng(lat,lon);
-            var driver_s2cellid = new s2.S2CellId(driver_s2latlng);
-            var driver = getS2CapAtLatLng(driver_s2latlng,0);
+    driver.forEach(function (each_driver) {
+        //var distance = mst.getDist(gps_driver,gps_customer,2)*1000;
 
-            if(cap.contains(driver)) {
-                redis.hsetAdd(redis.driver_hashset, driver_s2cellid.id());
-                console.log("is driver within radius?=" + radius +"->"+
-                    cap.contains(driver) + "=distance="+distance);
-            }
-        })
 
+        //var driver_s2latlng = new s2.S2LatLng(lat, lon);
+
+        var driver_s2cellid = new s2.S2CellId(each_driver);
+        var driver = getS2CapAtLatLng(driver_s2latlng, 0);
+
+        if (cap.contains(driver)) {
+            //redis.addDriverPosition(redis.driver_hashset, driver_s2cellid.id());
+            console.log("is driver within radius?=" + radius + "->" +
+                cap.contains(driver) + "=distance=" + distance);
+        }
     });
+}
+
+
 
     var keys = redis.keys(function(data){
         console.log(data + "length = " + data.length);
     });
 
-}
 
 /**
  * get S2Cap given an axis height and a LatLng
@@ -136,7 +151,7 @@ function calcS2CapSize(latLng,radius_meters){
     if(latLng !== null && typeof(latLng) === 'object') {
         var cap = getS2CapAtLatLng(latLng,radius_meters);
         var rect = cap.getRectBound();
-        console.log("radius ->" + axis_height + "\narea ->" + rect.size());
+        //console.log("radius ->" + axis_height + "\narea ->" + rect.size());
         return rect;
     }
 }
@@ -179,9 +194,26 @@ function decimalToBinary(DecimalValue){
 //35.669396,139.696042 (Tokyo) - face (110)
 //5.600254,-0.178466 (Accra) - face (111)
 //-26.104628,28.053901 (Joburg) - face (111)
+//-5.790916,141.405155 (New Zealand)
+//74.505182,-43.623446
+//-14.803729,-153.845548
 
-//logDriverLocation(35.669396,139.696042,"00002345","0847849574");
+logDriverLocation(-14.803729,-153.845548,"00002345","0847849574");
+/*console.log("--------->>>>>>>>>>>>----------")
+logDriverLocation(-26.104628,28.053901,"00002345","0847849574");*/
 var s2latlng = new s2.S2LatLng(-26.166329,28.148618);
-listDriversInRadius(s2latlng,13000);
-//calcS2CapSize(null,3);
+
+//should we use bluebird to promisify adddrivers
+addDrivers().then(function(){
+    var driver = redis.getDriverPositions();
+});
+
+
+console.log("drivers all ==" + driver);
+//listDriversInRadius(s2latlng,18000);
+var radius_rect = calcS2CapSize(s2latlng,18000);
+console.log("size of rect " + radius_rect.size() + radius_rect.getVertex(0));
+console.log("size of rect " + radius_rect.getVertex(1));
+console.log("size of rect " + radius_rect.getVertex(2));
+console.log("size of rect " + radius_rect.getVertex(3));
 

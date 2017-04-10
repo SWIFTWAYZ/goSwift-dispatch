@@ -50,7 +50,7 @@ if(typeof(Number.prototype.toRad) === "undefined") {
     }
 }
 
-var distanceCalc = function(start, end, decimals){
+distanceCalc = function(start, end, decimals){
 	decimals = decimals || 2;
     var earthRadius = 6371; // km
     //console.log("GPS=latitude distanceCalc = " + start + "|" + end);
@@ -77,22 +77,24 @@ var line_counter = 0;
 var reached = [];
 var unreached = [];
 
-var readLine = Promise.promisify(lineReader.eachLine);
-readLine('Gps_dump.csv', function(line, last) {
-  		var line_str = line.split(",");
-  		unreached[line_counter] = new gpsPoint(line_str[0],line_str[1],line_str[2],line_str[3]);
-  		line_counter++;
-  		if(last){
-    		// or check if it's the last one
-    		console.log("last item = " + last + "=" + line_counter);
- 	 	}
-}).then(function(){
-	console.log("total distance = " + dist(unreached));
-	sortByMST();
-}).catch(function(err){
-	console.log("error message = " + err);
-});
-
+readDrivers = function(cb) {
+    var readLine = Promise.promisify(lineReader.eachLine);
+    readLine('/Users/tinyiko/WebstormProjects/GoSwift/server/config/seeds/Gps_dump.csv', function (line, last) {
+        var line_str = line.split(",");
+        unreached[line_counter] = new gpsPoint(line_str[0], line_str[1], line_str[2], line_str[3]);
+        line_counter++;
+        if (last) {
+            // or check if it's the last one
+            console.log("last item = " + last + "=" + line_counter);
+        }
+    }).then(function () {
+        //console.log("total distance = " + dist(unreached));
+		sortByMST();
+		cb(reached);
+    }).catch(function (err) {
+        console.log("error message = " + err);
+    });
+}
 
 /**
 * add distance of all edges in an array and return total distance
@@ -147,7 +149,7 @@ var sortByMST = function(){
 				var v1 = reached[i];
 				var v2 = unreached[j];
 
-				var route_d = distanceCalc(v1,v2);
+				var route_d = distanceCalc(v1,v2,2);
 				if(route_d < record){
 
 					record = route_d;
@@ -164,14 +166,16 @@ var sortByMST = function(){
 	var total_distance = 0;
 	reached.forEach(function(d){
 		total_distance += d.distance;
-		console.log(d.latitude + "-"+ d.isDepart + "="+ d.name + "="+d.distance);
+		console.log(d.latitude + "-"+ d.longitude + "="+ d.name + "="+d.distance);
 	})
 
 	console.log("total MST distance = " + total_distance);
+	//return reached;
 }
 
-
-
+//readDrivers(function(){});
+exports.readDrivers = readDrivers;
+exports.getDist = distanceCalc;
 /**
 Algorithm strategies
 - take the longest trip by distance. calculate its bearing.

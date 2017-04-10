@@ -20,6 +20,4 @@ function logRiderLocation(lat,lon,rider_UUID,mobile_number){
         driver_mobile: mobile_number,
         //s2cell_id:s2driverCellId.id() //initialize to cell_id of earth
     };
-
-
 }

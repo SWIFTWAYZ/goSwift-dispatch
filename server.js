@@ -25,6 +25,8 @@ var http = require("http");
 var express = require("express");
 var redis = require("ioredis");
 var serverConfig = require("./config/init");
+var uuid = require('node-uuid');
+var path = require('path');
 
 var app = express();
 console.log(JSON.stringify(serverConfig));

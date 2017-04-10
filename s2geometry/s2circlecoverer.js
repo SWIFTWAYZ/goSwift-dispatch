@@ -1,4 +1,8 @@
 /**
+ * Created by tinyiko on 2017/04/10.
+ */
+
+/**
  * Created by tinyiko on 2017/04/09.
  */
 var s2 = require('s2geometry-node');
@@ -13,16 +17,16 @@ function EarthMetersToRadians(meters) {
 }
 
 (function(){
-var S2CircleCoverer,
-    s2cap,
-    radius,
-    axis_height,
-    min_level,
-    max_level,
-    max_cells,
-    s2cell;
+    var S2CircleCoverer,
+        s2cap,
+        radius,
+        axis_height,
+        min_level,
+        max_level,
+        max_cells,
+        s2cell;
 
-var S2CircleCoverer = {};
+    var S2CircleCoverer = {};
 
     S2CircleCoverer.setS2CapRadius = function(latLng,radius_in_meters){
         this.s2cap = s2cap;
