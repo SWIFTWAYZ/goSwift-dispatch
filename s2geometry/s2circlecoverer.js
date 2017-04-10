@@ -11,6 +11,9 @@ var _ = require('underscore');
 var earth_radius = 1000 * 6378.1; // (km = 6378.1) - radius of the earth
 var default_dispatch_radius = 31885;    //meters
 var kEarthCircumferenceMeters = 1000 * 40075.017;
+//min_level = 12
+//max_level = 26
+//max_cells = 100 cells
 
 function EarthMetersToRadians(meters) {
     return (2 * Math.PI) * (meters / kEarthCircumferenceMeters);
@@ -134,7 +137,7 @@ function EarthMetersToRadians(meters) {
 
     S2CircleCoverer.setS2BigCell(s);
     var divided = S2CircleCoverer.divide(s2cell_11);
-    S2CircleCoverer.setS2CapRadius(s2latLng,2635);
+    S2CircleCoverer.setS2CapRadius(s2latLng,2680);
 
     //2 * M_PI * max(0.0, height_) - calculate area of S2Cap
     var s2cap_area = (2 * Math.PI * Math.max(0.0,axis_height)) * kEarthCircumferenceMeters;

@@ -111,7 +111,6 @@ var bearing = function getBearing(first_gps, second_gps){
 */
 var sortByMST = function(){
 
-	//var firstReached
 	reached.push(unreached[0]);
 	unreached.splice(0,1);
 	var record;
