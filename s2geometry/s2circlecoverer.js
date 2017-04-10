@@ -4,12 +4,18 @@
 
 /**
  * Created by tinyiko on 2017/04/09.
+ *
+ * var nodes2ts = require("nodes2ts")
+ *
+ * nodes2ts.Utils.calcRegionFromCenterRadius(new nodes2ts.S2LatLng(10, 11),10,100)
  */
 var s2 = require('s2geometry-node');
+var nodes2ts = require("nodes2ts");
 var _ = require('underscore');
 
+var S2_CELL_LEVEL = 11;
 var earth_radius = 1000 * 6378.1; // (km = 6378.1) - radius of the earth
-var default_dispatch_radius = 31885;    //meters
+var default_dispatch_radius = 2680;    //meters
 var kEarthCircumferenceMeters = 1000 * 40075.017;
 //min_level = 12
 //max_level = 26
@@ -18,6 +24,18 @@ var kEarthCircumferenceMeters = 1000 * 40075.017;
 function EarthMetersToRadians(meters) {
     return (2 * Math.PI) * (meters / kEarthCircumferenceMeters);
 }
+
+function getS2CapRadius(latLng,radius_in_meters){
+    var s2cap_ts;
+    if(latLng !== null && typeof(latLng) === 'object') {
+        var radius_radians = EarthMetersToRadians(radius_in_meters);
+        axis_height = (radius_radians * radius_radians) / 2;
+        s2cap_ts = new nodes2ts.S2Cap(latLng.normalized().toPoint(), axis_height);
+        //console.log("s2cap = " + s2cap_ts.getRectBound().size());
+    }
+    return s2cap_ts;
+}
+
 
 (function(){
     var S2CircleCoverer,
@@ -127,7 +145,6 @@ function EarthMetersToRadians(meters) {
      * @type {s2.S2CellId}
      */
 
-    var S2_CELL_LEVEL = 11;
     var s2latLng = new s2.S2LatLng(-26.104628,28.053901);
     var s2cellId = new s2.S2CellId(s2latLng);
     var s2cell_11 = s2cellId.parent(S2_CELL_LEVEL)
@@ -147,5 +164,21 @@ function EarthMetersToRadians(meters) {
 
     console.log("child sub-division " + divided[0].approxArea() * kEarthCircumferenceMeters +"........");
     //console.log(S2CircleCoverer.getCovering());
+
+    var res = nodes2ts.Utils.calcRegionFromCenterRadius(new nodes2ts.S2LatLng(-26.104628,28.053901),2.67,80);
+
+    console.log("nodes2-ts results = " + res);
+
+    var covering = new nodes2ts.S2RegionCoverer();
+    covering.setMinLevel(12);
+    covering.setMaxLevel(26);
+    covering.setMaxCells(100);
+
+    //var point = new nodes2ts.S2Point();
+    //var s2cap_ts = new nodes2ts.S2Cap(point);
+    //new nodes2ts.S2Cap(new nodes2ts.S2Point(1, 1, 0),0.344)
+    var cap2 = getS2CapRadius(new nodes2ts.S2LatLng(-26.104628,28.053901),2600);
+    var results = covering.getCoveringCells(cap2);
+    console.log("nodes2-ts results = " + results);
 
 }).call(this);
