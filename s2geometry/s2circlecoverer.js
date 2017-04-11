@@ -14,6 +14,7 @@ var S2_CELL_LEVEL = 11;
 var earth_radius = 1000 * 6378.1; // (km = 6378.1) - radius of the earth
 var default_dispatch_radius = 2680;    //meters
 var kEarthCircumferenceMeters = 1000 * 40075.017;
+var cap_area;
 //min_level = 12
 //max_level = 26
 //max_cells = 100 cells
@@ -32,6 +33,10 @@ function getS2CapRadius(latLng,radius_in_meters){
         var radius_radians = EarthMetersToRadians(radius_in_meters);
         axis_height = (radius_radians * radius_radians) / 2;
         s2cap_ts = new nodes2ts.S2Cap(latLng.normalized().toPoint(), axis_height);
+
+        var area = (2 * Math.PI * Math.max(0.0,axis_height)) * kEarthCircumferenceMeters;
+        cap_area = area;
+        console.log("spherical cap area = " + area);
     }
     return s2cap_ts;
 }
@@ -48,9 +53,9 @@ function getS2CapRadius(latLng,radius_in_meters){
 
     var S2CircleCoverer = {};
 
-    S2CircleCoverer.setS2CapRadius = function(latLng,radius_in_meters){
-        this.s2cap = s2cap;
-        this.radius - radius_in_meters;
+   S2CircleCoverer.setS2CapRadius = function(latLng,radius_in_meters){
+        //this.s2cap = s2cap;
+        //this.radius - radius_in_meters;
         if(latLng !== null && typeof(latLng) === 'object') {
             var radius_radians = EarthMetersToRadians(radius_in_meters);
             axis_height = (radius_radians * radius_radians) / 2;
@@ -58,12 +63,17 @@ function getS2CapRadius(latLng,radius_in_meters){
             console.log("s2cap = " + s2cap.getRectBound().size());
         }
     }
+ /*
+    S2CircleCoverer.setS2Cap = function(latLng,radius){
+        this.radius = radius;
+
+    }*/
 
     S2CircleCoverer.getS2CapRadius = function(){
         return s2cap;
     }
 
-    S2CircleCoverer.setS2BigCell = function(cell){
+    /*S2CircleCoverer.setS2BigCell = function(cell){
         //s2.getClosestLevel(1000);
         var level = cell.level ();
         console.log("level ->" +level);
@@ -75,7 +85,7 @@ function getS2CapRadius(latLng,radius_in_meters){
 
     S2CircleCoverer.getS2BigCell = function(){
         return s2cell;
-    }
+    }*/
 
     /**
      * get a combination of cells at different levels as stipulated by the min,max and
@@ -97,31 +107,32 @@ function getS2CapRadius(latLng,radius_in_meters){
         var counter = 0;
         var covering_area = 0;
 
-        var centre_gps = new nodes2ts.S2LatLng(toRad(lat),toRad(lon));
+        var centre_gps = new nodes2ts.S2LatLng.fromDegrees(lat,lon);
         var cap2 = getS2CapRadius(centre_gps,radius);
         var results = covering.getCoveringCells(cap2);
+
         results.forEach(function(record){
-            //console.log("nodes2-ts results = " + record.id );//"---->"+record.toLatLng()
             var cell = new nodes2ts.S2Cell(record);
-            console.log(JSON.stringify(cell.toGEOJSON())+",");
+            //console.log(JSON.stringify(cell.toGEOJSON())+",");
             counter++;
-            covering_area += cell.approxArea();
+            var cell_area = cell.approxArea() * kEarthCircumferenceMeters;
+            covering_area += cell_area;
+            console.log("cellid = " + record.id + "-area = "+ cell_area.toFixed(3) + "-level="+cell.level);
         });
-        var area_sqm = covering_area * kEarthCircumferenceMeters;
-        console.log("no. of cells in region = " + counter + "-> area = " +area_sqm);
+
+        console.log("no. of cells in region = " + counter + "-> area = " +covering_area);
 
         return results;
     }
 
     /**
-     * get covering for polygon representing a city
-     * @param top_latlng
-     * @param bottom_latlng
+     * get covering for rectangle representing a city boundary
+     * @param rect_latlng
      * @param min
      * @param max
      * @param cells
      */
-    S2CircleCoverer.getCityCovering = function(top_latlng,bottom_latlng,min,max,cells){
+    S2CircleCoverer.getCityCovering = function(rect_latlng,min,max,cells){
         var counter = 0;
         var covering_area = 0;
 
@@ -130,19 +141,19 @@ function getS2CapRadius(latLng,radius_in_meters){
         city_covering.setMaxLevel(max);
         city_covering.setMaxCells(cells);
 
-        //var city_latlng = new nodes2ts.S2LatLngRect()
-        const city_rect = new nodes2ts.S2LatLngRect.fromLatLng(top_latlng, bottom_latlng);
-
-        console.log("rectangle---" + city_rect.getRectBound() + JSON.stringify(city_rect.toGEOJSON()));
-        var results = city_covering.getCoveringCells(city_rect);
+        //console.log("rectangle---" + city_rect.getRectBound() + JSON.stringify(city_rect.toGEOJSON()));
         results.forEach(function(record){
-            console.log("nodes2-ts results = " + record.id );//"---->"+record.toLatLng()
             var cell = new nodes2ts.S2Cell(record);
+            //console.log(JSON.stringify(cell.toGEOJSON())+",");
             counter++;
-            covering_area += cell.approxArea();
+            var cell_area = cell.approxArea() * kEarthCircumferenceMeters;
+            covering_area += cell_area;
+            console.log("cellid = " + record.id + "-area = "+ cell_area + "-level="+cell.level);//"---->"+record.toLatLng()
         });
-        var area_sqm = covering_area * kEarthCircumferenceMeters;
-        console.log("no. of cells in region = " + counter + "-> area = " +area_sqm);
+        //var area_sqm = covering_area * kEarthCircumferenceMeters;
+        console.log("no. of cells in region = " + counter + "-> area = " +covering_area);
+
+        return results;
     }
 
     /**
@@ -171,7 +182,6 @@ function getS2CapRadius(latLng,radius_in_meters){
      * @param sub_cell
      */
     S2CircleCoverer.isContained = function(sub_cell){
-
     }
     S2CircleCoverer.setMaxLevel = function(level){
         max_level = level;
@@ -192,7 +202,7 @@ function getS2CapRadius(latLng,radius_in_meters){
      * Testing code .....
      * @type {s2.S2CellId}
      */
-
+/*
     var s2latLng = new s2.S2LatLng(-26.104628,28.053901);
     var s2cellId = new s2.S2CellId(s2latLng);
     var s2cell_11 = s2cellId.parent(S2_CELL_LEVEL)
@@ -200,7 +210,7 @@ function getS2CapRadius(latLng,radius_in_meters){
     var s2cell_11_area = s.approxArea()* kEarthCircumferenceMeters;
     console.log("s2cell area = " + s2cell_11_area);
 
-    S2CircleCoverer.setS2BigCell(s);
+    //S2CircleCoverer.setS2BigCell(s);
     var divided = S2CircleCoverer.divide(s2cell_11);
     S2CircleCoverer.setS2CapRadius(s2latLng,2680);
 
@@ -213,13 +223,29 @@ function getS2CapRadius(latLng,radius_in_meters){
 
     //console.log("nodes2-ts results = " + res);
     //var s2latlng = new nodes2ts.S2LatLng(toRad(-26.104628),toRad(28.053901));
-    var results = S2CircleCoverer.getCovering(-26.104628,28.053901,2680,12,26,100);
+    //var results = S2CircleCoverer.getCovering(-26.104628,28.053901,2680,12,26,100);
 
     //-25.892130, 27.869969 (top)
     //-26.434234, 28.483952
 
-    var top_latlng = new nodes2ts.S2LatLng(toRad(-25.892130),toRad(27.869969));
-    var bottom_latlng = new nodes2ts.S2LatLng(toRad(-26.434234),toRad(28.483952));
-    //var city_results = S2CircleCoverer.getCityCovering(bottom_latlng,top_latlng,12,12,200);
+    var top_latlng = new nodes2ts.S2LatLng(-25.892130,27.869969);
+    var bottom_latlng = new nodes2ts.S2LatLng(1,1);
+
+    const center1Left = nodes2ts.S2LatLngRect.fromLatLng(
+        nodes2ts.S2LatLng.fromDegrees(-1, -1),
+        nodes2ts.S2LatLng.CENTER
+    );
+
+    var center1Right = nodes2ts.S2LatLngRect.fromLatLng(
+          nodes2ts.S2LatLng.CENTER,
+          new nodes2ts.S2LatLng.fromDegrees(-26.104628,28.053901)
+          //nodes2ts.S2LatLng.fromDegrees(1,1)
+      );
+
+    //-26.147476, 28.149559
+    //city_results = S2CircleCoverer.getCityCovering(center1Left,11,26,500);
+    
+    var city_results = S2CircleCoverer.getCovering(-26.104628,28.053901,32000,12,26,1000);
+    console.log("area of cap = " + cap_area);*/
 
 }).call(this);

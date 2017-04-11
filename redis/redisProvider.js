@@ -1,7 +1,7 @@
 /**
  * Created by tinyiko on 2017/04/03.
  */
-var DEFAULT_CELL_RESOLUTION = 10; /* 3km2 - 6km2*/
+var DEFAULT_CELL_RESOLUTION = 12; /* 3km2 - 6km2*/
 
 (function() {
 
@@ -37,15 +37,17 @@ var DEFAULT_CELL_RESOLUTION = 10; /* 3km2 - 6km2*/
         riders_hashset,
         driver_sortedset,
         riders_sortedset,
-        driver_cells;
+        driver_cells,
+        city_cells;
 
     var redisService = {};
 
-    driver_hashset = "DRIVERS_HSET";
-    riders_hashset = "RIDERS_HSET";
+    driver_hashset   = "DRIVERS_HSET";
+    riders_hashset   = "RIDERS_HSET";
     driver_sortedset = "drivers:list";
     riders_sortedset = "riders:list",
     driver_cells     = "driver_cell";
+    city_cells       = "city_cells";
 
     var EXPIRE_DRIVER_GPS = 3600; //60 minutes
     var EXPIRE_PASSENGER_GPS = 600; //10 minutes
@@ -66,10 +68,10 @@ var DEFAULT_CELL_RESOLUTION = 10; /* 3km2 - 6km2*/
      * driver_cell set. No duplicate cell ids
      * @param driver_id
      */
-    var createCellPosition = function(driver_id){
-        var cell_id = driver_id.parent(DEFAULT_CELL_RESOLUTION);
-        client.sadd(driver_cells,cell_id.id());
-        console.log("leaf id ="+ driver_id.id()+"/added to -> cell id=" + cell_id.id());
+    var createCellPosition = function(cell_id){
+        //var cell_id = driver_id.parent(DEFAULT_CELL_RESOLUTION);
+        client.sadd(city_cells,cell_id);
+        console.log(city_cells + ": adding id ="+ cell_id+"/to city grid");
     }
 
     /**

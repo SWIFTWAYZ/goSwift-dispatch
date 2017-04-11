@@ -23,21 +23,32 @@
 
 var http = require("http");
 var express = require("express");
-var redis = require("ioredis");
-var serverConfig = require("./config/init");
+var redis = require("./redis/redisProvider");
+var s2circle = require("./s2geometry/s2circlecoverer");
+var server = require("./config/init");
 var uuid = require('node-uuid');
 var path = require('path');
 
 var app = express();
-console.log(JSON.stringify(serverConfig));
+console.log(JSON.stringify(server));
 
-app.set("port",process.env.PORT||serverConfig['serverConfig']['port']);
+app.set("port",process.env.PORT||server['port']);
 
 app.listen(app.get('port'),function(err,data){
     if(err){
         console.error("error message ->" + err);
         return;
     }
+
+    var lat = parseFloat(server['city']['lat']);
+    var lon = parseFloat(server['city']['lon']);
+    var radius = parseFloat(server['city']['radius']);
+    console.log("radius ->" + radius + "--"+lat + ","+lon);
+    var city_grid = s2circle.S2CircleCoverer.getCovering(lat,lon,radius,12,26,1000);
+    city_grid.forEach(function(city_cell){
+        redis.redisService.createCellPosition(city_cell.id);
+    });
+
     console.log("server running on port:"  + app.get('port'));
 });
 

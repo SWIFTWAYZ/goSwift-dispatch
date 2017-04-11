@@ -6,14 +6,20 @@
  * redis servers. Also used to initialize config data for rabbitMQ
  */
 (function(){
-    var serverConfig;
 
-    server_config = {
+    var server_config = {
         port: '3000',
         host: 'localhost',
         redis_port: '3001',
         redis_host: 'localhost'
     };
 
-    exports.serverConfig = server_config;
+    var city = {
+        lat:'-26.104628',
+        lon: '28.053901',
+        radius: '32000'
+    };
+
+    exports.city = city;
+    exports.server = server_config;
 }).call(this);
