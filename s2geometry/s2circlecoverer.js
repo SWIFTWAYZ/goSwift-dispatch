@@ -156,6 +156,7 @@ function getS2CapRadius(latLng,radius_in_meters){
         return results;
     }
 
+
     /**
      * divide the bigger cell into child cells of index 0...3
      * @param next_cell_id
@@ -249,3 +250,5 @@ function getS2CapRadius(latLng,radius_in_meters){
     console.log("area of cap = " + cap_area);*/
 
 }).call(this);
+
+exports.getS2CapRadius = getS2CapRadius;

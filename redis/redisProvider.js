@@ -74,6 +74,12 @@ var DEFAULT_CELL_RESOLUTION = 12; /* 3km2 - 6km2*/
         console.log(city_cells + ": adding id ="+ cell_id+"/to city grid");
     }
 
+    var getCityGrid = function(cb){
+        client.smembers(city_cells,function(err,data){
+            console.log("retrieving city cells = " + data.length);
+            cb(data);
+        });
+    }
     /**
      * retrieve parent_ids from the driver_cell set
      * @param driver_id
@@ -114,6 +120,7 @@ var DEFAULT_CELL_RESOLUTION = 12; /* 3km2 - 6km2*/
     redisService.createCellPosition = createCellPosition;
     redisService.getDriverPositions = getDriverPositions;
     redisService.getDriversInCell = getDriversInCell;
+    redisService.getCityGrid   = getCityGrid;
 
     redisService.driver_hashset = driver_hashset;
     redisService.riders_hashset = riders_hashset;
