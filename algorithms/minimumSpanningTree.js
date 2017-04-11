@@ -22,7 +22,8 @@
 * -
 * This algorithm uses Prim's minimum spanning tree algorithm to determine
 *  given a set of GPS points representing passenger trips (both departure and arrival points),
-* the routes with the least distance between 2 or 3 passengers who are travelling
+* the routes with the least distance between 2 or 3 passengers who are travelling in more or less same
+* direction
 *
 * @
 * @params riders_depart_xy, passenger departure locations[] in x,y
@@ -48,6 +49,7 @@ var gpsPoint = function(lat,lon,isDepart,name){
 	this.distance = 0;
 
 }
+
 
 if(typeof(Number.prototype.toRad) === "undefined") {
     Number.prototype.toRad = function () {

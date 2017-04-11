@@ -35,5 +35,12 @@ distanceCalc = function(start, end, decimals){
 
 }
 
+function toRad(gps_point){
+    return gps_point * Math.PI / 180;
+}
+
+/*function toRadiansGPS(lat,lon){
+    return toRad(lat)
+}*/
 exports.distanceCalc = distanceCalc;
 exports.EarthMetersToRadians = EarthMetersToRadians;
