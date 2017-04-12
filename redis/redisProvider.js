@@ -74,10 +74,20 @@ var DEFAULT_CELL_RESOLUTION = 12; /* 3km2 - 6km2*/
         console.log(city_cells + ": adding id ="+ cell_id+"/to city grid");
     }
 
-    var getCityGrid = function(cb){
-        client.smembers(city_cells,function(err,data){
+    /**
+     * getCityGrid returns a list of all S2 cells at level 12 that makes up
+     * city boundary under default constraints (min=12, max = 26, max_cells = 500)
+     * @returns {*}
+     */
+    var getCityGrid = function(){
+        return client.smembers(city_cells,function(err,data){
             console.log("retrieving city cells = " + data.length);
-            cb(data);
+            //cb(data);
+        }).then(function(resolved,rejected){
+            if(resolved) {
+                //console.log("resolved getCityGrid---" + resolved);
+                return resolved;
+            }
         });
     }
     /**

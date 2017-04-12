@@ -69,10 +69,14 @@ function getS2CapRadius(latLng,radius_in_meters){
 
     }*/
 
+
     S2CircleCoverer.getS2CapRadius = function(){
         return s2cap;
     }
 
+    S2CircleCoverer.getCellsBoundedByCap = function(cellsArray,scap){
+
+    }
     /*S2CircleCoverer.setS2BigCell = function(cell){
         //s2.getClosestLevel(1000);
         var level = cell.level ();
