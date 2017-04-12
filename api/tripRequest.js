@@ -54,42 +54,28 @@ function arrayCopy(oldArray){
     var triprequest = {};
 
     /**
-     * retrieve cells from city grid cells that intersect customer latlng
+     * retrieve cells from city grid cells that intersect customer radius
      * @param cust_scap
      */
     triprequest.getIntersectCityCells = function(lat,lon){
-        //:nodes2ts.S2Cap
-
         redis.redisService.getCityGrid().then(function(data,reject){
 
-            var gridRegion = new nodes2ts.S2CellUnion();
-            gridRegion.initFromIds(data);
-            gridRegion.normalize();
+            var riderSphere = s2circle.S2CircleCoverer.getCovering(lat,lon,2680,12,26,100);
 
-            var gridRegion2 = new nodes2ts.S2CellUnion();
+            var cityRegion = new nodes2ts.S2CellUnion();
+            cityRegion.initFromIds(data);
+            cityRegion.normalize();
 
-            var copy = arrayCopy(data.splice(7,4));
-            console.log("deep copy into gridRegion2 = " + copy);
-            gridRegion2.initFromIds(copy);
-            gridRegion2.normalize();
+            var riderRegion = new nodes2ts.S2CellUnion();
+            riderRegion.initRawCellIds(riderSphere);
+            riderRegion.normalize();
 
-            console.log("cust_covering = "+ gridRegion2);
-            var gridRegion3 = new nodes2ts.S2CellUnion();
-            var copy2 = arrayCopy(data.splice(15,6))
-            console.log("deep copy into gridRegion3= " + copy2);
-            gridRegion3.initFromIds(copy2);
-            gridRegion3.normalize();
+            //console.log ("total number of cityRegion = " + cityRegion.size() +", -length riderRegion = " + riderRegion.size());
 
-            console.log ("total number of gridRegion3 = " + gridRegion3.size() +", -length gridRegion2=" + gridRegion2.size());
-            console.log("gridRegion3="+gridRegion3.cellId(4).rangeMin() + "-gridRegion2=" + gridRegion2.cellId(3).rangeMin());
+            var intersect_union = new nodes2ts.S2CellUnion();
+            var union = intersect_union.getIntersectionUU(cityRegion,riderRegion); //Google S2 bug fixed
+            console.log ("total number of city grids = " + intersect_union.size());
 
-            var new_union = new nodes2ts.S2CellUnion();
-            var union = new_union.getIntersectionUU(gridRegion3,gridRegion2); //errors here
-            console.log ("total number of city grids = " + union);
-
-            //check the vertices of cust_scap and then check which of the level 12 cells
-            //contains the edges. retrieve those cells's vehicles cell_ids and then
-            //check if their id's are bounded by the cap
         });
 
     }
@@ -99,6 +85,18 @@ function arrayCopy(oldArray){
      * testing ......
      */
 
-    triprequest.getIntersectCityCells(-26.104628,28.053901);
+    //triprequest.getIntersectCityCells(-26.104628,28.053901);
+    //triprequest.getIntersectCityCells(-26.270155, 28.438425); //spring
+    //triprequest.getIntersectCityCells(-26.152353, 28.255995);
+    //triprequest.getIntersectCityCells(-25.86464683750316,27.877844426113754);
+
+    for(var i = 0; i < 1000; i++) {
+        triprequest.getIntersectCityCells(-26.217146, 28.356669);
+    }
+    //-26.270155, 28.438425 (Spring - outside)
+    //-26.152353, 28.255995 (boksburg - outside)
+    //27.877844426113754,-25.86464683750316 (outside edge cells)
+    //-26.240749, 28.376074
+    //-26.217146, 28.356669 //near the edge
 
 }).call(this)
