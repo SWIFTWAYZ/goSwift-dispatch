@@ -62,7 +62,21 @@ function arrayCopy(oldArray){
 
             var riderSphere = s2circle.S2CircleCoverer.getCovering(lat,lon,2680,12,26,100);
 
-            var cityRegion = new nodes2ts.S2CellUnion();
+            //-26.115461, 28.092047
+            //-26.135891, 28.117186
+
+            var hi = new nodes2ts.S2LatLng.fromDegrees(-26.115461, 28.092047);
+            var lo = new nodes2ts.S2LatLng.fromDegrees(-26.135891, 28.117186);
+
+            var hi2 = new nodes2ts.S2LatLng.fromDegrees(-26.129719, 28.131236);
+            //-26.135891, 28.117186
+            //-26.129719, 28.131236
+            var riderSquare = nodes2ts.S2LatLngRect.fromPointPair(lo,hi2);
+
+            var riderSquare = s2circle.S2CircleCoverer.getSquareCovering(riderSquare,12,20,100);
+            //riderSquare.fromLatLng(hi,lo);
+
+            var cityRegion = new nodes2ts.S2CellUnion(-26.135891, 28.117186);
             cityRegion.initFromIds(data);
             cityRegion.normalize();
 
@@ -70,10 +84,15 @@ function arrayCopy(oldArray){
             riderRegion.initRawCellIds(riderSphere);
             riderRegion.normalize();
 
+            var riderRegion2 = new nodes2ts.S2CellUnion();
+            riderRegion2.initRawCellIds(riderSquare);
+            riderRegion2.normalize();
+
+            console.log("rider square = "+"-"+riderRegion2.size());
             //console.log ("total number of cityRegion = " + cityRegion.size() +", -length riderRegion = " + riderRegion.size());
 
             var intersect_union = new nodes2ts.S2CellUnion();
-            var union = intersect_union.getIntersectionUU(cityRegion,riderRegion); //Google S2 bug fixed
+            var union = intersect_union.getIntersectionUU(cityRegion,riderRegion2); //Google S2 bug fixed
             console.log ("total number of city grids = " + intersect_union.size());
 
         });
@@ -90,9 +109,9 @@ function arrayCopy(oldArray){
     //triprequest.getIntersectCityCells(-26.152353, 28.255995);
     //triprequest.getIntersectCityCells(-25.86464683750316,27.877844426113754);
 
-    for(var i = 0; i < 1000; i++) {
+    //for(var i = 0; i < 2; i++) {
         triprequest.getIntersectCityCells(-26.217146, 28.356669);
-    }
+    //}
     //-26.270155, 28.438425 (Spring - outside)
     //-26.152353, 28.255995 (boksburg - outside)
     //27.877844426113754,-25.86464683750316 (outside edge cells)
