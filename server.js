@@ -43,7 +43,11 @@ app.listen(app.get('port'),function(err,data){
     var lat = parseFloat(server['city']['lat']);
     var lon = parseFloat(server['city']['lon']);
     var radius = parseFloat(server['city']['radius']);
-    console.log("radius ->" + radius + "--"+lat + ","+lon);
+    var cityhub = server.city.name;
+    var hub_centre = server.city.centre;
+
+    console.log("Indexing cells for " + cityhub + ","+hub_centre +
+        "--[radius ->" + radius + "-centred at = "+lat + ","+lon+"]");
     var city_grid = s2circle.S2CircleCoverer.getCovering(lat,lon,radius,12,26,1000);
     city_grid.forEach(function(city_cell){
         redis.redisService.createCellPosition(city_cell.id);
