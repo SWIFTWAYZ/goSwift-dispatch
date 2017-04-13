@@ -2,7 +2,7 @@
  * Created by tinyiko on 2017/04/03.
  */
 var promise = require("bluebird");
-var s2 = require("s2geometry-node");
+var s2 = require("nodes2ts");
 var express = require("express");
 var redisService = require("../redis/redisProvider");
 var mst = require("../algorithms/minimumSpanningTree");
@@ -27,17 +27,20 @@ function logDriverLocation(lat,lon,driver_UUID,mobile_number){
       if (isNaN(lat) || isNaN(lon)) {
             throw new Error('Invalid LatLng object: (' + lat + ', ' + lon + ')');
      }
-    var s2Latlong = new s2.S2LatLng(lat,lon);
-    var s2driverCellId = new s2.S2CellId(s2Latlong);
+    var s2Latlong = new s2.S2LatLng.fromDegrees(lat,lon);
+    console.log("s2latlng = " + s2Latlong);
+
+    var s2driverCellId = new s2.S2CellId.fromPoint(s2Latlong.toPoint());
     //var s2driverCellId = s2driverCell.id();
+    var key = s2driverCellId.id+""; //2203687589641513315 -- {"low":-393942685,"high":513085999,"unsigned":false}
     var parent_key = getParentCellAtlevel(s2driverCellId,15);
 
     var driver_data = {
-        key: s2driverCellId.id(),
+        key: key,
         lat:lat,
         lon:lon,
         parent_level: parent_key.level(),
-        parent_key: parent_key.id(),
+        parent_key: parent_key.id+"",
         date_time: new Date(),
         driver_uuid: driver_UUID,
         driver_mobile: mobile_number,
@@ -45,8 +48,8 @@ function logDriverLocation(lat,lon,driver_UUID,mobile_number){
     };
 
     console.log("log vehicle with ID=" + JSON.stringify(driver_data));
-    console.log(s2driverCellId.id() + "->level = " + s2driverCellId.level());
-    console.log(decimalToBinary(s2driverCellId.id()));
+    console.log(s2driverCellId.id + "->level = " + s2driverCellId.level());
+    console.log(decimalToBinary(s2driverCellId.id));
 
     getS2CellArea(s2driverCellId,12);
     calcS2CapSize(s2Latlong,21000);
@@ -62,10 +65,10 @@ function getParentCellAtlevel(s2cell, parent_level){
     if (isNaN(parent_level) || parent_level < 1 || parent_level > 30) {
     throw new Error("'level' not valid, must be a number between 1 and 30");
   }
-    console.log("typeof->"+typeof(s2cell));
-    var s2Parent = s2cell.parent(parent_level);
-    console.log("Parent id="+ s2Parent.id() + "->level = " + parent_level);
-    console.log("binary key ->"+decimalToBinary(s2Parent.id()));
+    console.log("typeof->"+s2cell.pos());
+    var s2Parent = s2cell.parentL(parent_level);
+    console.log("Parent id="+ s2Parent.id + "->level = " + parent_level);
+    console.log("binary key ->"+decimalToBinary(s2Parent.id));
     return s2Parent;
 }
 
@@ -214,7 +217,7 @@ var s2latlng = new s2.S2LatLng(-26.166329,28.148618);
 //console.log("drivers all ==" + driver);
 //listDriversInRadius(s2latlng,18000);
 var radius_rect = calcS2CapSize(s2latlng,18000);
-console.log("size of rect " + radius_rect.size() + radius_rect.getVertex(0));
+console.log("size of rect " + radius_rect.size + radius_rect.getVertex(0));
 console.log("size of rect " + radius_rect.getVertex(1));
 console.log("size of rect " + radius_rect.getVertex(2));
 console.log("size of rect " + radius_rect.getVertex(3));

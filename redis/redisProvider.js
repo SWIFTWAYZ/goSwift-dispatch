@@ -71,7 +71,7 @@ var DEFAULT_CELL_RESOLUTION = 12; /* 3km2 - 6km2*/
     var createCellPosition = function(cell_id){
         //var cell_id = driver_id.parent(DEFAULT_CELL_RESOLUTION);
         client.sadd(city_cells,cell_id);
-        console.log(city_cells + ": adding id ="+ cell_id+"/to city grid");
+        //console.log(city_cells + ": adding id ="+ cell_id+"/to city grid");
     }
 
     /**

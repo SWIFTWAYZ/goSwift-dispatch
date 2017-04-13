@@ -25,6 +25,7 @@ var http = require("http");
 var express = require("express");
 var redis = require("./redis/redisProvider");
 var s2circle = require("./s2geometry/s2circlecoverer");
+var s2 = require("nodes2ts");
 var server = require("./config/init");
 var uuid = require('node-uuid');
 var path = require('path');
@@ -40,16 +41,20 @@ app.listen(app.get('port'),function(err,data){
         return;
     }
 
-    var lat = parseFloat(server['city']['lat']);
-    var lon = parseFloat(server['city']['lon']);
-    var radius = parseFloat(server['city']['radius']);
+    var lat = parseFloat(server.city.lat);
+    var lon = parseFloat(server.city.lon);
+    var radius = parseFloat(server.city.radius);
     var cityhub = server.city.name;
     var hub_centre = server.city.centre;
 
     console.log("Indexing cells for " + cityhub + ","+hub_centre +
         "--[radius ->" + radius + "-centred at = "+lat + ","+lon+"]");
-    var city_grid = s2circle.S2CircleCoverer.getCovering(lat,lon,radius,12,26,1000);
+
+    var city_grid = s2circle.S2CircleCoverer.getCovering(lat,lon,radius,12,18,1600);
     city_grid.forEach(function(city_cell){
+        var city_s2cell = new s2.S2Cell(city_cell)
+        var area = (city_s2cell.approxArea()*1000000*1000 * 40075.017).toFixed(0);
+        //console.log("adding id="+city_cell.id + ":/to city grid at level = "+city_s2cell.level +"["+(area)+"]");
         redis.redisService.createCellPosition(city_cell.id);
     });
 
