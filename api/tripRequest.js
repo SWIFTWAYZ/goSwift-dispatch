@@ -2,9 +2,9 @@
  * Created by tinyiko on 2017/04/03.
  */
 
-var s2 = require("s2geometry-node");
 var nodes2ts = require("nodes2ts");
 var redis = require("../redis/redisProvider");
+var init = require("../config/init");
 var _ = require('underscore');
 var s2circle = require("../s2geometry/s2circlecoverer");
 
@@ -53,28 +53,50 @@ function arrayCopy(oldArray){
 
     var triprequest = {};
 
-    /**
-     * retrieve cells from city grid cells that intersect customer radius
-     * @param cust_scap
-     */
-    triprequest.getIntersectCityCells = function(lat,lon){
-        redis.redisService.getCityGrid().then(function(data,reject){
 
-            var riderSphere = s2circle.S2CircleCoverer.getCovering(lat,lon,2680,12,26,100);
+    /**
+     * retrieve cells in customer rectangle that intersect with city-grid
+     * @param rect
+     */
+    triprequest.getIntersectSquareCells = function(rect){
+        redis.redisService.getCityGrid().then(function(data,reject) {
 
             //-26.115461, 28.092047
             //-26.135891, 28.117186
 
-            var hi = new nodes2ts.S2LatLng.fromDegrees(-26.115461, 28.092047);
-            var lo = new nodes2ts.S2LatLng.fromDegrees(-26.135891, 28.117186);
+            //var hi = new nodes2ts.S2LatLng.fromDegrees(-26.115461, 28.092047);
 
+            var lo = new nodes2ts.S2LatLng.fromDegrees(-26.135891, 28.117186);
             var hi2 = new nodes2ts.S2LatLng.fromDegrees(-26.129719, 28.131236);
             //-26.135891, 28.117186
             //-26.129719, 28.131236
-            var riderSquare = nodes2ts.S2LatLngRect.fromPointPair(lo,hi2);
+            var riderSquare = nodes2ts.S2LatLngRect.fromLatLng(lo, hi2);
 
-            var riderSquare = s2circle.S2CircleCoverer.getSquareCovering(riderSquare,12,20,100);
+            //-26.135891, 28.117186 (Edenvale - city centre)
+            var cityRegion = new nodes2ts.S2CellUnion(parseFloat(init.city.lat),parseFloat(init.city.lon));
+            cityRegion.initFromIds(data);
+            cityRegion.normalize();
+
+            var riderSquare = s2circle.S2CircleCoverer.getSquareCovering(riderSquare, 12, 20, 100);
+            var riderRegion2 = new nodes2ts.S2CellUnion();
+            riderRegion2.initRawCellIds(riderSquare);
+            riderRegion2.normalize();
+
+            var intersect_union = new nodes2ts.S2CellUnion();
+            var union = intersect_union.getIntersectionUU(cityRegion,riderRegion2); //Google S2 bug fixed
+            console.log ("total number of city grids = " + intersect_union.size());
+
             //riderSquare.fromLatLng(hi,lo);
+        });
+    }
+    /**
+     * retrieve cells from city grid cells that intersect customer circle
+     * @param cust_scap
+     */
+    triprequest.getIntersectRadiusCells = function(lat,lon,radius){
+        redis.redisService.getCityGrid().then(function(data,reject){
+
+            var riderSphere = s2circle.S2CircleCoverer.getCovering(lat,lon,radius,12,26,100);
 
             var cityRegion = new nodes2ts.S2CellUnion(-26.135891, 28.117186);
             cityRegion.initFromIds(data);
@@ -84,15 +106,11 @@ function arrayCopy(oldArray){
             riderRegion.initRawCellIds(riderSphere);
             riderRegion.normalize();
 
-            var riderRegion2 = new nodes2ts.S2CellUnion();
-            riderRegion2.initRawCellIds(riderSquare);
-            riderRegion2.normalize();
-
-            console.log("rider square = "+"-"+riderRegion2.size());
+            console.log("rider square = "+"-"+riderRegion.size());
             //console.log ("total number of cityRegion = " + cityRegion.size() +", -length riderRegion = " + riderRegion.size());
 
             var intersect_union = new nodes2ts.S2CellUnion();
-            var union = intersect_union.getIntersectionUU(cityRegion,riderRegion2); //Google S2 bug fixed
+            var union = intersect_union.getIntersectionUU(cityRegion,riderRegion); //Google S2 bug fixed
             console.log ("total number of city grids = " + intersect_union.size());
 
         });
@@ -110,7 +128,8 @@ function arrayCopy(oldArray){
     //triprequest.getIntersectCityCells(-25.86464683750316,27.877844426113754);
 
     //for(var i = 0; i < 2; i++) {
-        triprequest.getIntersectCityCells(-26.217146, 28.356669);
+        triprequest.getIntersectRadiusCells(-26.217146, 28.356669,2680);
+        //triprequest.getIntersectSquareCells(null)
     //}
     //-26.270155, 28.438425 (Spring - outside)
     //-26.152353, 28.255995 (boksburg - outside)

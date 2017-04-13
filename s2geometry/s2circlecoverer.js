@@ -102,7 +102,7 @@ function getS2CapRadius(latLng,radius_in_meters){
             covering_area += cell_area;
             //console.log("cellid = " + record.id + "-area = "+ cell_area.toFixed(3) + "-level="+cell.level);
         });
-        //console.log("no. of cells in region = " + counter + "-> area = " +covering_area);
+        console.log("no. of cells in region = " + counter + "-> area = " +covering_area);
         return results;
     }
 
