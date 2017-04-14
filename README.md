@@ -1,4 +1,4 @@
-# goSwift-Dispatch
+# goSwift-dispatch
 This is a real-time service to handle the dispatching of taxis to passengers 
 
 This service is developed using server-side Javascript running in Node.js
