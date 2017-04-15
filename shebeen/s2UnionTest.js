@@ -57,7 +57,7 @@ makeS2Union = function(){
             var cellid = new s2.S2CellId(intersect_cellid);
 
             var s2_cell = new s2.S2Cell(cellid);
-            //console.log(JSON.stringify(s2_cell.toGEOJSON()) + "");
+            console.log(JSON.stringify(s2_cell.toGEOJSON()) + "");
 
             console.log(cellid.toLatLng().toStringDegrees());
         }
