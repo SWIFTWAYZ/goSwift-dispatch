@@ -19,6 +19,12 @@ console.log("hello GPS script");
 var centerPoint = {
     latitude: -26.029613,
     longitude: 28.036167
+
+    //-26.029246, 28.033959 - wroxham rd
+
+    //latitude: -26.136208,
+    //longitude: 28.118119
+
     //latitude: 5.600254,
     //longitude: -0.178466
 };
@@ -71,5 +77,5 @@ function distance(lat1, lon1, lat2, lon2) {
         mappoints.push(randomGeo(centerpoint, distance));
     }
     return mappoints;
-})(centerPoint,21000,500);
+})(centerPoint,1000,20);
 

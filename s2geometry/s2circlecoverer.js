@@ -19,7 +19,7 @@ const default_dispatch_radius = 2680;    //meters
 const kEarthCircumferenceMeters = 1000 * 40075.017;
 var cap_area;
 //min_level = 12
-//max_level = 26
+//max_level = 18
 //max_cells = 100 cells
 
 function EarthMetersToRadians(meters) {
@@ -101,14 +101,19 @@ function getS2CapRadius(latLng,radius_in_meters){
         var cap2 = getS2CapRadius(centre_gps,radius);
         var results = covering.getCoveringCells(cap2);
 
+        console.log("{"+'"type":"FeatureCollection","features":[');
         results.forEach(function(record){
             var cell = new s2.S2Cell(record);
-            //console.log(JSON.stringify(cell.toGEOJSON())+",");
+            //cell.Cell = cell.id();
+            //cell.title2 = cell.id.id+"";
+            //console.log(cell.id.id+"-" + cell.level);
+            console.log(JSON.stringify(cell.toGEOJSON())+"," );
             counter++;
             var cell_area = cell.approxArea() * kEarthCircumferenceMeters;
             covering_area += cell_area;
             //console.log("cellid = " + record.id + "-area = "+ cell_area.toFixed(3) + "-level="+cell.level);
         });
+        console.log("]}");
         console.log("no. of cells in region = " + counter + "-> area = " +covering_area);
         return results;
     }
@@ -132,13 +137,11 @@ function getS2CapRadius(latLng,radius_in_meters){
         var results = city_covering.getCoveringCells(rect_latlng);
         results.forEach(function(record){
             var cell = new s2.S2Cell(record);
-            //console.log(JSON.stringify(cell.toGEOJSON())+",");
             counter++;
             var cell_area = cell.approxArea() * kEarthCircumferenceMeters;
             covering_area += cell_area;
             //console.log(JSON.stringify(cell.toGEOJSON())+",");
         });
-        //var area_sqm = covering_area * kEarthCircumferenceMeters;
         console.log("no. of cells in region = " + counter + "-> area = " +covering_area);
 
         return results;

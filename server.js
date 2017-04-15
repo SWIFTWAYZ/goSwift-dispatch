@@ -26,14 +26,14 @@ var express = require("express");
 var redis = require("./redis/redisProvider");
 var s2circle = require("./s2geometry/s2circlecoverer");
 var s2 = require("nodes2ts");
-var server = require("./config/init");
+var init = require("./config/init");
 var uuid = require('node-uuid');
 var path = require('path');
 
 var app = express();
-console.log(JSON.stringify(server));
+console.log(JSON.stringify(init.server));
 
-app.set("port",process.env.PORT||server['port']);
+app.set("port",process.env.PORT||init.server['port']);
 
 app.listen(app.get('port'),function(err,data){
     if(err){
@@ -41,29 +41,29 @@ app.listen(app.get('port'),function(err,data){
         return;
     }
 
-    var lat = parseFloat(server.city.lat);
-    var lon = parseFloat(server.city.lon);
-    var radius = parseFloat(server.city.radius);
-    var cityhub = server.city.name;
-    var hub_centre = server.city.centre;
+    var lat = init.city.lat;
+    var lon = init.city.lon;
+    var radius = init.city.radius;
+    var cityhub = init.city.name;
+    var hub_centre = init.city.centre;
 
     console.log("Indexing cells for " + cityhub + ","+hub_centre +
         "--[radius ->" + radius + "-centred at = "+lat + ","+lon+"]");
 
-    var city_grid = s2circle.S2CircleCoverer.getCovering(lat,lon,radius,12,18,1600);
+    var city_grid = s2circle.S2CircleCoverer.getCovering(lat,lon,radius,12,14,1000);
     city_grid.forEach(function(city_cell){
         var city_s2cell = new s2.S2Cell(city_cell)
         var area = (city_s2cell.approxArea()*1000000*1000 * 40075.017).toFixed(0);
-        //console.log("adding id="+city_cell.id + ":/to city grid at level = "+city_s2cell.level +"["+(area)+"]");
+        console.log("adding id="+city_cell.id + ":/to city grid at level = "+city_s2cell.level +"->>["+(area)+"]");
         redis.redisService.createCellPosition(city_cell.id);
     });
 
-    console.log("server running on port:"  + app.get('port'));
+    console.log("server running on port:"  + init.server.port);
 });
 
 app.all("*",function(req,res){
         console.log("request coming ...." + req);
-        res.send("responding with text....." + JSON.stringify(serverConfig));
+        res.send("responding with text....." + JSON.stringify(init));
         //res.sendStatus(200);
 });
 

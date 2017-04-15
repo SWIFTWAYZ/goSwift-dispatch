@@ -36,7 +36,7 @@
 var s2util = require("./s2GeometryUtility");
 var lineReader = require('line-reader');
 var Promise = require("bluebird");
-
+var s2 = require("nodes2ts");
 
 var line_counter = 0;
 var reached = [];
@@ -59,7 +59,7 @@ if(typeof(Number.prototype.toRad) === "undefined") {
 
 readDrivers = function(cb) {
     var readLine = Promise.promisify(lineReader.eachLine);
-    readLine('/Users/tinyiko/WebstormProjects/GoSwift/server/config/seeds/Gps_dump.csv', function (line, last) {
+    readLine('/Users/tinyiko/WebstormProjects/GoSwift/server/config/seeds/Gps_dump2.csv', function (line, last) {
         var line_str = line.split(",");
         unreached[line_counter] = new gpsPoint(line_str[0], line_str[1], line_str[2], line_str[3]);
         line_counter++;
@@ -146,19 +146,35 @@ var sortByMST = function(){
 	var total_distance = 0;
 	reached.forEach(function(d){
 		total_distance += d.distance;
-		console.log(d.latitude + "-"+ d.longitude + "="+ d.name + "="+d.distance);
+		console.log(d.latitude + ","+ d.longitude + "="+d.distance);
 	})
 
 	console.log("total MST distance = " + total_distance);
 	//return reached;
 }
 
-//readDrivers(function(){});
+
 exports.readDrivers = readDrivers;
 exports.getDist = s2util.distanceCalc;
 
-readDrivers(function(results){
+/*readDrivers(function(results){
 	console.log("results length = "+results.length);
+});*/
+
+readDrivers(function(data){
+	var counter = 0;
+	data.forEach(function(item){
+		counter++
+		var lat = item.latitude; var lon = item.longitude;
+		var str_latlng = item.latitude + "," + item.longitude;
+        var s2Latlong = new s2.S2LatLng.fromDegrees(lat,lon);
+
+		var s2cell = new s2.S2CellId.fromPoint(s2Latlong.toPoint(lat,lon));
+		var s2cell_str = s2cell.id.toString();
+        console.log(s2cell_str);
+        //console.log("item no. = " + counter + "/" +str_latlng+ "/id="+s2cell_str+"/");
+
+    });
 });
 /**
 Algorithm strategies

@@ -6,14 +6,15 @@ var s2 = require("nodes2ts");
 var express = require("express");
 var redisService = require("../redis/redisProvider");
 var mst = require("../algorithms/minimumSpanningTree");
+var swift = require("../constants");
 
-var driver_hashset = "DRIVERS_HSET";
-var riders_hashset = "RIDERS_HSET";
+const driver_hashset = "DRIVERS_HSET";
+const riders_hashset = "RIDERS_HSET";
 
-var earth_radius = 1000 * 6378.1; // (km = 6378.1) - radius of the earth
-var default_dispatch_radius = 31885;    //meters
-var kEarthCircumferenceMeters = 1000 * 40075.017;
-var default_cell_resolution = 12; /* 3km2 - 6km2*/
+const earth_radius = 1000 * 6378.1; // (km = 6378.1) - radius of the earth
+const default_dispatch_radius = 31885;    //meters
+const kEarthCircumferenceMeters = 1000 * 40075.017;
+const default_cell_resolution = 12; /* 3km2 - 6km2*/
 var redis = redisService.redisService;
 
 /**
@@ -76,20 +77,43 @@ function EarthMetersToRadians(meters) {
   return (2 * Math.PI) * (meters / kEarthCircumferenceMeters);
 }
 
+/**
+ * function to convert latlng degrees into S2CellId and store in redis.
+ * Retrieve the s2 cell that this driver GPS location belongs to
+ * @param user_id
+ * @param mobile
+ * @param lat
+ * @param lon
+ */
+function logDriverGPSLocation(user_id,mobile,lat,lon){
+    var s2_cellid = swift.s2CellIDfromLatLng(lat,lon);
+    console.log("s2_cellid = " + s2_cellid.id.toString());
+    //retrieve city cell that this driver belongs to
+    var parent_level12 = s2_cellid.parent(12);
+    console.log("parent_12 = " + parent_level12.id.toString());
+    //sismember key member
+    redis.isMember()//.sismember()
+
+
+}
+
+logDriverGPSLocation("tin2yiko",'0847849574',-26.0309030,28.040768);
+
 function addDrivers(){
     mst.readDrivers(function(data){
         data.forEach(function(each_driver) {
             //console.log("each driver->"+JSON.stringify(each_driver));
-            var gps_driver = {
-                latitude: each_driver.latitude,
-                longitude: each_driver.longitude
-            };
-            lat = parseFloat(each_driver.latitude);
-            lon = parseFloat(each_driver.longitude);
+
+            lat = each_driver.latitude;
+            lon = each_driver.longitude;
             var driver_s2latlng = new s2.S2LatLng(lat,lon);
             var driver_s2cellid = new s2.S2CellId(driver_s2latlng);
 
-            redis.createCellPosition(driver_s2cellid);
+            //redis.createCellPosition(driver_s2cellid);
+            //var cell_pos = getCellPosition()
+
+            //redis.addDriverPosition(cell_pos,driver_s2cellid)
+
             redis.addDriverPosition(redis.driver_hashset,driver_s2cellid);
         });
     });
@@ -203,19 +227,10 @@ function decimalToBinary(DecimalValue){
 //74.505182,-43.623446
 //-14.803729,-153.845548
 
-logDriverLocation(-26.166329,28.148618,"00002345","0847849574");
-/*console.log("--------->>>>>>>>>>>>----------")
-logDriverLocation(-26.104628,28.053901,"00002345","0847849574");*/
+//logDriverLocation(-26.166329,28.148618,"00002345","0847849574");
+
 var s2latlng = new s2.S2LatLng(-26.166329,28.148618);
 
-//should we use bluebird to promisify adddrivers
-/*addDrivers().then(function(){
-    var driver = redis.getDriverPositions();
-});*/
-
-
-//console.log("drivers all ==" + driver);
-//listDriversInRadius(s2latlng,18000);
 var radius_rect = calcS2CapSize(s2latlng,18000);
 console.log("size of rect " + radius_rect.size + radius_rect.getVertex(0));
 console.log("size of rect " + radius_rect.getVertex(1));

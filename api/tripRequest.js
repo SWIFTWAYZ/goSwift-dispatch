@@ -13,7 +13,7 @@ function logRiderLocation(lat,lon,rider_UUID,mobile_number){
     var s2riderCellId = new s2.S2CellId(s2Latlong);
 
     var driver_data = {
-        key: s2riderCellId.id(),
+        key: s2riderCellId.id.toString(),
         lat:lat,
         lon:lon,
         date_time: new Date(),
@@ -88,7 +88,7 @@ function arrayCopy(oldArray){
 
             var intersect_union = new s2.S2CellUnion();
             var union = intersect_union.getIntersectionUU(cityRegion,riderRegion2); //Google S2 bug fixed
-            console.log ("City cells = " + cityRegion.size() + ", Rider cells = " + riderRegion2.size() +
+            console.log ("city cells = " + cityRegion.size() + ", rider cells = " + riderRegion2.size() +
                 " - [intersecting cells = " + intersect_union.size() + "]");
 
             //riderSquare.fromLatLng(hi,lo);
@@ -114,7 +114,7 @@ function arrayCopy(oldArray){
             var intersect_union = new s2.S2CellUnion();
             var union = intersect_union.getIntersectionUU(cityRegion,riderRegion); //Google S2 bug fixed
 
-            console.log ("City cells = " + cityRegion.size() + ", Rider cells = " + riderRegion.size() +
+            console.log ("city cells = " + cityRegion.size() + ", rider cells = " + riderRegion.size() +
                 " - [intersecting cells = " + intersect_union.size() + "]");
 
         });
