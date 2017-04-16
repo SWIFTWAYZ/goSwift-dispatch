@@ -99,7 +99,6 @@ var DEFAULT_CELL_RESOLUTION = 12; /* 3km2 - 6km2*/
         //console.log(city_cells + ": adding id ="+ cell_id+"/to city grid");
     }
 
-
     /**
      * Check if cell id is a member of the city_cells set
      * @param cell_id
@@ -113,7 +112,6 @@ var DEFAULT_CELL_RESOLUTION = 12; /* 3km2 - 6km2*/
             return false;
         });
     }
-
 
     /**
      * getCityGrid returns a list of all S2 cells at level 12 that makes up
@@ -196,8 +194,6 @@ var DEFAULT_CELL_RESOLUTION = 12; /* 3km2 - 6km2*/
             console.log("array = "+ item + "-"+item.id.toString());
         });
 
-
-
     //addDriverPosition("2203672884067434496");
     //addDriverPosition("2203795001640038161");
     //addDriverPosition("2203795001640038162");
@@ -206,11 +202,6 @@ var DEFAULT_CELL_RESOLUTION = 12; /* 3km2 - 6km2*/
     /*addDriverPosition("2203794989626726499");*/
     addDriverPosition("2203795003930470261");
     addDriverPosition("2203795004670293457");
-
-    /*var ans = isMemberOfGrid("22036728840674344960").then(function(resolved,reject){
-        console.log("is resolved: " + resolved);
-    });*/
-
 
 }).call(this);
 
