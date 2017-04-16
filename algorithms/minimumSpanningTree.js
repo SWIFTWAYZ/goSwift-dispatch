@@ -170,7 +170,7 @@ readDrivers(function(data){
         var s2Latlong = new s2.S2LatLng.fromDegrees(lat,lon);
 
 		var s2cell = new s2.S2CellId.fromPoint(s2Latlong.toPoint(lat,lon));
-		var s2cell_str = s2cell.id.toString();
+		var s2cell_str = s2cell.id.toString() + "["+new s2.S2Cell(s2cell).level+"]";
         console.log(s2cell_str);
         //console.log("item no. = " + counter + "/" +str_latlng+ "/id="+s2cell_str+"/");
 

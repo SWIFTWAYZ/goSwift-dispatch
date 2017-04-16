@@ -6,6 +6,26 @@ var DEFAULT_CELL_RESOLUTION = 12; /* 3km2 - 6km2*/
 (function() {
 
     var redis = require("ioredis");
+    var swift = require("../constants");
+    var s2 = require("nodes2ts");
+
+    var redisService,
+        driver_hashset,
+        riders_hashset,
+        driver_sortedset,
+        riders_sortedset,
+        driver_cells,
+        city_cells;
+
+    var redisService = {};
+
+    driver_sortedset = "drivers:list";
+    riders_sortedset = "riders:list";
+    driver_cells     = "driver_cell";
+    city_cells       = "city_cells";
+
+    var EXPIRE_DRIVER_GPS = 3600; //60 minutes
+    var EXPIRE_PASSENGER_GPS = 600; //10 minutes
 
     var client = new redis({
       retryStrategy: function (times) {
@@ -22,7 +42,6 @@ var DEFAULT_CELL_RESOLUTION = 12; /* 3km2 - 6km2*/
         }
       });
 
-    var done = function(){};
     client.on('error',function(err,data){
         if(err.message.startsWith("connect ECONNREFUSED")){
             console.log("server connection failed...");
@@ -31,36 +50,42 @@ var DEFAULT_CELL_RESOLUTION = 12; /* 3km2 - 6km2*/
 
     client.on("connect",function(){
         console.log("redis server connection succeeded...");
-    })
-    var redisService,
-        driver_hashset,
-        riders_hashset,
-        driver_sortedset,
-        riders_sortedset,
-        driver_cells,
-        city_cells;
-
-    var redisService = {};
-
-    driver_hashset   = "DRIVERS_HSET";
-    riders_hashset   = "RIDERS_HSET";
-    driver_sortedset = "drivers:list";
-    riders_sortedset = "riders:list",
-    driver_cells     = "driver_cell";
-    city_cells       = "city_cells";
-
-    var EXPIRE_DRIVER_GPS = 3600; //60 minutes
-    var EXPIRE_PASSENGER_GPS = 600; //10 minutes
+    });
 
     /**
-     * method to add drivers to hashset
-     * @param hset_name
-     * @param value
+     * retrieve array of parent IDs at level 12 - 14 for given leaf-id
+     * @param leaf_id
+     * @returns {null}
      */
-    var addDriverPosition = function (hset_name, value) {
-        client.sadd(hset_name, value);
-        //console.log("sadd.....ioredis->" + value + "to---"+hset_name);
+    var getParentIdArray = function(leaf_id, start_index, no_of_levels){
+        var s2cell = new s2.S2CellId(leaf_id);
+        var parentCellsArray = new Array();
+        if(s2cell.isLeaf()){
+            var total = start_index + no_of_levels;
+            for(var i = start_index; i < total; i++){
+                var parent12 = s2cell.parentL(i);
+                parentCellsArray.push(parent12);
+            }
+        }
+        return parentCellsArray;
+    }
 
+    /**
+     *  method to add drivers to grid cells by grid_id
+     * @param leaf_id
+     */
+    var addDriverPosition = function (leaf_id) {
+        var gridArray = getParentIdArray(leaf_id,12,3);
+        //could use client.sinter (set intersection) for grid cell where to add driver
+        gridArray.forEach(function(item){
+            var grid_id = item.id.toString();
+            isMemberOfGrid(grid_id).then(function (resolve, reject) {
+                if (resolve) {
+                    client.sadd("city_cells:" + grid_id, leaf_id);
+                    console.log("adding driver id = " + leaf_id + "-- to grid=" + grid_id);
+                }
+            });
+        });
     }
 
     /**
@@ -73,6 +98,22 @@ var DEFAULT_CELL_RESOLUTION = 12; /* 3km2 - 6km2*/
         client.sadd(city_cells,cell_id);
         //console.log(city_cells + ": adding id ="+ cell_id+"/to city grid");
     }
+
+
+    /**
+     * Check if cell id is a member of the city_cells set
+     * @param cell_id
+     * @returns {*}, true if member and false if not member
+     */
+    var isMemberOfGrid = function(cell_id) {
+
+        return client.sismember(city_cells, cell_id).then(function (resolve, reject) {
+            if(resolve)
+            return true;
+            return false;
+        });
+    }
+
 
     /**
      * getCityGrid returns a list of all S2 cells at level 12 that makes up
@@ -106,10 +147,14 @@ var DEFAULT_CELL_RESOLUTION = 12; /* 3km2 - 6km2*/
      * @param cellid
      */
     var getDriversInCell = function(cellid){
-        client.smembers(cellid,function(err,driver_ids){
-            console.log("all drivers in cell="+ cellid + "---size->"+ "--" + driver_ids);
+        client.sismember(city_cells, cellid, function(error,driver_ids){
+            if(error){
+                console.log("error = " + error);
+                throw new Error(error);
+            }
+            console.log("all drivers in cell="+ cellid + "---size->"+ "--" + error+ "-"+driver_ids);
             return driver_ids;
-        })
+        });
     }
 
     /**
@@ -141,7 +186,40 @@ var DEFAULT_CELL_RESOLUTION = 12; /* 3km2 - 6km2*/
     exports.redisService = redisService;
 
     //redisService.getDriverCells();
-    //getAllDriversInCell("2203679687295631360");
+    //getDriversInCell("2203679687295631360");
+    //
+    // getDriversInCell("2203694324544176128");
+    //getParentIdArray("2203694324544176128");
+
+    var array = getParentIdArray("2203794989626726499",12,3);
+    array.forEach(function(item){
+            console.log("array = "+ item + "-"+item.id.toString());
+        });
+
+
+
+    //addDriverPosition("2203672884067434496");
+    //addDriverPosition("2203795001640038161");
+    //addDriverPosition("2203795001640038162");
+    //addDriverPosition("2203795001640038163");
+
+    /*addDriverPosition("2203794989626726499");*/
+    addDriverPosition("2203795003930470261");
+    addDriverPosition("2203795004670293457");
+
+    /*var ans = isMemberOfGrid("22036728840674344960").then(function(resolved,reject){
+        console.log("is resolved: " + resolved);
+    });*/
+
 
 }).call(this);
 
+//sinter - intersections of sets
+//sismember - check if is member of set
+//sort - sort members of set
+//exists - check if key exists in redis
+//smove - move a member from one set to another
+//sdiff - subtract multiple sets
+//scard - count members of set
+//RPUSH key value - push specified values at the tail of the list stored at key
+//SETEX - Set key to hold the string value and set key to timeout after

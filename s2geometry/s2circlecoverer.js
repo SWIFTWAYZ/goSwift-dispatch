@@ -5,6 +5,7 @@
 
 var s2 = require("nodes2ts");
 var _ = require('underscore');
+var swift = require("../constants");
 
 const S2_CELL_LEVEL = 12;
 
@@ -66,12 +67,6 @@ function getS2CapRadius(latLng,radius_in_meters){
             console.log("s2cap = " + s2cap.getRectBound().size());
         }
     }
- /*
-    S2CircleCoverer.setS2Cap = function(latLng,radius){
-        this.radius = radius;
-
-    }*/
-
 
     S2CircleCoverer.getS2CapRadius = function(){
         return s2cap;
