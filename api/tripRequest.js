@@ -53,7 +53,6 @@ function arrayCopy(oldArray){
 
     var triprequest = {};
 
-
     triprequest.getTaxi = function(){
 
     }
@@ -67,7 +66,6 @@ function arrayCopy(oldArray){
             //-26.115461, 28.092047
             //-26.135891, 28.117186
 
-            //var hi = new s2.S2LatLng.fromDegrees(-26.115461, 28.092047);
             var lo = new s2.S2LatLng.fromDegrees(-26.135891, 28.117186);
             var hi = new s2.S2LatLng.fromDegrees(-26.129719, 28.131236);
             //-26.135891, 28.117186
@@ -79,8 +77,6 @@ function arrayCopy(oldArray){
             var cityRegion = new s2.S2CellUnion(init.city.lat,init.city.lon);
             cityRegion.initFromIds(data);
             cityRegion.normalize();
-
-            console.log("---------->>----------------");
             var riderSquare = s2circle.S2CircleCoverer.getSquareCovering(riderSquare, 12, 20, 100);
             var riderRegion2 = new s2.S2CellUnion();
             riderRegion2.initRawCellIds(riderSquare);
@@ -90,8 +86,6 @@ function arrayCopy(oldArray){
             var union = intersect_union.getIntersectionUU(cityRegion,riderRegion2); //Google S2 bug fixed
             console.log ("city cells = " + cityRegion.size() + ", rider cells = " + riderRegion2.size() +
                 " - [intersecting cells = " + intersect_union.size() + "]");
-
-            //riderSquare.fromLatLng(hi,lo);
         });
     }
     /**
@@ -100,7 +94,6 @@ function arrayCopy(oldArray){
      */
     triprequest.getIntersectRadiusCells = function(lat,lon,radius){
         redis.redisService.getCityGrid().then(function(data,reject){
-            console.log("---------->>----------------");
             var riderSphere = s2circle.S2CircleCoverer.getCovering(lat,lon,radius,12,26,100);
             console.log("city lat_lon = " + init.city.lat+","+init.city.lon);
             var cityRegion = new s2.S2CellUnion(init.city.lat,init.city.lon);
@@ -116,9 +109,7 @@ function arrayCopy(oldArray){
 
             console.log ("city cells = " + cityRegion.size() + ", rider cells = " + riderRegion.size() +
                 " - [intersecting cells = " + intersect_union.size() + "]");
-
         });
-
     }
     exports.triprequest = triprequest;
 
@@ -126,10 +117,8 @@ function arrayCopy(oldArray){
      * testing ......
      */
 
-    //for(var i = 0; i < 2; i++) {
-        triprequest.getIntersectRadiusCells(-26.217146, 28.356669,2680);
-        //triprequest.getIntersectSquareCells(null)
-    //}
+    triprequest.getIntersectRadiusCells(-26.217146, 28.356669,2680);
+
     //-26.270155, 28.438425 (Spring - outside)
     //-26.152353, 28.255995 (boksburg - outside)
     //27.877844426113754,-25.86464683750316 (outside edge cells)
