@@ -61,7 +61,6 @@ makeS2Union = function(){
             console.log(cellid.toLatLng().toStringDegrees());
         }
     }
-
 }
 
 makeS2Union();
