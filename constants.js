@@ -8,6 +8,7 @@ const S2_CELL_SMALL_SUBURB_LEVEL = 13; //1386091 sqm (1.3 km2)
 const S2_CELL_BIG_MALL_LEVEL = 14;  //346697 sqm
 const S2_CELL_BLOCK_LEVEL = 17; //5417 sqm
 const S2_CELL_HOUSE_LEVEL = 18; //1377 sqm
+const DEFAULT_MAX_CELLS = 1000;
 
 function toRad(degrees){
     var radians = degrees * Math.PI/180;
@@ -44,11 +45,14 @@ function getParentIdAtLevel(level,leaf_id){
 }
 
 exports.S2_CELL_BIG_SUBURB_LEVEL = S2_CELL_BIG_SUBURB_LEVEL;
+exports.DEFAULT_MAX_CELLS = DEFAULT_MAX_CELLS;
+
 exports.toRad = toRad;
 exports.s2CellIDfromLatLng = s2CellIDfromLatLng;
 exports.s2CellfromLatLng = s2CellfromLatLng;
 exports.getQuadIdFromLatLng = getQuadIdFromLatLng;
 exports.getParentIdAtLevel = getParentIdAtLevel;
+
 
 //console.log(s2CellfromLatLng(-26.0309030,28.040768).id.id.toString()+"");
 //console.log(getQuadIdFromLatLng(-26.0309030,28.040768));

@@ -99,7 +99,7 @@ function getS2CapRadius(latLng,radius_in_meters){
         console.log("{"+'"type":"FeatureCollection","features":[');
         results.forEach(function(record){
             var cell = new s2.S2Cell(record);
-            console.log(JSON.stringify(cell.toGEOJSON())+"," );
+            //console.log(JSON.stringify(cell.toGEOJSON())+"," );
             counter++;
             var cell_area = cell.approxArea() * kEarthCircumferenceMeters;
             covering_area += cell_area;
@@ -137,7 +137,6 @@ function getS2CapRadius(latLng,radius_in_meters){
 
         return results;
     }
-
 
     /**
      * divide the bigger cell into child cells of index 0...3

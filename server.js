@@ -26,6 +26,7 @@ var express = require("express");
 var redis = require("./redis/redisProvider");
 var s2circle = require("./s2geometry/s2circlecoverer");
 var s2 = require("nodes2ts");
+var swift = require("./constants");
 var init = require("./config/init");
 var uuid = require('node-uuid');
 var path = require('path');
@@ -50,7 +51,7 @@ app.listen(app.get('port'),function(err,data){
     console.log("Indexing cells for " + cityhub + ","+hub_centre +
         "--[radius ->" + radius + "-centred at = "+lat + ","+lon+"]");
 
-    var city_grid = s2circle.S2CircleCoverer.getCovering(lat,lon,radius,12,14,1000);
+    var city_grid = s2circle.S2CircleCoverer.getCovering(lat,lon,radius,12,14,swift.DEFAULT_MAX_CELLS);
     city_grid.forEach(function(city_cell){
         var city_s2cell = new s2.S2Cell(city_cell)
         var area = (city_s2cell.approxArea()*1000000*1000 * 40075.017).toFixed(0);
