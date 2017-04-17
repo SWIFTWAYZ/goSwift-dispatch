@@ -8,8 +8,8 @@ var redisService = require("../redis/redisProvider");
 var mst = require("../algorithms/minimumSpanningTree");
 var swift = require("../constants");
 
-const driver_hashset = "DRIVERS_HSET";
-const riders_hashset = "RIDERS_HSET";
+/*const driver_hashset = "DRIVERS_HSET";
+const riders_hashset = "RIDERS_HSET";*/
 
 const earth_radius = 1000 * 6378.1; // (km = 6378.1) - radius of the earth
 const default_dispatch_radius = 31885;    //meters
@@ -92,12 +92,9 @@ function logDriverGPSLocation(user_id,mobile,lat,lon){
     var parent_level12 = s2_cellid.parent(12);
     console.log("parent_12 = " + parent_level12.id.toString());
     //sismember key member
-    redis.isMember()//.sismember()
-
+    //redis.isMember();
 
 }
-
-logDriverGPSLocation("tin2yiko",'0847849574',-26.0309030,28.040768);
 
 function addDrivers(){
     mst.readDrivers(function(data){
@@ -118,6 +115,7 @@ function addDrivers(){
         });
     });
 }
+
 /**
  * list drivers within radius of customer centrepoint
  * @param cust_latlng
@@ -131,11 +129,6 @@ function listDriversInRadius(cust_latlng,radius) {
     var driver = redis.getDriverPositions();
 
     driver.forEach(function (each_driver) {
-        //var distance = mst.getDist(gps_driver,gps_customer,2)*1000;
-
-
-        //var driver_s2latlng = new s2.S2LatLng(lat, lon);
-
         var driver_s2cellid = new s2.S2CellId(each_driver);
         var driver = getS2CapAtLatLng(driver_s2latlng, 0);
 
@@ -147,14 +140,11 @@ function listDriversInRadius(cust_latlng,radius) {
     });
 }
 
-
-
-    var keys = redis.keys(function(data){
+var keys = redis.keys(function(data){
         if(data != null) {
             console.log(data + "length = " + data.length);
         }
-    });
-
+});
 
 /**
  * get S2Cap given an axis height and a LatLng
@@ -170,6 +160,7 @@ function getS2CapAtLatLng(latLng,meters) {
         return cap;
     }
 }
+
 /**
  * get bounding rectangle for S2Cap with a given radius and centre point
  * @param point
@@ -193,11 +184,8 @@ function getS2CellArea(s2cell,level){
     var cell_id = getParentCellAtlevel(s2cell,level);
     var s2cell = new s2.S2Cell(cell_id);
     var size = s2cell.approxArea();
-    //console.log("rangeMin - size of cell =" + s2cell.min());
-
     console.log("size of cell at level ->" + level + "=" + size);
     return size;
-    //approxArea
 }
 
 function decimalToBinary(DecimalValue){
@@ -228,6 +216,7 @@ function decimalToBinary(DecimalValue){
 //-14.803729,-153.845548
 
 //logDriverLocation(-26.166329,28.148618,"00002345","0847849574");
+logDriverGPSLocation("tin2yiko",'0847849574',-26.0309030,28.040768);
 
 var s2latlng = new s2.S2LatLng(-26.166329,28.148618);
 

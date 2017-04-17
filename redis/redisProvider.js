@@ -205,6 +205,7 @@ var DEFAULT_CELL_RESOLUTION = 12; /* 3km2 - 6km2*/
 
 }).call(this);
 
+//sadd - "2203795001640038161","0847849574","2017-04-16:11:23:24","0012349999"
 //sinter - intersections of sets
 //sismember - check if is member of set
 //sort - sort members of set

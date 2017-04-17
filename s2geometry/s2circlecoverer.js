@@ -99,14 +99,10 @@ function getS2CapRadius(latLng,radius_in_meters){
         console.log("{"+'"type":"FeatureCollection","features":[');
         results.forEach(function(record){
             var cell = new s2.S2Cell(record);
-            //cell.Cell = cell.id();
-            //cell.title2 = cell.id.id+"";
-            //console.log(cell.id.id+"-" + cell.level);
             console.log(JSON.stringify(cell.toGEOJSON())+"," );
             counter++;
             var cell_area = cell.approxArea() * kEarthCircumferenceMeters;
             covering_area += cell_area;
-            //console.log("cellid = " + record.id + "-area = "+ cell_area.toFixed(3) + "-level="+cell.level);
         });
         console.log("]}");
         console.log("no. of cells in region = " + counter + "-> area = " +covering_area);
