@@ -29,15 +29,12 @@ var DEFAULT_CELL_RESOLUTION = 12; /* 3km2 - 6km2*/
 
     var client = new redis({
       retryStrategy: function (times) {
-          //setTimeout(function(){
               times++;
               if (times === 200) {
                  console.log("---i am giving up...");
                  done();
                 return;
                 }
-          //},1000);
-          //console.log("attempting to connect...");
           return 0;
         }
       });
@@ -167,7 +164,6 @@ var DEFAULT_CELL_RESOLUTION = 12; /* 3km2 - 6km2*/
     }
 
     //attach methods and variables to object and export
-
     redisService.keys = keys;
     redisService.addDriverPosition = addDriverPosition;
     redisService.createCellPosition = createCellPosition;
@@ -180,14 +176,10 @@ var DEFAULT_CELL_RESOLUTION = 12; /* 3km2 - 6km2*/
     redisService.driver_sortedset = driver_sortedset;
     redisService.riders_sortedset = riders_sortedset;
 
-
     exports.redisService = redisService;
 
-    //redisService.getDriverCells();
     //getDriversInCell("2203679687295631360");
-    //
     // getDriversInCell("2203694324544176128");
-    //getParentIdArray("2203694324544176128");
 
     var array = getParentIdArray("2203794989626726499",12,3);
     array.forEach(function(item){
