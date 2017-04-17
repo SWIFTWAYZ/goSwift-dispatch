@@ -41,8 +41,8 @@ function getParentIdAtLevel(level,leaf_id){
     var s2cell = new s2.S2CellId(leaf_id);
     var parent_s2cell = s2cell.parentL(level);
     return parent_s2cell.id.toString();
-    return parent_s2cell.id.toString();
 }
+
 exports.S2_CELL_BIG_SUBURB_LEVEL = S2_CELL_BIG_SUBURB_LEVEL;
 exports.toRad = toRad;
 exports.s2CellIDfromLatLng = s2CellIDfromLatLng;
@@ -57,3 +57,6 @@ exports.getParentIdAtLevel = getParentIdAtLevel;
 console.log(getParentIdAtLevel(12,"2203795019799751829"));
 console.log(getParentIdAtLevel(13,"2203795019799751829"));
 console.log(getParentIdAtLevel(14,"2203795019799751829"));
+
+console.log("from token = " + s2.S2CellId.fromToken("1e9573d").pos());
+console.log("from token = " + s2.S2CellId.fromToken("1e9573e0b6892f11").pos());

@@ -108,7 +108,6 @@ function addDrivers(){
 
             //redis.createCellPosition(driver_s2cellid);
             //var cell_pos = getCellPosition()
-
             //redis.addDriverPosition(cell_pos,driver_s2cellid)
 
             redis.addDriverPosition(redis.driver_hashset,driver_s2cellid);

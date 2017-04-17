@@ -50,8 +50,11 @@ var DEFAULT_CELL_RESOLUTION = 12; /* 3km2 - 6km2*/
     });
 
     /**
-     * retrieve array of parent IDs at level 12 - 14 for given leaf-id
+     * retrieve array of parent IDs at level 12 - 14 for given leaf-id, where start-index
+     * is the minimum level and no_of_levels is additional levels to maximum level
      * @param leaf_id
+     * @param start_index
+     * @param no_of_levels
      * @returns {null}
      */
     var getParentIdArray = function(leaf_id, start_index, no_of_levels){
@@ -75,7 +78,7 @@ var DEFAULT_CELL_RESOLUTION = 12; /* 3km2 - 6km2*/
         var gridArray = getParentIdArray(leaf_id,12,3);
         //could use client.sinter (set intersection) for grid cell where to add driver
         gridArray.forEach(function(item){
-            var grid_id = item.id.toString();
+            var grid_id = item.pos();
             isMemberOfGrid(grid_id).then(function (resolve, reject) {
                 if (resolve) {
                     client.sadd("city_cells:" + grid_id, leaf_id);
@@ -88,12 +91,14 @@ var DEFAULT_CELL_RESOLUTION = 12; /* 3km2 - 6km2*/
     /**
      * Create unique parent cell id each time a driver is created under
      * driver_cell set. No duplicate cell ids
-     * @param driver_id
+     * @param cell_id
      */
     var createCellPosition = function(cell_id){
         //var cell_id = driver_id.parent(DEFAULT_CELL_RESOLUTION);
-        client.sadd(city_cells,cell_id);
-        //console.log(city_cells + ": adding id ="+ cell_id+"/to city grid");
+        var s2cell = new s2.S2CellId(cell_id);
+        if(s2cell.level() < 19){
+            client.sadd(city_cells,cell_id);
+        }
     }
 
     /**
@@ -102,7 +107,6 @@ var DEFAULT_CELL_RESOLUTION = 12; /* 3km2 - 6km2*/
      * @returns {*}, true if member and false if not member
      */
     var isMemberOfGrid = function(cell_id) {
-
         return client.sismember(city_cells, cell_id).then(function (resolve, reject) {
             if(resolve)
             return true;
@@ -111,8 +115,8 @@ var DEFAULT_CELL_RESOLUTION = 12; /* 3km2 - 6km2*/
     }
 
     /**
-     * getCityGrid returns a list of all S2 cells at level 12 that makes up
-     * city boundary under default constraints (min=12, max = 26, max_cells = 500)
+     * getCityGrid returns a list of all S2 cells at level 12-14 that makes up
+     * city boundary under default constraints (min=12, max = 14, max_cells = 1000)
      * @returns {*}
      */
     var getCityGrid = function(){
@@ -126,7 +130,9 @@ var DEFAULT_CELL_RESOLUTION = 12; /* 3km2 - 6km2*/
             }
         });
     }
+
     /**
+     * REDO----
      * retrieve parent_ids from the driver_cell set
      * @param driver_id
      */
@@ -134,7 +140,7 @@ var DEFAULT_CELL_RESOLUTION = 12; /* 3km2 - 6km2*/
         client.smembers(driver_cells,function(err,celldata){
             console.log("driver at level = " + ", retrieved in cell="+celldata[0]);
             return celldata;
-        })
+        });
     }
 
     /**
@@ -179,11 +185,11 @@ var DEFAULT_CELL_RESOLUTION = 12; /* 3km2 - 6km2*/
     exports.redisService = redisService;
 
     //getDriversInCell("2203679687295631360");
-    // getDriversInCell("2203694324544176128");
+    //getDriversInCell("2203694324544176128");
 
     var array = getParentIdArray("2203794989626726499",12,3);
     array.forEach(function(item){
-            console.log("array = "+ item + "-"+item.id.toString());
+            console.log("array = "+ item + "-"+item.pos());
         });
 
     //addDriverPosition("2203672884067434496");
@@ -194,6 +200,7 @@ var DEFAULT_CELL_RESOLUTION = 12; /* 3km2 - 6km2*/
     /*addDriverPosition("2203794989626726499");*/
     addDriverPosition("2203795003930470261");
     addDriverPosition("2203795004670293457");
+    getDriverPositions();
 
 }).call(this);
 
