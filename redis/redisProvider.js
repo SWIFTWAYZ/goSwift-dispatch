@@ -29,13 +29,16 @@ var DEFAULT_CELL_RESOLUTION = 12; /* 3km2 - 6km2*/
 
     var client = new redis({
       retryStrategy: function (times) {
+          var delay = Math.min(times * 50, 2000);
+          return delay;
+          /*
               times++;
               if (times === 200) {
                  console.log("---i am giving up...");
                  done();
                 return;
                 }
-          return 0;
+          return 0;*/
         }
       });
 
@@ -184,33 +187,14 @@ var DEFAULT_CELL_RESOLUTION = 12; /* 3km2 - 6km2*/
 
     exports.redisService = redisService;
 
-    //getDriversInCell("2203679687295631360");
-    //getDriversInCell("2203694324544176128");
-
     var array = getParentIdArray("2203794989626726499",12,3);
     array.forEach(function(item){
             console.log("array = "+ item + "-"+item.pos());
         });
 
-    //addDriverPosition("2203672884067434496");
-    //addDriverPosition("2203795001640038161");
-    //addDriverPosition("2203795001640038162");
-    //addDriverPosition("2203795001640038163");
-
-    /*addDriverPosition("2203794989626726499");*/
     addDriverPosition("2203795003930470261");
     addDriverPosition("2203795004670293457");
     getDriverPositions();
 
 }).call(this);
 
-//sadd - "2203795001640038161","0847849574","2017-04-16:11:23:24","0012349999"
-//sinter - intersections of sets
-//sismember - check if is member of set
-//sort - sort members of set
-//exists - check if key exists in redis
-//smove - move a member from one set to another
-//sdiff - subtract multiple sets
-//scard - count members of set
-//RPUSH key value - push specified values at the tail of the list stored at key
-//SETEX - Set key to hold the string value and set key to timeout after

@@ -6,6 +6,7 @@
 var s2 = require("nodes2ts");
 var _ = require('underscore');
 var swift = require("../constants");
+var redis = require("../redis/redisProvider");
 
 const S2_CELL_LEVEL = 12;
 
@@ -19,9 +20,6 @@ const earth_radius = 1000 * 6378.1; // (km = 6378.1) - radius of the earth
 const default_dispatch_radius = 2680;    //meters
 const kEarthCircumferenceMeters = 1000 * 40075.017;
 var cap_area;
-//min_level = 12
-//max_level = 18
-//max_cells = 100 cells
 
 function EarthMetersToRadians(meters) {
     return (2 * Math.PI) * (meters / kEarthCircumferenceMeters);
@@ -166,8 +164,22 @@ function getS2CapRadius(latLng,radius_in_meters){
     S2CircleCoverer.isContained = function(sub_cell){
     }
 
+    S2CircleCoverer.initialise = function(lat,lon,radius){
+        //min_level,max_level,max_cells
+        var city_grid = this.getCovering(lat,lon,radius,12,14,swift.DEFAULT_MAX_CELLS);//s2circle.S2CircleCoverer
+        //add code to check if redis is connected and ready?
+        city_grid.forEach(function(city_cell){
+            var city_s2cell = new s2.S2Cell(city_cell)
+            var area = (city_s2cell.approxArea()*1000000*1000 * 40075.017).toFixed(0);
+            console.log("adding id="+city_cell.id + ":/to city grid at level = "+
+                city_s2cell.level +"->>["+(area)+"]");
+
+            redis.redisService.createCellPosition(city_cell.id);
+        });
+    }
+
     exports.S2CircleCoverer = S2CircleCoverer;
 
 }).call(this);
 
-exports.getS2CapRadius = getS2CapRadius;
+//exports.getS2CapRadius = getS2CapRadius;

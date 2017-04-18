@@ -51,14 +51,7 @@ app.listen(app.get('port'),function(err,data){
     console.log("Indexing cells for " + cityhub + ","+hub_centre +
         "--[radius ->" + radius + "-centred at = "+lat + ","+lon+"]");
 
-    var city_grid = s2circle.S2CircleCoverer.getCovering(lat,lon,radius,12,14,swift.DEFAULT_MAX_CELLS);
-    city_grid.forEach(function(city_cell){
-        var city_s2cell = new s2.S2Cell(city_cell)
-        var area = (city_s2cell.approxArea()*1000000*1000 * 40075.017).toFixed(0);
-        console.log("adding id="+city_cell.id + ":/to city grid at level = "+city_s2cell.level +"->>["+(area)+"]");
-        redis.redisService.createCellPosition(city_cell.id);
-    });
-
+    s2circle.S2CircleCoverer.initialise(lat,lon,radius);
     console.log("server running on port:"  + init.server.port);
 });
 
