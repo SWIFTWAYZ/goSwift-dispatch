@@ -26,7 +26,7 @@ var redis = redisService.redisService;
  */
 function logDriverLocation(lat,lon,driver_UUID,mobile_number){
       if (isNaN(lat) || isNaN(lon)) {
-            throw new Error('Invalid LatLng object: (' + lat + ', ' + lon + ')');
+            throw new Error('latitude and longitude must be double values: (' + lat + ', ' + lon + ')');
      }
     var s2Latlong = new s2.S2LatLng.fromDegrees(lat,lon);
     console.log("s2latlng = " + s2Latlong);
