@@ -15,7 +15,7 @@
     };
 
     var city = {
-        lat:'-26.104628', //Edenvale - JHB
+        lat:'-26.104628', //Sandton ICC - JHB
         lon: '28.053901',
         radius: '32000',
         name: "Johannesburg",

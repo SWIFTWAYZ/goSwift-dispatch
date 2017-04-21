@@ -87,13 +87,11 @@ function EarthMetersToRadians(meters) {
  */
 function logDriverGPSLocation(user_id,mobile,lat,lon){
     var s2_cellid = swift.s2CellIDfromLatLng(lat,lon);
-    console.log("s2_cellid = " + s2_cellid.id.toString());
+    console.log("s2_cellid = " + s2_cellid.pos());
     //retrieve city cell that this driver belongs to
-    var parent_level12 = s2_cellid.parent(12);
-    console.log("parent_12 = " + parent_level12.id.toString());
-    //sismember key member
-    //redis.isMember();
-
+    //var parent_level12 = s2_cellid.parent(12);
+    //console.log("parent_12 = " + parent_level12.id.toString());
+    redis.addDriverPosition(s2_cellid.pos());
 }
 
 function addDrivers(){
@@ -215,9 +213,10 @@ function decimalToBinary(DecimalValue){
 //-14.803729,-153.845548
 
 //logDriverLocation(-26.166329,28.148618,"00002345","0847849574");
-logDriverGPSLocation("tin2yiko",'0847849574',-26.0309030,28.040768);
+//logDriverGPSLocation("tin2yiko",'0847849574',-26.1309030,28.340768);
+logDriverGPSLocation("tin2yiko",'0847849574',-26.367327,28.345615);
 
-var s2latlng = new s2.S2LatLng(-26.166329,28.148618);
+var s2latlng = new s2.S2LatLng(-26.267329,28.149618);
 
 var radius_rect = calcS2CapSize(s2latlng,18000);
 console.log("size of rect " + radius_rect.size + radius_rect.getVertex(0));

@@ -6,6 +6,7 @@ var s2 = require("nodes2ts");
 var redis = require("../redis/redisProvider");
 var init = require("../config/init");
 var _ = require('underscore');
+var constant = require('../constants');
 var s2circle = require("../s2geometry/s2circlecoverer");
 
 function logRiderLocation(lat,lon,rider_UUID,mobile_number){
@@ -60,6 +61,7 @@ function arrayCopy(oldArray){
      * retrieve cells in customer rectangle that intersect with city-grid
      * @param rect
      */
+    //getRiderGeoSquare
     triprequest.getIntersectSquareCells = function(rect){
         redis.redisService.getCityGrid().then(function(data,reject) {
 
@@ -92,6 +94,8 @@ function arrayCopy(oldArray){
      * retrieve cells from city grid cells that intersect customer circle
      * @param cust_scap
      */
+
+    //getRiderGeoRadius
     triprequest.getIntersectRadiusCells = function(lat,lon,radius){
         redis.redisService.getCityGrid().then(function(data,reject){
             var riderSphere = s2circle.S2CircleCoverer.getCovering(lat,lon,radius,12,26,100);
@@ -117,7 +121,7 @@ function arrayCopy(oldArray){
      * testing ......
      */
 
-    triprequest.getIntersectRadiusCells(-26.217146, 28.356669,2680);
+    triprequest.getIntersectRadiusCells(-26.217146, 28.356669,constant.RIDER_GEO_RADIUS);
 
     //-26.270155, 28.438425 (Spring - outside)
     //-26.152353, 28.255995 (boksburg - outside)

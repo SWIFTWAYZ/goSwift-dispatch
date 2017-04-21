@@ -95,6 +95,7 @@ function getS2CapRadius(latLng,radius_in_meters){
         var results = covering.getCoveringCells(cap2);
 
         console.log("{"+'"type":"FeatureCollection","features":[');
+        //dont really need this loop except for being verbose. turn it off in prooduction
         results.forEach(function(record){
             var cell = new s2.S2Cell(record);
             //console.log(JSON.stringify(cell.toGEOJSON())+"," );
@@ -124,15 +125,15 @@ function getS2CapRadius(latLng,radius_in_meters){
         city_covering.setMaxCells(cells);
 
         var results = city_covering.getCoveringCells(rect_latlng);
+
         results.forEach(function(record){
             var cell = new s2.S2Cell(record);
             counter++;
             var cell_area = cell.approxArea() * kEarthCircumferenceMeters;
             covering_area += cell_area;
-            //console.log(JSON.stringify(cell.toGEOJSON())+",");
+            console.log(JSON.stringify(cell.toGEOJSON())+",");
         });
         console.log("no. of cells in region = " + counter + "-> area = " +covering_area);
-
         return results;
     }
 
@@ -171,8 +172,9 @@ function getS2CapRadius(latLng,radius_in_meters){
         city_grid.forEach(function(city_cell){
             var city_s2cell = new s2.S2Cell(city_cell)
             var area = (city_s2cell.approxArea()*1000000*1000 * 40075.017).toFixed(0);
-            console.log("adding id="+city_cell.id + ":/to city grid at level = "+
-                city_s2cell.level +"->>["+(area)+"]");
+            //console.log("adding id="+city_cell.id + ":/to city grid at level = "+
+              //  city_s2cell.level +"->>["+(area)+"]");
+            console.log(JSON.stringify(city_s2cell.toGEOJSON())+",");
 
             redis.redisService.createCellPosition(city_cell.id);
         });

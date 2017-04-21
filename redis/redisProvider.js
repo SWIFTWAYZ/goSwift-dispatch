@@ -31,14 +31,6 @@ var DEFAULT_CELL_RESOLUTION = 12; /* 3km2 - 6km2*/
       retryStrategy: function (times) {
           var delay = Math.min(times * 50, 2000);
           return delay;
-          /*
-              times++;
-              if (times === 200) {
-                 console.log("---i am giving up...");
-                 done();
-                return;
-                }
-          return 0;*/
         }
       });
 
@@ -78,6 +70,7 @@ var DEFAULT_CELL_RESOLUTION = 12; /* 3km2 - 6km2*/
      * @param leaf_id
      */
     var addDriverPosition = function (leaf_id) {
+        //check if lead_id is object or cellid
         var gridArray = getParentIdArray(leaf_id,12,3);
         //could use client.sinter (set intersection) for grid cell where to add driver
         gridArray.forEach(function(item){
