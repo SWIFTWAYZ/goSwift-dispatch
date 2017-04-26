@@ -11,19 +11,10 @@ var _ = require("underscore");
 (function() {
 
     var redisService,
-        driver_hashset,
-        riders_hashset,
-        driver_sortedset,
-        riders_sortedset,
         driver_cells,
         city_cells;
 
     var redisService = {};
-
-    driver_sortedset = "drivers:list";
-    riders_sortedset = "riders:list";
-    driver_cells     = "driver_cell";
-    city_cells       = "city_cells";
 
     var client = new redis({
       retryStrategy: function (times) {
@@ -239,13 +230,7 @@ var _ = require("underscore");
     redisService.getDriversInCell = getDriversInCell;
     redisService.getCityGrid   = getCityGrid;
 
-    redisService.driver_hashset = driver_hashset;
-    redisService.riders_hashset = riders_hashset;
-    redisService.driver_sortedset = driver_sortedset;
-    redisService.riders_sortedset = riders_sortedset;
-
     exports.redisService = redisService;
-
 
     var array = s2common.getParentIdArray("2203794989626726499",12,3);
     array.forEach(function(item){
