@@ -117,9 +117,9 @@ function getS2CellAreaOfParent(s2cell,level){
 }
 
 function addDriversFromFile(){
-    s2common.readDrivers(function(data) {
-    }).then(function (data) {
-        unreached = data;
+    var filename = '/Users/tinyiko/WebstormProjects/GoSwift/server/config/seeds/Gps_dump2.csv';
+    s2common.readDrivers(filename).then(function (data) {
+        //unreached = data;
         data.forEach(function (each_driver) {
             //can do distance calc here
             //console.log("each driver->"+JSON.stringify(each_driver));

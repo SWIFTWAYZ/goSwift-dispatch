@@ -157,11 +157,9 @@ function getS2CapRadius(latLng,radius_in_meters){
         city_grid.forEach(function(city_cell){
             var city_s2cell = new s2.S2Cell(city_cell)
             var area = (city_s2cell.approxArea()*1000000*1000 * 40075.017).toFixed(0);
-            //console.log("adding id="+city_cell.id + ":/to city grid at level = "+
-              //  city_s2cell.level +"->>["+(area)+"]");
-            console.log(JSON.stringify(city_s2cell.toGEOJSON())+",");
-
-            
+            console.log("adding id="+city_cell.id + ":/to city grid at level = "+
+                city_s2cell.level +"->>["+(area)+"]");
+            //console.log(JSON.stringify(city_s2cell.toGEOJSON())+",");
             redis.redisService.createCellPosition(city_cell.id);
         });
     }

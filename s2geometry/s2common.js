@@ -15,7 +15,6 @@ var gpsPoint = function(lat,lon,isDepart,name){
     this.isDepart = isDepart;
     this.name = name;
     this.distance = 0;
-
 }
 
 function toRad(degrees){
@@ -62,21 +61,22 @@ var distanceCalc = function(start, end, decimals){
  * @param reject
  * @returns {a promise}
  */
-var readDrivers = function() {
+var readDrivers = function(filename) {
     var readLine = Promise.promisify(lineReader.eachLine);
     var promise = new Promise(function(resolve,reject){
-        readLine('/Users/tinyiko/WebstormProjects/GoSwift/server/config/seeds/Gps_dump2.csv', function (line, last) {
+        readLine(filename, function (line, last) {
             var line_str = line.split(",");
             unreached[line_counter] = new gpsPoint(line_str[0], line_str[1], line_str[2], line_str[3]);
-            //reached.push(unreached[line_counter]);
             line_counter++;
-            //console.log("line counter = " + line_counter);
             if (last) {
                 // or check if it's the last one
                 console.log("last item = " + last + "=" + line_counter);
             }
-        }).then(function(){
+        }).then(function(results){
+            //console.log("readline results :"+results);
             resolve(unreached);
+        }).catch(function(error){
+            reject(error.toString());
         });
     });
     return promise;
@@ -284,7 +284,9 @@ function addDriversFromFile(){
 
     var sandton = new s2.S2CellId.fromToken("1e95715000000000");
     console.log("cell-id from token = " + sandton.id);
-    readDrivers().then(function(data){
+    var filename = '/Users/tinyiko/WebstormProjects/GoSwift/server/config/seeds/Gps_dump2.csv';
+    readDrivers(filename).then(function(data){
+        //console.log("readDrivers()----"+data);
         data.forEach(function(each_driver) {
             lat = each_driver.latitude;
             lon = each_driver.longitude;
@@ -293,7 +295,7 @@ function addDriversFromFile(){
 
         });
     }).catch(function(error){
-        console.log(error);
+        console.log("Error logged : " +error);
     });
 }
 
