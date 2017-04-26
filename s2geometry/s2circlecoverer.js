@@ -82,7 +82,7 @@ function getS2CapRadius(latLng,radius_in_meters){
             var cell = new s2.S2Cell(record);
             //console.log(JSON.stringify(cell.toGEOJSON())+"," );
             counter++;
-            var cell_area = cell.approxArea() * kEarthCircumferenceMeters;
+            var cell_area = cell.approxArea() * constants.KEARTH_CIRCUMFERENCE_METERS;
             covering_area += cell_area;
         });
         console.log("]}");
@@ -111,7 +111,7 @@ function getS2CapRadius(latLng,radius_in_meters){
         results.forEach(function(record){
             var cell = new s2.S2Cell(record);
             counter++;
-            var cell_area = cell.approxArea() * kEarthCircumferenceMeters;
+            var cell_area = cell.approxArea() * constants.KEARTH_CIRCUMFERENCE_METERS;
             covering_area += cell_area;
             console.log(JSON.stringify(cell.toGEOJSON())+",");
         });
@@ -149,15 +149,19 @@ function getS2CapRadius(latLng,radius_in_meters){
 
     S2CircleCoverer.initialise = function(lat,lon,radius){
         //min_level,max_level,max_cells
-        var city_grid = this.getCovering(lat,lon,radius,12,14,constants.DEFAULT_CITY_MAX_CELLS);//s2circle.S2CircleCoverer
+        var min = constants.S2_CELL_MIN_LEVEL;
+        var max = constants.S2_CELL_MAX_LEVEL;
+        var max_cells = constants.DEFAULT_CITY_MAX_CELLS;
+        var city_grid = this.getCovering(lat,lon,radius,min,max,max_cells);//s2circle.S2CircleCoverer
         //add code to check if redis is connected and ready?
         city_grid.forEach(function(city_cell){
             var city_s2cell = new s2.S2Cell(city_cell)
             var area = (city_s2cell.approxArea()*1000000*1000 * 40075.017).toFixed(0);
             //console.log("adding id="+city_cell.id + ":/to city grid at level = "+
               //  city_s2cell.level +"->>["+(area)+"]");
-            //console.log(JSON.stringify(city_s2cell.toGEOJSON())+",");
+            console.log(JSON.stringify(city_s2cell.toGEOJSON())+",");
 
+            
             redis.redisService.createCellPosition(city_cell.id);
         });
     }
