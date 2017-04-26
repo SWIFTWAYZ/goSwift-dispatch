@@ -8,11 +8,6 @@ var redisService = require("../redis/redisProvider");
 var s2common = require("../s2geometry/s2common");
 var bigInt = require("big-integer");
 
-const EARTH_RADIUS = 1000 * 6378.1; // (km = 6378.1) - radius of the earth
-const DEFAULT_DISPATCH_RADIUS = 31885;    //meters
-const EARTH_CIRCUMFERENCE_METERS = 1000 * 40075.017;
-const DEFAULT_CELL_RESOLUTION = 12; /* 3km2 - 6km2*/
-
 var redis = redisService.redisService;
 
 /**
