@@ -246,9 +246,9 @@ var _ = require("underscore");
         console.log("results = " + JSON.stringify(results));
     });
 
-    /*
+
     addDriverPosition("2203795003930470261");
-    addDriverPosition("2203795004670293457");
+     /*addDriverPosition("2203795004670293457");
     getDriverPositions();
     */
     //face=0, pos=1e9573d000000004, level=29
