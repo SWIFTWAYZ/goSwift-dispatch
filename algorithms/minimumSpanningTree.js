@@ -33,23 +33,10 @@
 * @params time_window
 */
 
-var s2util = require("./s2GeometryUtility");
-var lineReader = require('line-reader');
-var Promise = require("bluebird");
-var s2 = require("nodes2ts");
+var s2common = require("../s2geometry/s2common");
 
-var line_counter = 0;
 var reached = [];
 var unreached = [];
-var gpsPoint = function(lat,lon,isDepart,name){
-	this.latitude = lat;
-	this.longitude = lon;
-	this.isDepart = isDepart;
-	this.name = name;
-	this.distance = 0;
-
-}
-
 
 if(typeof(Number.prototype.toRad) === "undefined") {
     Number.prototype.toRad = function () {
@@ -57,27 +44,8 @@ if(typeof(Number.prototype.toRad) === "undefined") {
     }
 }
 
-readDrivers = function(cb) {
-    var readLine = Promise.promisify(lineReader.eachLine);
-    readLine('/Users/tinyiko/WebstormProjects/GoSwift/server/config/seeds/Gps_dump2.csv', function (line, last) {
-        var line_str = line.split(",");
-        unreached[line_counter] = new gpsPoint(line_str[0], line_str[1], line_str[2], line_str[3]);
-        line_counter++;
-        if (last) {
-            // or check if it's the last one
-            console.log("last item = " + last + "=" + line_counter);
-        }
-    }).then(function () {
-        //console.log("total distance = " + dist(unreached));
-		sortByMST();
-		cb(reached);
-    }).catch(function (err) {
-        console.log("error message = " + err);
-    });
-}
-
 /**
- * move to s2GeometryUtil
+ * should we move this code to s2GeometryUtil?
  * add distance of all edges in an array and return total distance
  * @param, array - array with edges to be summed
 */
@@ -87,7 +55,7 @@ var dist = function sumEdgeDistance(array){
 
 	unreached.forEach(function(d){
 		if(counter == array.length -1) return;
-		var dist = s2util.distanceCalc(array[counter],array[counter+1]);
+		var dist = s2common.distanceCalc(array[counter],array[counter+1]);
 		total_distance = total_distance+dist;
 		counter++;
 	});
@@ -96,6 +64,7 @@ var dist = function sumEdgeDistance(array){
 }
 
 /**
+ * should we move this code to S2GeometryUtil?
 * function to calculate bearing given 2 GPS points
 */
 var bearing = function getBearing(first_gps, second_gps){
@@ -109,7 +78,6 @@ var bearing = function getBearing(first_gps, second_gps){
 
 /**
 * Function that implements minimum spanning tree (MST) using Prim's algorithm
-*
 */
 var sortByMST = function(){
 
@@ -129,7 +97,7 @@ var sortByMST = function(){
 				var v1 = reached[i];
 				var v2 = unreached[j];
 
-				var route_d = s2util.distanceCalc(v1,v2,2);
+				var route_d = s2common.distanceCalc(v1,v2,2);
 				if(route_d < record){
 
 					record = route_d;
@@ -154,33 +122,31 @@ var sortByMST = function(){
 }
 
 
-exports.readDrivers = readDrivers;
-exports.getDist = s2util.distanceCalc;
+exports.getDist = s2common.distanceCalc;
 
-/*readDrivers(function(results){
-	console.log("results length = "+results.length);
-});*/
-
-readDrivers(function(data){
-	var counter = 0;
-	data.forEach(function(item){
-		counter++
-		var lat = item.latitude; var lon = item.longitude;
-		var str_latlng = item.latitude + "," + item.longitude;
-        var s2Latlong = new s2.S2LatLng.fromDegrees(lat,lon);
-
-		var s2cell = new s2.S2CellId.fromPoint(s2Latlong.toPoint(lat,lon));
-		var s2cell_str = s2cell.id.toString() + "["+new s2.S2Cell(s2cell).level+"]";
-        console.log(s2cell_str);
-        //console.log("item no. = " + counter + "/" +str_latlng+ "/id="+s2cell_str+"/");
-
+s2common.readDrivers(function(data) {
+    //console.log(data);
+    data.forEach(function (each_driver) {
+    	//can do distance calc here
+        console.log("each driver->"+JSON.stringify(each_driver));
+        lat = each_driver.latitude;
+        lon = each_driver.longitude;
+        var s2cellid = s2common.s2CellIDfromLatLng(lat,lon)
+		console.log(s2cellid);
     });
+}).then(function (data) {
+    //console.log("total distance = " + data);
+	unreached = data;
+    sortByMST();
+    //cb(reached);
+}).catch(function (err) {
+    console.log("error message = " + err);
 });
+
 /**
 Algorithm strategies
-- take the longest trip by distance. calculate its bearing.
-iterate through all other trips with a similar bearing with a minimum
-diviation
+- take the longest trip by distance. calculate its bearing. iterate through all other trips
+ with a similar bearing with a minimum deviation
 
 - define the maximum deviation from trip route allowable for 2nd and 3rd pickup
 - define maximum total cost in distance allowable to combine 2 or 3 individual trips

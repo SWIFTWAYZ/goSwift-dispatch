@@ -21,7 +21,7 @@
         name: "Johannesburg",
         centre: "Edenvale"
     };
-
+    //-26.135891, 28.117186 (Edenvale - city centre)
     exports.city = city;
     exports.server = server_config;
 }).call(this);

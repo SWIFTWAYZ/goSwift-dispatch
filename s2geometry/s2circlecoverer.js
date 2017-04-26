@@ -5,38 +5,20 @@
 
 var s2 = require("nodes2ts");
 var _ = require('underscore');
-var swift = require("../constants");
+var constants = require("../constants");
+var s2common = require("./s2common");
 var redis = require("../redis/redisProvider");
 
-const S2_CELL_LEVEL = 12;
-
-const S2_CELL_BIG_SUBURB_LEVEL = 12; //5541846 sqm (5.5 km2)
-const S2_CELL_SMALL_SUBURB_LEVEL = 13; //1386091 sqm (1.3 km2)
-const S2_CELL_BIG_MALL_LEVEL = 14;  //346697 sqm
-const S2_CELL_BLOCK_LEVEL = 17; //5417 sqm
-const S2_CELL_HOUSE_LEVEL = 18; //1377 sqm
-
-const earth_radius = 1000 * 6378.1; // (km = 6378.1) - radius of the earth
-const default_dispatch_radius = 2680;    //meters
-const kEarthCircumferenceMeters = 1000 * 40075.017;
 var cap_area;
-
-function EarthMetersToRadians(meters) {
-    return (2 * Math.PI) * (meters / kEarthCircumferenceMeters);
-}
-
-function toRad(gps_point){
-    return gps_point * Math.PI / 180;
-}
 
 function getS2CapRadius(latLng,radius_in_meters){
     var s2cap_ts;
     if(latLng !== null && typeof(latLng) === 'object') {
-        var radius_radians = EarthMetersToRadians(radius_in_meters);
+        var radius_radians = s2common.EarthMetersToRadians(radius_in_meters);
         axis_height = (radius_radians * radius_radians) / 2;
         s2cap_ts = new s2.S2Cap(latLng.normalized().toPoint(), axis_height);
 
-        var area = (2 * Math.PI * Math.max(0.0,axis_height)) * kEarthCircumferenceMeters;
+        var area = (2 * Math.PI * Math.max(0.0,axis_height)) * constants.KEARTH_CIRCUMFERENCE_METERS;
         cap_area = area;
         console.log("spherical cap area = " + area);
     }
@@ -167,14 +149,14 @@ function getS2CapRadius(latLng,radius_in_meters){
 
     S2CircleCoverer.initialise = function(lat,lon,radius){
         //min_level,max_level,max_cells
-        var city_grid = this.getCovering(lat,lon,radius,12,14,swift.DEFAULT_MAX_CELLS);//s2circle.S2CircleCoverer
+        var city_grid = this.getCovering(lat,lon,radius,12,14,constants.DEFAULT_CITY_MAX_CELLS);//s2circle.S2CircleCoverer
         //add code to check if redis is connected and ready?
         city_grid.forEach(function(city_cell){
             var city_s2cell = new s2.S2Cell(city_cell)
             var area = (city_s2cell.approxArea()*1000000*1000 * 40075.017).toFixed(0);
             //console.log("adding id="+city_cell.id + ":/to city grid at level = "+
               //  city_s2cell.level +"->>["+(area)+"]");
-            console.log(JSON.stringify(city_s2cell.toGEOJSON())+",");
+            //console.log(JSON.stringify(city_s2cell.toGEOJSON())+",");
 
             redis.redisService.createCellPosition(city_cell.id);
         });

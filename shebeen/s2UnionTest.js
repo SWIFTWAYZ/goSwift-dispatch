@@ -4,7 +4,7 @@
 
 var s2 = require("nodes2ts");
 
-var cellId_one = "2203795067297071104,2203794792419164160";
+
 //var cellId_one = "2203794929858117632";
 //var cellId_one = "2203794792419164160";
 //Tulbagh = 2203794929858117632
@@ -12,7 +12,7 @@ var cellId_one = "2203795067297071104,2203794792419164160";
 //"2203840834468577280";
 //"2203676182602317824,2203694187105222656," +
 //"2203734542617935872,2203734645697150976,2203699392605585408";
-
+var cellId_one = "2203795067297071104,2203794792419164160";
 var cellIds_two="2203795001640038161,2203794989626726499,2203795003930470261,"+
     "2203795004670293457,2203795004245194413,2203795027567883285,2203795025995072127";
 
@@ -58,7 +58,7 @@ makeS2Union = function(){
 
             var s2_cell = new s2.S2Cell(cellid);
             //console.log(JSON.stringify(s2_cell.toGEOJSON()) + "");
-            console.log(cellid.toLatLng().toStringDegrees());
+            console.log(cellid.id + "-"+cellid.toLatLng().toStringDegrees());
         }
     }
 }

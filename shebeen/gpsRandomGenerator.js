@@ -77,5 +77,5 @@ function distance(lat1, lon1, lat2, lon2) {
         mappoints.push(randomGeo(centerpoint, distance));
     }
     return mappoints;
-})(centerPoint,1000,20);
+})(centerPoint,22000,2000);
 

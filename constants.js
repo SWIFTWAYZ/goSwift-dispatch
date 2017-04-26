@@ -1,103 +1,39 @@
 /**
  * Created by tinyiko on 2017/04/15.
  */
-var s2 = require("nodes2ts");
 
-const S2_CELL_BIG_SUBURB_LEVEL = 12; //5541846 sqm (5.5 km2)
-const S2_CELL_SMALL_SUBURB_LEVEL = 13; //1386091 sqm (1.3 km2)
-const S2_CELL_BIG_MALL_LEVEL = 14;  //346697 sqm
+const EARTH_RADIUS = 1000 * 6378.1; // (km = 6378.1) - radius of the earth
+//const default_dispatch_radius = 31885;    //meters
+const DEFAULT_DISPATCH_RADIUS = 31885;
+//const kEarthCircumferenceMeters = 1000 * 40075.017;
+const KEARTH_CIRCUMFERENCE_METERS = 1000 * 40075.017;
+
+const S2_CELL_MIN_LEVEL = 12; //5541846 sqm (5.5 km2)
+const S2_CELL_MIDDLE_LEVEL = 13; //1386091 sqm (1.3 km2)
+const S2_CELL_MAX_LEVEL = 14;  //346697 sqm
 const S2_CELL_BLOCK_LEVEL = 17; //5417 sqm
 const S2_CELL_HOUSE_LEVEL = 18; //1377 sqm
-const DEFAULT_MAX_CELLS = 1000;
+const DEFAULT_CITY_MAX_CELLS = 1000;
 
 const RIDER_GEO_RADIUS = 2680;
+const DEFAULT_RIDER_MAX_CELLS = 100;
 
-function toRad(degrees){
-    var radians = degrees * Math.PI/180;
-    return radians;
-}
+const EXPIRE_DRIVER_GPS = 3600; //60 minutes
+const EXPIRE_PASSENGER_GPS = 600; //10 minutes
 
-/**
- * returns a S2CellId from a latlng
- * @param lat
- * @param lon
- * @returns {s2.S2CellId.fromPoint}
- */
-function s2CellIDfromLatLng(lat,lon){
-    if(isNaN(lat) || isNaN(lon)){
-        throw new Error("latitude and longitude must be double values");
-    }
-    var s2_latlng = new s2.S2LatLng.fromDegrees(lat,lon);
-    var s2_point = s2_latlng.toPoint();
-    var s2_cellid = new s2.S2CellId.fromPoint(s2_point);
+exports.S2_CELL_MIN_LEVEL = S2_CELL_MIN_LEVEL;
+exports.S2_CELL_MAX_LEVEL = S2_CELL_MAX_LEVEL
+exports.DEFAULT_CITY_MAX_CELLS = DEFAULT_CITY_MAX_CELLS;
+exports.DEFAULT_RIDER_MAX_CELLS = DEFAULT_RIDER_MAX_CELLS;
+exports.S2_CELL_MIDDLE_LEVEL = S2_CELL_MIDDLE_LEVEL;
 
-    return s2_cellid;
-}
-
-/**
- * Returns a S2Cell object from a latlng
- * @param lat
- * @param lon
- * @returns {S2Cell}
- */
-function s2CellfromLatLng(lat,lon){
-    if(isNaN(lat) || isNaN(lon)){
-        throw new Error("latitude and longitude must be double values");
-    }
-    var s2_latlng = s2.S2LatLng.fromDegrees(lat,lon);
-    var s2cell = new s2.S2Cell.fromLatLng(s2_latlng);
-    return s2cell;
-}
-
-/**
- * get a hilbert curve key/id from a latlng
- * @param lat
- * @param lon
- * @returns {string}
- */
-function getQuadIdFromLatLng(lat,lon){
-    var id = s2CellIDfromLatLng(lat,lon).id+"";
-    return id;
-}
-
-/**
- * given a level and leaf id, this function returns id of parent
- * @param level
- * @param leaf_id
- */
-function getParentIdAtLevel(level,leaf_id){
-    if(level < 30 && level > 1) {
-        var s2cell = new s2.S2CellId(leaf_id);
-        var parent_s2cell = s2cell.parentL(level);
-        return parent_s2cell.id.toString();
-    }
-    else{
-        throw new Error("Out of bounds error (level must be between 1 and 30)")
-    }
-}
-
-exports.S2_CELL_BIG_SUBURB_LEVEL = S2_CELL_BIG_SUBURB_LEVEL;
-exports.DEFAULT_MAX_CELLS = DEFAULT_MAX_CELLS;
 exports.RIDER_GEO_RADIUS = RIDER_GEO_RADIUS;
+exports.EXPIRE_DRIVER_GPS = EXPIRE_DRIVER_GPS;
+exports.EXPIRE_PASSENGER_GPS = EXPIRE_PASSENGER_GPS;
 
-exports.toRad = toRad;
-exports.s2CellIDfromLatLng = s2CellIDfromLatLng;
-exports.s2CellfromLatLng = s2CellfromLatLng;
-exports.getQuadIdFromLatLng = getQuadIdFromLatLng;
-exports.getParentIdAtLevel = getParentIdAtLevel;
-
-//console.log(getParentIdAtLevel(12,"2203795019799751829"));
-
-console.log(s2CellIDfromLatLng(-26.0309030,28.040768).id.toString());
-console.log(s2CellfromLatLng(-26.0309030,28.040768).id.id.toString()+"");
-console.log(getQuadIdFromLatLng(-26.0309030,28.040768));
-//2203795001640038161
-//console.log(getS2CellLevel(s2CellfromLatLng(-26.0309030,28.040768)));
+exports.KEARTH_CIRCUMFERENCE_METERS = KEARTH_CIRCUMFERENCE_METERS;
+exports.EARTH_RADIUS = EARTH_RADIUS;
 
 
-//console.log(getParentIdAtLevel(12,"2203795019799751829"));
-/*console.log(getParentIdAtLevel(13,"2203795019799751829"));
-console.log(getParentIdAtLevel(14,"2203795019799751829"));
 
-console.log("from token = " + s2.S2CellId.fromToken("1e9573d").pos());
-console.log("from token = " + s2.S2CellId.fromToken("1e9573e0b6892f11").pos());*/
+

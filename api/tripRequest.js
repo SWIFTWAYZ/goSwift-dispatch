@@ -46,17 +46,10 @@ function arrayClone( arr ) {
     }
 }
 
-function arrayCopy(oldArray){
-    return JSON.parse(JSON.stringify(oldArray))
-}
-
 (function(){
 
     var triprequest = {};
 
-    triprequest.getTaxi = function(){
-
-    }
     /**
      * retrieve cells in customer rectangle that intersect with city-grid
      * @param rect
@@ -65,16 +58,11 @@ function arrayCopy(oldArray){
     triprequest.getIntersectSquareCells = function(rect){
         redis.redisService.getCityGrid().then(function(data,reject) {
 
-            //-26.115461, 28.092047
-            //-26.135891, 28.117186
-
             var lo = new s2.S2LatLng.fromDegrees(-26.135891, 28.117186);
             var hi = new s2.S2LatLng.fromDegrees(-26.129719, 28.131236);
-            //-26.135891, 28.117186
-            //-26.129719, 28.131236
+
             var riderSquare = s2.S2LatLngRect.fromLatLng(lo, hi);
 
-            //-26.135891, 28.117186 (Edenvale - city centre)
             console.log("city lat_lon = " + init.city.lat+","+init.city.lon);
             var cityRegion = new s2.S2CellUnion(init.city.lat,init.city.lon);
             cityRegion.initFromIds(data);
@@ -98,7 +86,11 @@ function arrayCopy(oldArray){
     //getRiderGeoRadius
     triprequest.getIntersectRadiusCells = function(lat,lon,radius){
         redis.redisService.getCityGrid().then(function(data,reject){
-            var riderSphere = s2circle.S2CircleCoverer.getCovering(lat,lon,radius,12,26,100);
+            var min = constant.S2_CELL_MIN_LEVEL;
+            var max = constant.S2_CELL_MAX_LEVEL;
+            var no_of_cells = constant.DEFAULT_RIDER_MAX_CELLS;
+
+            var riderSphere = s2circle.S2CircleCoverer.getCovering(lat,lon,radius,min,max,no_of_cells);
             console.log("city lat_lon = " + init.city.lat+","+init.city.lon);
             var cityRegion = new s2.S2CellUnion(init.city.lat,init.city.lon);
             cityRegion.initFromIds(data);
