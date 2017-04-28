@@ -7,6 +7,7 @@ var Promise = require("bluebird");
 var s2 = require("nodes2ts");
 var constants = require("../constants");
 
+var i = 0;
 var line_counter = 0;
 var unreached = [];
 var gpsPoint = function(lat,lon,isDepart,name){
@@ -153,26 +154,32 @@ var getChildrenCellIds = function(cell_id){
     return array;
 }
 
-
+var node_array = [];
 function getFirstLeafCellOfBranch (parent){
+
     if(parent.isLeaf() == true) return;
     //var s2cell_centre = null;
     while(i < 18){
         s2cell_centre = parent.subdivide()[0];
         console.log(s2cell_centre + "=" + s2cell_centre.id.id +"="+i);
         i++;
+        node_array.push(s2cell_centre);
         getFirstLeafCellOfBranch(s2cell_centre);
     }
+    return node_array;
 }
 
+var node_array2 = []
 function getLastLeafCellOfBranch(parent){
     if(parent.isLeaf() == true) return;
     while(count < 18){
         var s2cell_centre = parent.subdivide()[3];
         console.log(s2cell_centre + "=" + s2cell_centre.id.id +"="+count);
         count++;
+        node_array2.push(s2cell_centre);
         getLastLeafCellOfBranch(s2cell_centre);
     }
+    return node_array2;
 }
 //calculate cell-id range for leaf cells contained in a particular cell
 //get minimum leaf-cell id (level 30) from quad tree (level 14)c
@@ -332,6 +339,8 @@ addDriversFromFile()
 exports.getChildrenCellIds = getChildrenCellIds;
 exports.getS2CellIdAtLevel = getS2CellIdAtLevel;
 exports.getParentIdArray = getParentIdArray;
+exports.getFirstLeafCellOfBranch = getFirstLeafCellOfBranch;
+exports.getLastLeafCellOfBranch = getLastLeafCellOfBranch;
 
 exports.toRad = toRad;
 exports.s2CellIDfromLatLng = s2CellIDfromLatLng;

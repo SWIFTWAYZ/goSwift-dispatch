@@ -77,7 +77,7 @@ function getS2CapRadius(latLng,radius_in_meters){
         var results = covering.getCoveringCells(cap2);
 
         console.log("{"+'"type":"FeatureCollection","features":[');
-        //dont really need this loop except for being verbose. turn it off in prooduction
+        //dont really need this loop except for being verbose. turn it off in production
         results.forEach(function(record){
             var cell = new s2.S2Cell(record);
             //console.log(JSON.stringify(cell.toGEOJSON())+"," );

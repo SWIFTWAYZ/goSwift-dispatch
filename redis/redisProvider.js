@@ -14,6 +14,8 @@ var _ = require("underscore");
         driver_cells,
         city_cells;
 
+        city_cells       = "city_cells";
+
     var redisService = {};
 
     var client = new redis({
@@ -61,8 +63,11 @@ var _ = require("underscore");
     var createCellPosition = function(cell_id){
         //var cell_id = driver_id.parent(DEFAULT_CELL_RESOLUTION);
         var s2cell = new s2.S2CellId(cell_id);
+        console.log("createCellPosition broken = " + cell_id);
         if(s2cell.level() < 19){
+
             client.sadd(city_cells,cell_id);
+            console.log("createCellPosition "+cell_id);
         }
     }
 

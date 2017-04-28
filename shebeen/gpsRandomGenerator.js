@@ -2,31 +2,14 @@
  * Created by tinyiko on 2017/03/30.
  */
 
-
-var immediate = function(i){
-    console.log("immediate function, i =" + i);
-
-}(4)
-
-
-var obj = {num: 3};
-var addNumber = function(a){
-    return this.num + a;
-}
-
-console.log("hello GPS script");
-
 var centerPoint = {
     latitude: -26.029613,
     longitude: 28.036167
 
-    //-26.029246, 28.033959 - wroxham rd
+    //-26.029246, 28.033959 - wroxham street, paulshof
 
     //latitude: -26.136208,
     //longitude: 28.118119
-
-    //latitude: 5.600254,
-    //longitude: -0.178466
 };
 
 //generateMapPoints(centerPoint,21000,30);
@@ -77,5 +60,5 @@ function distance(lat1, lon1, lat2, lon2) {
         mappoints.push(randomGeo(centerpoint, distance));
     }
     return mappoints;
-})(centerPoint,22000,2000);
+})(centerPoint,22000,200);
 
