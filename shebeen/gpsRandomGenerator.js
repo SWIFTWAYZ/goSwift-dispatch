@@ -60,5 +60,5 @@ function distance(lat1, lon1, lat2, lon2) {
         mappoints.push(randomGeo(centerpoint, distance));
     }
     return mappoints;
-})(centerPoint,22000,200);
+})(centerPoint,22000,300);
 

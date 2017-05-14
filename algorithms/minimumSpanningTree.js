@@ -32,6 +32,7 @@
 * @params distance, cost = distance (assumption - we ignore other costs like time, money etc)
 * @params time_window
 */
+"use strict";
 
 var s2common = require("../s2geometry/s2common");
 
@@ -129,8 +130,8 @@ s2common.readDrivers(function(data) {
     data.forEach(function (each_driver) {
     	//can do distance calc here
         console.log("each driver->"+JSON.stringify(each_driver));
-        lat = each_driver.latitude;
-        lon = each_driver.longitude;
+        var lat = each_driver.latitude;
+        var lon = each_driver.longitude;
         var s2cellid = s2common.s2CellIDfromLatLng(lat,lon)
 		console.log(s2cellid);
     });

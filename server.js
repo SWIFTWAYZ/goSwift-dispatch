@@ -20,6 +20,7 @@
  * -
  * Author: Tinykov
  */
+"use strict";
 
 var http = require("http");
 var express = require("express");
@@ -28,9 +29,10 @@ var s2circle = require("./s2geometry/s2circlecoverer");
 var init = require("./config/init");
 var uuid = require('node-uuid');
 var path = require('path');
+var logger = require("./config/logutil").logger;
 
 var app = express();
-console.log(JSON.stringify(init.server));
+logger.log(JSON.stringify(init.server));
 
 app.set("port",process.env.PORT||init.server['port']);
 
@@ -46,15 +48,15 @@ app.listen(app.get('port'),function(err,data){
     var cityhub = init.city.name;
     var hub_centre = init.city.centre;
 
-    console.log("Indexing cells for " + cityhub + ","+hub_centre +
+    logger.log("Indexing cells for " + cityhub + ","+hub_centre +
         "--[radius ->" + radius + "-centred at = "+lat + ","+lon+"]");
 
     s2circle.S2CircleCoverer.initialise(lat,lon,radius);
-    console.log("server running on port:"  + init.server.port);
+    logger.log("server running on port:"  + init.server.port);
 });
 
 app.all("*",function(req,res){
-        console.log("request coming ...." + req);
+        logger.log("request coming ...." + req);
         res.send("responding with text....." + JSON.stringify(init));
         //res.sendStatus(200);
 });

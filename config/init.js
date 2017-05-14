@@ -5,6 +5,9 @@
  * This file initialiazes config data for the dispatch and
  * redis servers. Also used to initialize config data for rabbitMQ
  */
+
+"use strict";
+
 (function(){
 
     var server_config = {
@@ -19,7 +22,7 @@
         lon: '28.053901',
         radius: '32000',
         name: "Johannesburg",
-        centre: "Edenvale"
+        centre: "Sandton ICC"
     };
     //-26.135891, 28.117186 (Edenvale - city centre)
     exports.city = city;

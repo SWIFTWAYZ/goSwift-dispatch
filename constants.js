@@ -1,6 +1,7 @@
 /**
  * Created by tinyiko on 2017/04/15.
  */
+"use strict";
 
 const EARTH_RADIUS = 1000 * 6378.1; // (km = 6378.1) - radius of the earth
 //const default_dispatch_radius = 31885;    //meters

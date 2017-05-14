@@ -1,6 +1,9 @@
 /**
  * Created by tinyiko on 2017/04/09.
  */
+
+"use strict";
+
 var s2 = require('s2geometry-node');
 var _ = require('underscore');
 
@@ -12,7 +15,7 @@ function EarthMetersToRadians(meters) {
     return (2 * Math.PI) * (meters / kEarthCircumferenceMeters);
 }
 
-distanceCalc = function(start, end, decimals){
+var distanceCalc = function(start, end, decimals){
     decimals = decimals || 2;
     var earthRadius = 6371; // km
     //console.log("GPS=latitude distanceCalc = " + start + "|" + end);

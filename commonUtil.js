@@ -1,6 +1,7 @@
 /**
  * Created by tinyiko on 2017/04/22.
  */
+"use strict";
 
 function decimalToBinary(DecimalValue){
     var BinaryValue = '';
