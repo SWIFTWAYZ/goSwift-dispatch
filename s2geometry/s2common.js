@@ -105,12 +105,20 @@ var s2common = (function(){
     s2common.getParentIdArray = function(leaf_id, start_index, no_of_levels){
         var s2cell = new s2.S2CellId(leaf_id);
         var parentCellsArray = new Array();
-        if(s2cell.isLeaf()){
+
+        var index_total = start_index + no_of_levels;
+        var cell_level = s2cell.level();
+
+        if(index_total < cell_level){
             var total = start_index + no_of_levels;
             for(var i = start_index; i < total; i++){
                 var parent12 = s2cell.parentL(i);
                 parentCellsArray.push(parent12);
             }
+        }
+        else{
+            throw Error("Cant get parent at level="+index_total +
+                " for a cell:" + leaf_id + " at level="+cell_level+"");
         }
         return parentCellsArray;
     }
@@ -125,7 +133,6 @@ var s2common = (function(){
             throw new Error("key not integer string  e.g.'2203794985692692496'");
         }
         var s2cell_id = new s2.S2CellId(cell_id);
-
         if(s2cell_id.isLeaf() == false) {
             return new s2.S2Cell(s2cell_id).subdivide();
         }
@@ -172,7 +179,7 @@ var s2common = (function(){
         var s2_point = s2_latlng.toPoint();
         var s2_cellid = new s2.S2CellId.fromPoint(s2_point);
 
-        logger.debug(s2_cellid.toToken());
+        //logger.debug(s2_cellid.toToken());
         return s2_cellid;
     }
 
@@ -200,13 +207,18 @@ var s2common = (function(){
      * @param leaf_id
      */
     s2common.getParentIdAtLevel = function(level,leaf_id){
-        if(level < 30 && level > 1) {
-            var s2cell = new s2.S2CellId(leaf_id);
+        if(level > 30 || level < 1){
+            throw Error("level out of bounds, should be between 1 - 30");
+        }
+        var s2cell = new s2.S2CellId(leaf_id);
+        if(s2cell.isValid() == false) throw Error("Invalid cell id");
+        if(s2cell.level() > level){
             var parent_s2cell = s2cell.parentL(level);
             return parent_s2cell.id.toString();
         }
         else{
-            throw new Error("Out of bounds error (level must be between 1 and 30)")
+            throw Error("parent level must be less than " +s2cell.level() +
+                ", current level = "+level);
         }
     }
 
@@ -234,7 +246,7 @@ var s2common = (function(){
         //return intersectArray;
     };
 
-     s2common.addDriversFromFile = function(){
+    s2common.addDriversFromFile = function(){
         var sandton_near = new s2.S2CellId("2203792318518001664").getEdgeNeighbors();
         logger.log("edge neighbors = "+sandton_near);
 
@@ -260,8 +272,13 @@ var s2common = (function(){
 
 exports.s2common = s2common;
 
-//s2common.addDriversFromFile();
-s2common.s2CellIDfromLatLng(-26.270155, 28.438425);
+//s2common.addDriversFromFile();//-26.270155, 28.438425
+var id = s2common.s2CellIDfromLatLng(-26.270155, 28.438425);
+var parent = s2common.getParentIdAtLevel(29,id.pos());
+var s2id = new s2.S2CellId(parent);
+//logger.log(s2id.isValid() + "-"+s2id);
+//var parentArray = s2common.getParentIdArray(id.pos(),26,3);
+//logger.log(parentArray);
 //var children = s2common.getChildrenCellIds("2203793418029629440");
 
 
