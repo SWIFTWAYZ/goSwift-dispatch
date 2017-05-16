@@ -56,22 +56,20 @@ var driverLocation = (function(){
      * @param cust_latlng
      * @param radius
      */
-    driverLocation.listDriversInRadius = function(cust_latlng,radius) {
-        var cap = getS2CapAtLatLng(cust_latlng, radius);
-
-        //get all drivers in every cell for now. in future, we must optimize to get only drivers
-        //in cells that intersect the customer spherical cap//use S2Region.getCovering() or similar
-        var driver = redis.getDriverPositions();
-
-        driver.forEach(function (each_driver) {
-            var driver_s2cellid = new s2.S2CellId(each_driver);
-            var driver = getS2CapAtLatLng(driver_s2latlng, 0);
-
-            if (cap.contains(driver)) {
-                logger.debug("is driver within radius?=" + radius + "->" +
-                    cap.contains(driver));
-            }
+    driverLocation.listDriversInRadius = function(driverKey,radius) {
+        var cap = driverLocation.getS2CapFromKey(driverKey, radius);
+        redis.getDriverPositions(driverKey,function(driver){
+            driver.forEach(function (each_driver) {
+                var driver_s2cellid = new s2.S2CellId(each_driver);
+                logger.log("each driver = "+each_driver);
+                var driver = driverLocation.getS2CapFromKey(each_driver, 0);
+                if(cap.contains(driver_s2cellid.toPoint())){
+                    logger.log("Testing....contains..."+each_driver);
+                }
+                logger.log("-------------------------------------");
+            });
         });
+
     }
 
     /**
@@ -80,11 +78,13 @@ var driverLocation = (function(){
      * @param meters
      * @returns {s2.S2Cap}
      */
-    driverLocation.getS2CapAtLatLng = function(latLng,meters) {
-        if(latLng !== null && typeof(latLng) === 'object') {
-            var radius_radians = EarthMetersToRadians(meters);
+    driverLocation.getS2CapFromKey = function(key,meters) {
+        //if(latLng !== null && typeof(latLng) === 'object') {
+        if(isNaN(key) === false){
+            var s2_point = new s2.S2CellId(key).toPoint();
+            var radius_radians = s2common.EarthMetersToRadians(meters);
             var axis_height = (radius_radians * radius_radians) / 2;
-            var cap = new s2.S2Cap(latLng.normalized().toPoint(), axis_height);
+            var cap = new s2.S2Cap(s2_point, axis_height);
             return cap;
         }
     }
@@ -97,7 +97,7 @@ var driverLocation = (function(){
      */
     driverLocation.getS2CapRectBound = function(latLng,radius_meters){
         if(latLng !== null && typeof(latLng) === 'object') {
-            var cap = getS2CapAtLatLng(latLng,radius_meters);
+            var cap = driverLocation.getS2CapAtLatLng(latLng,radius_meters);
             var rect = cap.getRectBound();
             //logger.debug("radius ->" + axis_height + "\n"+"area ->" + rect.size());
             return rect;
@@ -109,7 +109,6 @@ var driverLocation = (function(){
      * review whether we should pass an S2CellId or S2Cell
      */
     driverLocation.getS2CellAreaOfParent = function(s2cell,level){
-
         if(s2cell.isLeaf() && level < s2cell.level() ){
             var cell_id = getParentCellAtlevel(s2cell,level);
             var s2cell = new s2.S2Cell(cell_id);
@@ -128,18 +127,16 @@ var driverLocation = (function(){
                 var lon = each_driver.longitude;
                 driverLocation.logDriverGPSLocation("000121","0767892416",lat,lon);
             });
-
         }).catch(function (err) {
             console.log(err);
             logger.debug("error message = " + err);
         });
     }
-
-
     return driverLocation;
 }).call(this);
 
 exports.driverLocation = driverLocation;
 
 //driverLocation.addDriversFromFile();
-driverLocation.getParentCellAtlevel("2203794861138640897",12);
+//driverLocation.getParentCellAtlevel("2203794861138640897",12);
+driverLocation.listDriversInRadius("2203795001640038161",100);
