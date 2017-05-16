@@ -111,6 +111,13 @@ var provider = (function() {
             })
     }
 
+    provider.getVehiclePositionByRange = function(vehicle,index_start,index_end,cb){
+            client.zrange(VEHICLE_KEY+vehicle,index_start,index_end,'withscores').then(function(results){
+                logger.log(results);
+                cb(results);
+            });
+    }
+
     provider.getVehiclePositionAndScore = function(vehicle_id,cb){
             client.zrange(VEHICLE_KEY+vehicle_id,0,-1,'withscores').then(function(results){
                 logger.log(results);
@@ -270,7 +277,7 @@ try{
     var vehiclekey = "2203795008470789909";
     var vehicleId = "004458";
 
-    provider.getVehiclePositionAndScore(vehicleId,function(results){
+    provider.getVehiclePositionByRange(vehicleId,0,4,function(results){
         logger.log("----withscores >>"+results.length);
     })
     provider.getVehiclePosition(vehicleId,function(results){
