@@ -60,23 +60,23 @@ var tripRequest = (function(){
     //getRiderGeoSquare
     tripRequest.getIntersectSquareCells = function(rect){
         redis.getCityGrid(function(data){
-                var lo = new s2.S2LatLng.fromDegrees(-26.135891, 28.117186);
-                var hi = new s2.S2LatLng.fromDegrees(-26.129719, 28.131236);
-                var riderSquare = s2.S2LatLngRect.fromLatLng(lo, hi);
+            var lo = new s2.S2LatLng.fromDegrees(-26.135891, 28.117186);
+            var hi = new s2.S2LatLng.fromDegrees(-26.129719, 28.131236);
+            var riderSquare = s2.S2LatLngRect.fromLatLng(lo, hi);
 
-                logger.info("city lat_lon = " + init.city.lat+","+init.city.lon);
-                var cityRegion = new s2.S2CellUnion(init.city.lat,init.city.lon);
-                cityRegion.initFromIds(data);
-                cityRegion.normalize();
-                var riderSquare = s2circle.S2CircleCoverer.getSquareCovering(riderSquare, 12, 20, 100);
-                var riderRegion2 = new s2.S2CellUnion();
-                riderRegion2.initRawCellIds(riderSquare);
-                riderRegion2.normalize();
+            logger.info("city lat_lon = " + init.city.lat+","+init.city.lon);
+            var cityRegion = new s2.S2CellUnion(init.city.lat,init.city.lon);
+            cityRegion.initFromIds(data);
+            cityRegion.normalize();
+            var riderSquare = s2circle.S2CircleCoverer.getSquareCovering(riderSquare, 12, 20, 100);
+            var riderRegion2 = new s2.S2CellUnion();
+            riderRegion2.initRawCellIds(riderSquare);
+            riderRegion2.normalize();
 
-                var intersect_union = new s2.S2CellUnion();
-                var union = intersect_union.getIntersectionUU(cityRegion,riderRegion2); //Google S2 bug fixed
-                logger.debug ("city cells = " + cityRegion.size() + ", rider cells = " + riderRegion2.size() +
-                    " - [intersecting cells = " + intersect_union.size() + "]");
+            var intersect_union = new s2.S2CellUnion();
+            var union = intersect_union.getIntersectionUU(cityRegion,riderRegion2); //Google S2 bug fixed
+            logger.debug ("city cells = " + cityRegion.size() + ", rider cells = " + riderRegion2.size() +
+                " - [intersecting cells = " + intersect_union.size() + "]");
 
         });
     }
