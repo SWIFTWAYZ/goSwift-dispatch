@@ -13,7 +13,7 @@ var logger = require("../config/logutil").logger;
 var provider = (function() {
 
     var driver_cells,
-        city_cells = "city_cells";
+        CITY_CELLS = "city_cells";
     var gridArray = null;
     var client = new redis({
         retryStrategy: function (times) {
@@ -53,31 +53,54 @@ var provider = (function() {
         return v+"]";
     }
 
+    //----------------------------------------methods to add driver position--------------------------------------------
+    provider.loop = function(item){
+        var promise = new Promise(function(resolve,reject){
+            client.sismember(CITY_CELLS,item).then(function(results) {
+                if (results) {
+                    resolve(item);
+                } else {
+                    reject(item);
+                }
+            });
+        });
+        return promise;
+    }
+
+    provider.getCellforVehicleKey = function(vehicleKey,vehicle_id,cb){
+        var cellArray = s2common.getParentIdArray(vehicleKey,12,3);
+        for(var i = 0; i < cellArray.length; i++){
+            var item = cellArray[i].pos();
+            provider.loop(item).then(function(cell){
+                logger.log("loop, index = " + i + "cell="+cell);
+                if(cell)
+                    cb(cell);
+            }).catch(function(error){
+                logger.log("not a member = " + error);
+            });
+        }
+    }
+
     /**
      * get leaf S2's parent at level 12-14. Then check if each of the leaf's parent
      * IDs are members of city_cells redis key (i.e. valid grid cells). if so, add
      * the driver's position key to the grid cell.
      * @param leaf_id
      */
-    provider.addDriverPosition = function (leaf_id) {
-        gridArray = s2common.getParentIdArray(leaf_id,12,3);
-        //logger.log("grid leaf_id ="+leaf_id + S2ArrayToString(gridArray));
-        gridArray.forEach(function(item){
-            var member_grid = client.sismember("city_cells",item.pos()).then(function(results) {
-                if (results) {
-                        return results;
-                }
-                return null;
-            }).then(function(id){
-                if(id){
-                    var grid_cell = item.pos()+"";
-                    client.sadd("city_cells:" + grid_cell, leaf_id);
-                    logger.log(leaf_id + "|"+grid_cell+ "=is member of redis");
-                }
+    provider.addDriverPosition = function (leaf_id,vehicle_id) {
+        provider.getCellforVehicleKey(leaf_id,vehicle_id,function(grid_cell){
+            client.sadd("city_cells:" + grid_cell, leaf_id).then(function(results){
+                logger.log("adding key = " + leaf_id + "-to grid|"+grid_cell+ " = results: "+results);
             });
         });
     }
 
+    provider.addVehiclePosition = function(driverKey,vehicle_id){
+        //zadd vehicle:001 1493758483 2203795001640038161
+        var key = "vehicle:"+vehicle_id;
+        var cell = null;
+    }
+    //----------------------------------------end of methods to add driver position-------------------------------------
     /**
      * Create unique parent cell id each time a driver is created under
      * driver_cell set. No duplicate cell ids
@@ -108,10 +131,13 @@ var provider = (function() {
      * retrieve parent_ids from the driver_cell set
      * @param driver_id
      */
-    provider.getDriverPositions = function(){
-        client.smembers(driver_cells,function(err,celldata){
-            console.log("driver at level = " + ", retrieved in cell="+celldata[0]);
-            return celldata;
+    provider.getDriverPositions = function(driver_key,cb){
+        //driver_cells
+        var key = "city_cells:2203795067297071104";
+        logger.log(key);
+        client.smembers(key).then(function(celldata){
+            logger.log("driver at level = " + ", retrieved in cell="+celldata[0]);
+            cb(celldata);
         });
     }
 
@@ -121,20 +147,20 @@ var provider = (function() {
      */
     provider.getDriversInCell = function(s2cell_id,cb){
         if(new s2.S2CellId(s2cell_id).isLeaf()){
-             cb(null);
+            cb(null);
         }
         else {
-                client.smembers("city_cells:" + s2cell_id).then(function (results) {
+            client.smembers("city_cells:" + s2cell_id).then(function (results) {
                 //logger.log(results);
-                    if (results.length > 0) {
-                        var array = _.toArray(results);
-                        cb(array)
-                    }
-                    else {
-                        logger.log("no members " + results);
-                        cb(null);
-                    }
-                });
+                if (results.length > 0) {
+                    var array = _.toArray(results);
+                    cb(array)
+                }
+                else {
+                    logger.log("no members " + results);
+                    cb(null);
+                }
+            });
         }
     }
 
@@ -196,6 +222,13 @@ exports.provider = provider;
 
 //2203795067297071104
 //2203793418029629440
-provider.getDriversInCell("2203793418029629440",function(data){
-    logger.log("driver locations in cell = " + data);
-});
+/*provider.getDriversInCell("2203793418029629440",function(data){
+ logger.log("driver locations in cell = " + data);
+ });*/
+
+/*provider.getCellforVehicleKey("2203795001640038161","004455",function(cell){
+ logger.log("get cell id for vehicle  = " + cell);
+ });*/
+
+provider.addDriverPosition("2203795003930470261");
+
