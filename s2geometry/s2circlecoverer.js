@@ -119,7 +119,7 @@ var S2CircleCoverer = (function(){
         var divided_cell_id;
         var divided_cell;
         var children = new Array(4);
-        for(i = 0; i < 4; i++) {
+        for(var i = 0; i < 4; i++) {
             divided_cell_id = next_cell_id.child(i);
             divided_cell = new s2.S2Cell(divided_cell_id);
             children.push(divided_cell);
