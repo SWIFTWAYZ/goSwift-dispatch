@@ -104,7 +104,7 @@ var provider = (function() {
         var now = new Date().getTime();
         var before = now - secondsAgo * 1000;
         logger.log("minutes ago from NOW --- " + secondsAgo * 1000000);
-        client.zrangebyscore(VEHICLE_KEY+vehicle_id,before,now).then(function(results){
+        client.zrangebyscore(VEHICLE_KEY+vehicle_id,before,now,'withscores').then(function(results){
                 logger.log("----rangebyscore >>> " +before + ">"+ results.length);
                 logger.log(results);
                 cb(results);
@@ -283,8 +283,8 @@ try{
     var vehiclekey = "2203795008470789909";
     var vehicleId = "004458";
 
-    //13900 - 9800
-    provider.getVehiclePositionByTime(vehicleId,13900,function(results){
+    //14900 - 9800 (at 9:02 pm)
+    provider.getVehiclePositionByTime(vehicleId,14900,function(results){
         logger.log(results);
     });
     provider.getVehiclePositionByRange(vehicleId,0,4,function(results){
