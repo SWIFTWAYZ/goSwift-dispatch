@@ -104,10 +104,18 @@ var provider = (function() {
         });
     }
 
-    provider.getVehiclePosition = function(vehicle_id){
-            client.zrange(vehicle_id,0,-1).then(function(results){
-                logger.log(">>> positions for vehicle_id = " + vehicle_id + " [total pos = "+results.length);
+
+    provider.getVehiclePosition = function(vehicle_id,cb){
+            client.zrange(VEHICLE_KEY+vehicle_id,0,-1).then(function(results){
+                cb(results);
             })
+    }
+
+    provider.getVehiclePositionAndScore = function(vehicle_id,cb){
+            client.zrange(VEHICLE_KEY+vehicle_id,0,-1,'withscores').then(function(results){
+                logger.log(results);
+                cb(results);
+        });
     }
     provider.addVehiclePosition = function(driverKey,vehicle_id,timestamp){
         //zadd vehicle:001 1493758483 2203795001640038161
@@ -260,8 +268,18 @@ var ts = new Date().getTime();
 logger.log("timeInMillis = " + ts);
 try{
     var vehiclekey = "2203795008470789909";
+    var vehicleId = "004458";
 
-    provider.getVehiclePosition("vehicle:004458");
+    provider.getVehiclePositionAndScore(vehicleId,function(results){
+        logger.log("----withscores >>"+results.length);
+    })
+    provider.getVehiclePosition(vehicleId,function(results){
+        logger.log(">>> positions for vehicle_id = " + vehicleId + " [total pos = "+results.length);
+        results.forEach(function(item){
+            logger.log("vehicle id " + vehicleId + " = position " + item);
+        });
+    });
+
     logger.log("adding to cell id = -------" + vehiclekey +
         "=["+s2common.getParentIdAtLevel(12,vehiclekey)+"]------");
     provider.addVehiclePosition(vehiclekey,"004458",ts);
