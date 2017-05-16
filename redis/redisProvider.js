@@ -13,6 +13,7 @@ var logger = require("../config/logutil").logger;
 var provider = (function() {
 
     var driver_cells,
+        TRIP_KEY = "trip:",
         CITY_CELLS      = "city_cells",
         CITY_CELL_KEY   = "city_cells:",
         VEHICLE_KEY     = "vehicle:";
@@ -30,7 +31,6 @@ var provider = (function() {
      * change to connect to correct environment
      */
     function provider(){
-
         client.on('error',function(err,data){
             if(err.message.startsWith("connect ECONNREFUSED")){
                 console.log("server connection failed...");
@@ -77,11 +77,6 @@ var provider = (function() {
             var item = cellArray[i].pos();
             provider.isMemberOfCityCells(item).then(function(cell){
                 logger.log("loop, index = " + i + "cell="+cell);
-                /*if(cell > 0)
-                    cb(cell);
-                if(cell === 0){
-                    cb(0);
-                }*/
                 cb(cell);
             }).catch(function(error){
                 logger.log("not a member = " + error);
@@ -104,6 +99,16 @@ var provider = (function() {
         });
     }
 
+
+    provider.getVehiclePositionByTime = function(vehicle_id,secondsAgo,cb){
+        var now = new Date().getTime();
+        var before = now - secondsAgo * 1000;
+        client.zrangebyscore(VEHICLE_KEY+vehicle_id,1,before).then(function(results){
+                logger.log("----rangebyscore >>> " +before + ">"+ results.length);
+                logger.log(results);
+                cb(results);
+        });
+    }
 
     provider.getVehiclePosition = function(vehicle_id,cb){
             client.zrange(VEHICLE_KEY+vehicle_id,0,-1).then(function(results){
@@ -277,9 +282,12 @@ try{
     var vehiclekey = "2203795008470789909";
     var vehicleId = "004458";
 
+    provider.getVehiclePositionByTime(vehicleId,11000,function(results){
+        logger.log(results);
+    });
     provider.getVehiclePositionByRange(vehicleId,0,4,function(results){
         logger.log("----withscores >>"+results.length);
-    })
+    });
     provider.getVehiclePosition(vehicleId,function(results){
         logger.log(">>> positions for vehicle_id = " + vehicleId + " [total pos = "+results.length);
         results.forEach(function(item){
