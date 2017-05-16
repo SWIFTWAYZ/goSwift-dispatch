@@ -54,7 +54,7 @@ var provider = (function() {
     }
 
     //----------------------------------------methods to add driver position--------------------------------------------
-    provider.loop = function(item){
+    provider.isMemberOfCityCells = function(item){
         var promise = new Promise(function(resolve,reject){
             client.sismember(CITY_CELLS,item).then(function(results) {
                 if (results) {
@@ -71,7 +71,7 @@ var provider = (function() {
         var cellArray = s2common.getParentIdArray(vehicleKey,12,3);
         for(var i = 0; i < cellArray.length; i++){
             var item = cellArray[i].pos();
-            provider.loop(item).then(function(cell){
+            provider.isMemberOfCityCells(item).then(function(cell){
                 logger.log("loop, index = " + i + "cell="+cell);
                 if(cell)
                     cb(cell);
@@ -95,9 +95,17 @@ var provider = (function() {
         });
     }
 
-    provider.addVehiclePosition = function(driverKey,vehicle_id){
+    provider.addVehiclePosition = function(driverKey,vehicle_id,timestamp){
         //zadd vehicle:001 1493758483 2203795001640038161
+        //zrange vehicle:004459 0 -1 withscores
         var key = "vehicle:"+vehicle_id;
+        provider.getCellforVehicleKey(driverKey,vehicle_id,function(grid_cell){
+
+            client.sadd("city_cells:" + grid_cell, driverKey);
+            client.zadd(key,timestamp,driverKey).then(function(results){
+                logger.log("adding vehicle to key = "+ key + ", results ="+results);
+            })
+        });
         var cell = null;
     }
     //----------------------------------------end of methods to add driver position-------------------------------------
@@ -109,7 +117,7 @@ var provider = (function() {
     provider.createCellPosition = function(cell_id){
         var s2cell = new s2.S2CellId(cell_id);
         if(s2cell.level() < 19){
-            client.sadd(city_cells,cell_id);
+            client.sadd(CITY_CELLS,cell_id);
         }
     }
 
@@ -230,5 +238,8 @@ exports.provider = provider;
  logger.log("get cell id for vehicle  = " + cell);
  });*/
 
-provider.addDriverPosition("2203795003930470261");
+//provider.addDriverPosition("2203795003930470261");
 
+var tt = new Date().getTime();
+logger.log("timeInMillis = " + tt);
+provider.addVehiclePosition("2203795122495293251","004459",tt);
