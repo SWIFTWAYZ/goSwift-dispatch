@@ -13,7 +13,10 @@ var logger = require("../config/logutil").logger;
 var provider = (function() {
 
     var driver_cells,
-        CITY_CELLS = "city_cells";
+        CITY_CELLS      = "city_cells",
+        CITY_CELL_KEY   = "city_cells:",
+        VEHICLE_KEY     = "vehicle:";
+
     var gridArray = null;
     var client = new redis({
         retryStrategy: function (times) {
@@ -57,10 +60,11 @@ var provider = (function() {
     provider.isMemberOfCityCells = function(item){
         var promise = new Promise(function(resolve,reject){
             client.sismember(CITY_CELLS,item).then(function(results) {
-                if (results) {
+                if (results === 1) {
                     resolve(item);
-                } else {
-                    reject(item);
+                } else if(results === 0){
+                    resolve(0)
+                    //reject(item);
                 }
             });
         });
@@ -73,8 +77,12 @@ var provider = (function() {
             var item = cellArray[i].pos();
             provider.isMemberOfCityCells(item).then(function(cell){
                 logger.log("loop, index = " + i + "cell="+cell);
-                if(cell)
+                /*if(cell > 0)
                     cb(cell);
+                if(cell === 0){
+                    cb(0);
+                }*/
+                cb(cell);
             }).catch(function(error){
                 logger.log("not a member = " + error);
             });
@@ -89,22 +97,30 @@ var provider = (function() {
      */
     provider.addDriverPosition = function (leaf_id,vehicle_id) {
         provider.getCellforVehicleKey(leaf_id,vehicle_id,function(grid_cell){
+            if(grid_cell === 0) return;
             client.sadd("city_cells:" + grid_cell, leaf_id).then(function(results){
                 logger.log("adding key = " + leaf_id + "-to grid|"+grid_cell+ " = results: "+results);
             });
         });
     }
 
+    provider.getVehiclePosition = function(vehicle_id){
+            client.zrange(vehicle_id,0,-1).then(function(results){
+                logger.log(">>> positions for vehicle_id = " + vehicle_id + " [total pos = "+results.length);
+            })
+    }
     provider.addVehiclePosition = function(driverKey,vehicle_id,timestamp){
         //zadd vehicle:001 1493758483 2203795001640038161
         //zrange vehicle:004459 0 -1 withscores
-        var key = "vehicle:"+vehicle_id;
+        var key = VEHICLE_KEY + vehicle_id;
         provider.getCellforVehicleKey(driverKey,vehicle_id,function(grid_cell){
-
-            client.sadd("city_cells:" + grid_cell, driverKey);
-            client.zadd(key,timestamp,driverKey).then(function(results){
-                logger.log("adding vehicle to key = "+ key + ", results ="+results);
-            })
+            logger.log("did we get cell for vehiclekey? = " + grid_cell);
+            if(grid_cell > 0) {
+                client.sadd(CITY_CELL_KEY + grid_cell, driverKey);
+                client.zadd(key, timestamp, driverKey).then(function (results) {
+                    logger.log("adding vehicle to key = " + key + ", results =" + results);
+                });
+            }
         });
         var cell = null;
     }
@@ -234,12 +250,22 @@ exports.provider = provider;
  logger.log("driver locations in cell = " + data);
  });*/
 
-/*provider.getCellforVehicleKey("2203795001640038161","004455",function(cell){
+provider.getCellforVehicleKey("2203795001640038161","004455",function(cell){
  logger.log("get cell id for vehicle  = " + cell);
- });*/
+ });
 
 //provider.addDriverPosition("2203795003930470261");
 
-var tt = new Date().getTime();
-logger.log("timeInMillis = " + tt);
-provider.addVehiclePosition("2203795122495293251","004459",tt);
+var ts = new Date().getTime();
+logger.log("timeInMillis = " + ts);
+try{
+    var vehiclekey = "2203795008470789909";
+
+    provider.getVehiclePosition("vehicle:004458");
+    logger.log("adding to cell id = -------" + vehiclekey +
+        "=["+s2common.getParentIdAtLevel(12,vehiclekey)+"]------");
+    provider.addVehiclePosition(vehiclekey,"004458",ts);
+}catch(error){
+    logger.log(error);
+}
+
