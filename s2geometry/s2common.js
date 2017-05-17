@@ -104,6 +104,7 @@ var s2common = (function(){
 
     s2common.getParentIdArray = function(leaf_id, start_index, no_of_levels){
         var s2cell = new s2.S2CellId(leaf_id);
+        if(s2cell.isValid() == false) throw Error("Invalid cell id = "+leaf_id);
         var parentCellsArray = new Array();
 
         var index_total = start_index + no_of_levels;
@@ -129,10 +130,11 @@ var s2common = (function(){
      * @returns {Array}
      */
     s2common.getChildrenCellIds = function(cell_id){
-        if(isNaN(cell_id)){
+        /*if(isNaN(cell_id)){
             throw new Error("key not integer string  e.g.'2203794985692692496'");
-        }
+        }*/
         var s2cell_id = new s2.S2CellId(cell_id);
+        if(s2cell_id.isValid() == false) throw Error("Invalid cell id = "+cell_id);
         if(s2cell_id.isLeaf() == false) {
             return new s2.S2Cell(s2cell_id).subdivide();
         }
@@ -211,7 +213,7 @@ var s2common = (function(){
             throw Error("level out of bounds, should be between 1 - 30");
         }
         var s2cell = new s2.S2CellId(leaf_id);
-        if(s2cell.isValid() == false) throw Error("Invalid cell id");
+        if(s2cell.isValid() == false) throw Error("Invalid cell id = "+leaf_id);
         if(s2cell.level() > level){
             var parent_s2cell = s2cell.parentL(level);
             return parent_s2cell.id.toString();
@@ -280,7 +282,3 @@ var s2id = new s2.S2CellId(parent);
 //var parentArray = s2common.getParentIdArray(id.pos(),26,3);
 //logger.log(parentArray);
 //var children = s2common.getChildrenCellIds("2203793418029629440");
-
-
-
-

@@ -6,16 +6,14 @@
 var redis = require("ioredis");
 var s2 = require("nodes2ts");
 var _ = require("underscore");
-var common = require("../commonUtil");
 var s2common = require("../s2geometry/s2common").s2common;
 var logger = require("../config/logutil").logger;
 
 var provider = (function() {
 
-    var driver_cells,
-        TRIP_KEY = "trip:",
+    var TRIP_KEY = "trip:",
         CITY_CELLS      = "city_cells",
-        CITY_CELL_KEY   = "city_cells:",
+        CITY_CELL_KEY   = "city_cell:",
         VEHICLE_KEY     = "vehicle:";
 
     var gridArray = null;
@@ -99,14 +97,13 @@ var provider = (function() {
         });
     }
 
-
     provider.getVehiclePositionByTime = function(vehicle_id,secondsAgo,cb){
         var now = new Date().getTime();
         var before = now - secondsAgo * 1000;
-        logger.log("minutes ago from NOW --- " + secondsAgo * 1000000);
+        logger.log("minutes to go back from NOW --- " + ((secondsAgo * 1000)/60000).toFixed(0) + "min");
         client.zrangebyscore(VEHICLE_KEY+vehicle_id,before,now,'withscores').then(function(results){
                 logger.log("----rangebyscore >>> " +before + ">"+ results.length);
-                logger.log(results);
+                //logger.log(results);
                 cb(results);
         });
     }
@@ -143,7 +140,6 @@ var provider = (function() {
                 });
             }
         });
-        var cell = null;
     }
     //----------------------------------------end of methods to add driver position-------------------------------------
     /**
@@ -280,13 +276,14 @@ provider.getCellforVehicleKey("2203795001640038161","004455",function(cell){
 var ts = new Date().getTime();
 logger.log("timeInMillis = " + ts);
 try{
-    var vehiclekey = "2203795008470789909";
+    var vehiclekey = "2203795008470789910";
     var vehicleId = "004458";
 
     //14900 - 9800 (at 9:02 pm)
     provider.getVehiclePositionByTime(vehicleId,14900,function(results){
         logger.log(results);
     });
+    /*
     provider.getVehiclePositionByRange(vehicleId,0,4,function(results){
         logger.log("----withscores >>"+results.length);
     });
@@ -299,7 +296,7 @@ try{
 
     logger.log("adding to cell id = -------" + vehiclekey +
         "=["+s2common.getParentIdAtLevel(12,vehiclekey)+"]------");
-    provider.addVehiclePosition(vehiclekey,"004458",ts);
+    provider.addVehiclePosition(vehiclekey,"004458",ts);*/
 }catch(error){
     logger.log(error);
 }
