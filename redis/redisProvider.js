@@ -54,7 +54,7 @@ var provider = (function() {
         return v+"]";
     }
 
-    //----------------------------------------methods to add driver position--------------------------------------------
+    //----------methods to add driver position--------------------------
     provider.isMemberOfCityCells = function(item){
         var promise = new Promise(function(resolve,reject){
             client.sismember(CITY_CELLS,item).then(function(results) {
@@ -74,8 +74,11 @@ var provider = (function() {
         for(var i = 0; i < cellArray.length; i++){
             var item = cellArray[i].pos();
             provider.isMemberOfCityCells(item).then(function(cell){
-                logger.log("loop, index = " + i + "cell="+cell);
-                cb(cell);
+                if(cell > 0){
+                    logger.log("loop, index = " + i + "cell="+cell);
+                    cb(cell);
+                }
+
             }).catch(function(error){
                 logger.log("not a member = " + error);
             });
@@ -91,7 +94,8 @@ var provider = (function() {
     provider.addDriverPosition = function (leaf_id,vehicle_id) {
         provider.getCellforVehicleKey(leaf_id,vehicle_id,function(grid_cell){
             if(grid_cell === 0) return;
-            client.sadd("city_cells:" + grid_cell, leaf_id).then(function(results){
+            client.sadd("city_cells:" + grid_cell, leaf_id)
+                .then(function(results){
                 logger.log("adding key = " + leaf_id + "-to grid|"+grid_cell+ " = results: "+results);
             });
         });
@@ -100,8 +104,10 @@ var provider = (function() {
     provider.getVehiclePositionByTime = function(vehicle_id,secondsAgo,cb){
         var now = new Date().getTime();
         var before = now - secondsAgo * 1000;
-        logger.log("minutes to go back from NOW --- " + ((secondsAgo * 1000)/60000).toFixed(0) + "min");
-        client.zrangebyscore(VEHICLE_KEY+vehicle_id,before,now,'withscores').then(function(results){
+        var minutesAgo = ((secondsAgo * 1000)/60000).toFixed(0);
+        logger.log("minutes to go back from NOW --- " +minutesAgo+ "min");
+        client.zrangebyscore(VEHICLE_KEY+vehicle_id,before,now,'withscores')
+            .then(function(results){
                 logger.log("----rangebyscore >>> " +before + ">"+ results.length);
                 //logger.log(results);
                 cb(results);
@@ -109,20 +115,23 @@ var provider = (function() {
     }
 
     provider.getVehiclePosition = function(vehicle_id,cb){
-            client.zrange(VEHICLE_KEY+vehicle_id,0,-1).then(function(results){
+            client.zrange(VEHICLE_KEY+vehicle_id,0,-1)
+                .then(function(results){
                 cb(results);
             })
     }
 
     provider.getVehiclePositionByRange = function(vehicle,index_start,index_end,cb){
-            client.zrange(VEHICLE_KEY+vehicle,index_start,index_end,'withscores').then(function(results){
+            client.zrange(VEHICLE_KEY+vehicle,index_start,index_end,'withscores')
+                .then(function(results){
                 logger.log(results);
                 cb(results);
             });
     }
 
     provider.getVehiclePositionAndScore = function(vehicle_id,cb){
-            client.zrange(VEHICLE_KEY+vehicle_id,0,-1,'withscores').then(function(results){
+            client.zrange(VEHICLE_KEY+vehicle_id,0,-1,'withscores')
+                .then(function(results){
                 logger.log(results);
                 cb(results);
         });
@@ -141,7 +150,7 @@ var provider = (function() {
             }
         });
     }
-    //----------------------------------------end of methods to add driver position-------------------------------------
+
     /**
      * Create unique parent cell id each time a driver is created under
      * driver_cell set. No duplicate cell ids
@@ -227,36 +236,6 @@ var provider = (function() {
         });
     }
 
-    /***
-     *
-     */
-    provider.addDriverSet = function(){
-
-        //getS2CellIdAtLevel("2203794985692692496",12);
-        console.log("adding sets...");
-        var hash_table = {
-            cell_id:"2203795067297071104",
-            vehicle:"zdw065gp",
-            timestamp:"1492783299"
-        };
-
-        client.hmset("vehicle:12345",hash_table,function(result){
-            console.log("hashset --- " + result);
-        });
-        client.hmset("vehicle:2203795003930470261","cell_id","2203795067297071104","vehicle","zdw065gp",
-            "timestamp","1492783261",function(result){
-                console.log("hash multi-set = " + result);
-            });
-
-        client.hgetall("vehicle:2203795003930470261",function(error,data){
-            var array = _.toArray(data);
-            array.forEach(function(item){
-                console.log(item);
-            });
-            console.log("hgetting all hashes ["+ array[2] +"]-"+JSON.stringify(data));
-        });
-    };
-
     return provider;
 })();
 exports.provider = provider;
@@ -268,35 +247,31 @@ exports.provider = provider;
  });*/
 
 provider.getCellforVehicleKey("2203795001640038161","004455",function(cell){
- logger.log("get cell id for vehicle  = " + cell);
+ logger.log("-get cell id for vehicle  = " + cell);
  });
 
 //provider.addDriverPosition("2203795003930470261");
 
 var ts = new Date().getTime();
-logger.log("timeInMillis = " + ts);
 try{
-    var vehiclekey = "2203795008470789910";
+    var vehiclekey = "2203795008470789908";
     var vehicleId = "004458";
 
+    provider.addVehiclePosition(vehiclekey,"004458",ts);
     //14900 - 9800 (at 9:02 pm)
     provider.getVehiclePositionByTime(vehicleId,14900,function(results){
         logger.log(results);
     });
-    /*
-    provider.getVehiclePositionByRange(vehicleId,0,4,function(results){
-        logger.log("----withscores >>"+results.length);
-    });
+
     provider.getVehiclePosition(vehicleId,function(results){
         logger.log(">>> positions for vehicle_id = " + vehicleId + " [total pos = "+results.length);
         results.forEach(function(item){
-            logger.log("vehicle id " + vehicleId + " = position " + item);
+            logger.log("vehicle_id:" + vehicleId + " - [" + item +"]");
         });
     });
-
     logger.log("adding to cell id = -------" + vehiclekey +
         "=["+s2common.getParentIdAtLevel(12,vehiclekey)+"]------");
-    provider.addVehiclePosition(vehiclekey,"004458",ts);*/
+
 }catch(error){
     logger.log(error);
 }

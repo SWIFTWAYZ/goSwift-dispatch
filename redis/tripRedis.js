@@ -69,6 +69,12 @@ var client = new redis();
 
 exports.tripRequest = tripService;
 
+/*var hash_table = {
+    cell_id:"2203795067297071104",
+    vehicle:"zdw065gp",
+    timestamp:"1492783299"
+};
+client.hmset("vehicle:12345",hash_table);*/
 //var tstamp = new Date().getTime();
 //tripService.startTrip("01232","004458",tstamp);
 //var tstamp = new Date().getTime();
