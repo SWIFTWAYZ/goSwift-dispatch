@@ -5,7 +5,7 @@
 
 var redis = require("ioredis");
 var s2 = require("nodes2ts");
-var _ = require("underscore");
+var _  = require("underscore");
 var s2common = require("../s2geometry/s2common").s2common;
 var logger = require("../config/logutil").logger;
 
@@ -58,14 +58,19 @@ var provider = (function() {
     provider.isMemberOfCityCells = function(item){
         var promise = new Promise(function(resolve,reject){
             client.sismember(CITY_CELLS,item).then(function(results) {
+                logger.log("ismember? item = "+ item + ",response = " + results);
+                //resolve(item);
                 if (results === 1) {
+                    //if item is a member of cell, we return the key
                     resolve(item);
                 } else if(results === 0){
+                    //else we return 0
                     resolve(0)
                     //reject(item);
                 }
             }).catch(function(error){
                 logger.log('error = '+error);
+                reject(error);
             });
         });
         return promise;
@@ -154,7 +159,7 @@ var provider = (function() {
         //var hexKey = new s2.S2CellId(driverKey).toToken();
         var key = VEHICLE_KEY + vehicle_id;
         provider.getCellforVehicleKey(driverKey,vehicle_id,function(grid_cell){
-            logger.log("did we get cell for vehiclekey? = " + grid_cell + "-"+driverKey);
+            logger.log("did we get cell for vehiclekey? = " + grid_cell + "={"+driverKey+"}");
             if(grid_cell > 0) {
                 client.multi()
                     .zadd(CELL_KEY + grid_cell,timestamp,vehicle_id)
@@ -188,7 +193,7 @@ var provider = (function() {
      * @returns {*}
      */
     provider.getCityGrid = function(cb){
-        client.smembers("city_cells").then(function(results){
+        client.smembers(CITY_CELLS).then(function(results){
             cb(results);
         });
     }
@@ -199,12 +204,15 @@ var provider = (function() {
      * @param driver_id
      */
     provider.getDriverPositions = function(driver_key,cb){
-        //driver_cells - do we retrieve vehicle_ids in cell and then filter?
-        var key = "cell:2203795067297071104";
-        logger.log(key);
-        client.smembers(key).then(function(celldata){
-            logger.log("driver at level = " + ", retrieved in cell="+celldata[0]);
+        //driver_cells - we retrieve driver quadKeys from VEHICLE_KEY
+        logger.log(driver_key);
+        client.zrange(VEHICLE_KEY+driver_key,0,-1,'withscores').then(function(celldata){
+            //logger.log("positions for vehicle id = "+ driver_key );
+            logger.log("driver = " + driver_key + ", positions = " + JSON.stringify(celldata));
             cb(celldata);
+        }).catch(function(error){
+            var err_msg = "error retrieving position for driver id = ";
+            cb(err_msg + driver_key);
         });
     }
 
@@ -217,11 +225,11 @@ var provider = (function() {
             cb(null);
         }
         else {
-            client.smembers("city_cells:" + s2cell_id).then(function (results) {
+            client.zrange(CELL_KEY + s2cell_id,0,-1,'withscores').then(function (results) {
                 //logger.log(results);
                 if (results.length > 0) {
                     var array = _.toArray(results);
-                    cb(array)
+                    cb(array);
                 }
                 else {
                     logger.log("no members " + results);
@@ -264,7 +272,7 @@ exports.provider = provider;
 /*provider.getDriversInCell("2203793418029629440",function(data){
  logger.log("driver locations in cell = " + data);
  });*/
-
+/*
 provider.getCellforVehicleKey("2203795001640038161","004455",function(cell){
  logger.log("-get cell id for vehicle  = " + cell);
  });
@@ -273,17 +281,17 @@ provider.getCellforVehicleKey("2203795001640038161","004455",function(cell){
 
 var ts = new Date().getTime();
 try{
-    var vehiclekey = "2203795008470789907";
-    var vehicle2   = "2203795008470789908";
-    var vehicle3   = "2203795008470789909";
-    var vehicle4   = "2203795008470789903";
+    var vehiclekey = "2203802065219101569";
+    var vehicle2   = "2203787314152141717";
+    var vehicle3   = "2203797838024789103";
+    var vehicle4   = "2203798923659060959";
 
     var vehicleId = "004458";
 
-    provider.addVehiclePosition(vehiclekey,"004458",ts);
-    provider.addVehiclePosition(vehicle2,"004459",ts+80);
-    provider.addVehiclePosition(vehicle3,"004460",ts+120);
-    provider.addVehiclePosition(vehicle4,"004461",ts+150);
+    provider.addVehiclePosition(vehiclekey,"004469",ts);
+    provider.addVehiclePosition(vehicle2,"004470",ts+80);
+    provider.addVehiclePosition(vehicle3,"004471",ts+120);
+    provider.addVehiclePosition(vehicle4,"004472",ts+150);
 
     //14900 - 9800 (at 9:02 pm)
     provider.getVehiclePositionByTime(vehicleId,14900,function(results){
@@ -302,4 +310,14 @@ try{
 }catch(error){
     logger.log(error);
 }
+*/
+var driver_id2 = "004471";
+provider.getDriverPositions(driver_id2,function(results){
+    logger.log("position of "+ driver_id2 + ", positions = " + results);
+})
 
+var grid_key = "2203795067297071104";
+var grid_key2 = "2203794861138657280";
+provider.getDriversInCell(grid_key,function(data){
+    logger.log("drivers within grid cell = " +grid_key+"-"+ JSON.stringify(data));
+})
