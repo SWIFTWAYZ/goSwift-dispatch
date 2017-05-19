@@ -142,6 +142,14 @@ var provider = (function() {
                 logger.log('error = '+error);
             });;
     }
+
+    /**
+     * This method uses redis transactions to ensure driver_key is added to CELL_KEY
+     * and VEHICLE_KEY as an atomic transaction.
+     * @param driverKey
+     * @param vehicle_id
+     * @param timestamp
+     */
     provider.addVehiclePosition = function(driverKey,vehicle_id,timestamp){
         //zadd vehicle:001 1493758483 2203795001640038161
         //zrange vehicle:004459 0 -1 withscores
@@ -149,9 +157,12 @@ var provider = (function() {
         provider.getCellforVehicleKey(driverKey,vehicle_id,function(grid_cell){
             logger.log("did we get cell for vehiclekey? = " + grid_cell);
             if(grid_cell > 0) {
-                client.sadd(CELL_KEY + grid_cell, driverKey);
-                client.zadd(key, timestamp, driverKey).then(function (results) {
+                client.multi()
+                    .sadd(CELL_KEY + grid_cell, driverKey+"-"+vehicle_id)
+                    .zadd(key, timestamp, driverKey)
+                    .exec().then(function (results) {
                     logger.log("adding vehicle to key = " + key + ", results =" + results);
+
                 }).catch(function(error){
                     logger.log('error = '+error);
                 });;
@@ -264,10 +275,18 @@ provider.getCellforVehicleKey("2203795001640038161","004455",function(cell){
 
 var ts = new Date().getTime();
 try{
-    var vehiclekey = "2203795008470789908";
+    var vehiclekey = "2203795008470789907";
+    var vehicle2   = "2203795008470789908";
+    var vehicle3   = "2203795008470789909";
+    var vehicle4   = "2203795008470789903";
+
     var vehicleId = "004458";
 
     provider.addVehiclePosition(vehiclekey,"004458",ts);
+    provider.addVehiclePosition(vehicle2,"004459",ts+80);
+    provider.addVehiclePosition(vehicle3,"004460",ts+120);
+    provider.addVehiclePosition(vehicle4,"004461",ts+150);
+
     //14900 - 9800 (at 9:02 pm)
     provider.getVehiclePositionByTime(vehicleId,14900,function(results){
         logger.log(results);
