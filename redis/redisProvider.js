@@ -151,21 +151,19 @@ var provider = (function() {
      * @param timestamp
      */
     provider.addVehiclePosition = function(driverKey,vehicle_id,timestamp){
-        //zadd vehicle:001 1493758483 2203795001640038161
-        //zrange vehicle:004459 0 -1 withscores
+        //var hexKey = new s2.S2CellId(driverKey).toToken();
         var key = VEHICLE_KEY + vehicle_id;
         provider.getCellforVehicleKey(driverKey,vehicle_id,function(grid_cell){
-            logger.log("did we get cell for vehiclekey? = " + grid_cell);
+            logger.log("did we get cell for vehiclekey? = " + grid_cell + "-"+driverKey);
             if(grid_cell > 0) {
                 client.multi()
-                    .sadd(CELL_KEY + grid_cell, driverKey+"-"+vehicle_id)
+                    .zadd(CELL_KEY + grid_cell,timestamp,vehicle_id)
                     .zadd(key, timestamp, driverKey)
                     .exec().then(function (results) {
                     logger.log("adding vehicle to key = " + key + ", results =" + results);
-
                 }).catch(function(error){
                     logger.log('error = '+error);
-                });;
+                });
             }
         });
     }
