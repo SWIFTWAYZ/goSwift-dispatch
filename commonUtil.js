@@ -3,6 +3,9 @@
  */
 "use strict";
 
+var logger = require("./config/logutil").logger;
+var _ = require("underscore");
+
 function decimalToBinary(DecimalValue){
     var BinaryValue = '';
     // Loop from 2^64/2 to 1
@@ -21,4 +24,33 @@ function decimalToBinary(DecimalValue){
     return BinaryValue;
 };
 
-exports.decimalToBinary = decimalToBinary;
+var deepCopy = function  (arr) {
+    var out = [];
+    for (var i = 0, len = arr.length; i < len; i++) {
+        var item = arr[i];
+        var obj = {};
+        for (var k in item) {
+            obj[k] = item[k];
+        }
+        out.push(obj);
+    }
+    return out;
+}
+
+var arrayClone = function ( arr ) {
+    if( _.isArray( arr ) ) {
+        return _.map( arr, arrayClone );
+    } else if( typeof arr === 'object' ) {
+        throw 'Cannot clone array containing an object!';
+    } else {
+        return arr;
+    }
+}
+
+exports.decimalToBinary = decimalToBinary
+
+var copy = arrayClone(['a','b','c']);
+var copy1 = deepCopy(['a','b','c']);
+
+logger.log('copied array1 = ' + JSON.stringify(copy))
+logger.log("copied array = " + JSON.stringify(copy1));

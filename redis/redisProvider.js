@@ -11,12 +11,12 @@ var logger = require("../config/logutil").logger;
 
 var provider = (function() {
 
-    var TRIP_KEY = "trip:",
+    var TRIP_KEY        = "trip:",
         CITY_CELLS      = "city_cells",
-        CITY_CELL_KEY   = "city_cell:",
+        CELL_KEY        = "cell:",
         VEHICLE_KEY     = "vehicle:";
 
-    var gridArray = null;
+    //var gridArray = null;
     var client = new redis({
         retryStrategy: function (times) {
             var delay = Math.min(times * 50, 2000);
@@ -64,6 +64,8 @@ var provider = (function() {
                     resolve(0)
                     //reject(item);
                 }
+            }).catch(function(error){
+                logger.log('error = '+error);
             });
         });
         return promise;
@@ -78,7 +80,6 @@ var provider = (function() {
                     logger.log("loop, index = " + i + "cell="+cell);
                     cb(cell);
                 }
-
             }).catch(function(error){
                 logger.log("not a member = " + error);
             });
@@ -94,10 +95,11 @@ var provider = (function() {
     provider.addDriverPosition = function (leaf_id,vehicle_id) {
         provider.getCellforVehicleKey(leaf_id,vehicle_id,function(grid_cell){
             if(grid_cell === 0) return;
-            client.sadd("city_cells:" + grid_cell, leaf_id)
-                .then(function(results){
+            client.sadd("city_cells:" + grid_cell, leaf_id).then(function(results){
                 logger.log("adding key = " + leaf_id + "-to grid|"+grid_cell+ " = results: "+results);
-            });
+            }).catch(function(error){
+                logger.log('error = '+error);
+            });;
         });
     }
 
@@ -106,35 +108,39 @@ var provider = (function() {
         var before = now - secondsAgo * 1000;
         var minutesAgo = ((secondsAgo * 1000)/60000).toFixed(0);
         logger.log("minutes to go back from NOW --- " +minutesAgo+ "min");
-        client.zrangebyscore(VEHICLE_KEY+vehicle_id,before,now,'withscores')
-            .then(function(results){
+        client.zrangebyscore(VEHICLE_KEY+vehicle_id,before,now,'withscores').then(function(results){
                 logger.log("----rangebyscore >>> " +before + ">"+ results.length);
                 //logger.log(results);
                 cb(results);
-        });
+        }).catch(function(error){
+            logger.log('error = '+error);
+        });;
     }
 
     provider.getVehiclePosition = function(vehicle_id,cb){
-            client.zrange(VEHICLE_KEY+vehicle_id,0,-1)
-                .then(function(results){
+            client.zrange(VEHICLE_KEY+vehicle_id,0,-1).then(function(results){
                 cb(results);
-            })
-    }
-
-    provider.getVehiclePositionByRange = function(vehicle,index_start,index_end,cb){
-            client.zrange(VEHICLE_KEY+vehicle,index_start,index_end,'withscores')
-                .then(function(results){
-                logger.log(results);
-                cb(results);
+            }).catch(function(error){
+                logger.log('error = '+error);
             });
     }
 
-    provider.getVehiclePositionAndScore = function(vehicle_id,cb){
-            client.zrange(VEHICLE_KEY+vehicle_id,0,-1,'withscores')
-                .then(function(results){
+    provider.getVehiclePositionByRange = function(vehicle,index_start,index_end,cb){
+            client.zrange(VEHICLE_KEY+vehicle,index_start,index_end,'withscores').then(function(results){
                 logger.log(results);
                 cb(results);
-        });
+            }).catch(function(error){
+                logger.log('error = '+error);
+            });;
+    }
+
+    provider.getVehiclePositionAndScore = function(vehicle_id,cb){
+            client.zrange(VEHICLE_KEY+vehicle_id,0,-1,'withscores').then(function(results){
+                logger.log(results);
+                cb(results);
+        }).catch(function(error){
+                logger.log('error = '+error);
+            });;
     }
     provider.addVehiclePosition = function(driverKey,vehicle_id,timestamp){
         //zadd vehicle:001 1493758483 2203795001640038161
@@ -143,10 +149,12 @@ var provider = (function() {
         provider.getCellforVehicleKey(driverKey,vehicle_id,function(grid_cell){
             logger.log("did we get cell for vehiclekey? = " + grid_cell);
             if(grid_cell > 0) {
-                client.sadd(CITY_CELL_KEY + grid_cell, driverKey);
+                client.sadd(CELL_KEY + grid_cell, driverKey);
                 client.zadd(key, timestamp, driverKey).then(function (results) {
                     logger.log("adding vehicle to key = " + key + ", results =" + results);
-                });
+                }).catch(function(error){
+                    logger.log('error = '+error);
+                });;
             }
         });
     }
@@ -182,8 +190,8 @@ var provider = (function() {
      * @param driver_id
      */
     provider.getDriverPositions = function(driver_key,cb){
-        //driver_cells
-        var key = "city_cells:2203795067297071104";
+        //driver_cells - do we retrieve vehicle_ids in cell and then filter?
+        var key = "cell:2203795067297071104";
         logger.log(key);
         client.smembers(key).then(function(celldata){
             logger.log("driver at level = " + ", retrieved in cell="+celldata[0]);
@@ -210,7 +218,9 @@ var provider = (function() {
                     logger.log("no members " + results);
                     cb(null);
                 }
-            });
+            }).catch(function(error){
+                logger.log('error = '+error);
+            });;
         }
     }
 

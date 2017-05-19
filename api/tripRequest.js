@@ -30,29 +30,6 @@ var tripRequest = (function(){
         };
     }
 
-    tripRequest.deepCopy = function  (arr) {
-        var out = [];
-        for (var i = 0, len = arr.length; i < len; i++) {
-            var item = arr[i];
-            var obj = {};
-            for (var k in item) {
-                obj[k] = item[k];
-            }
-            out.push(obj);
-        }
-        return out;
-    }
-
-    tripRequest.arrayClone = function ( arr ) {
-        if( _.isArray( arr ) ) {
-            return _.map( arr, arrayClone );
-        } else if( typeof arr === 'object' ) {
-            throw 'Cannot clone array containing an object!';
-        } else {
-            return arr;
-        }
-    }
-
     /**
      * retrieve cells in customer rectangle that intersect with city-grid
      * @param rect
@@ -108,8 +85,6 @@ var tripRequest = (function(){
                 " - [intersecting cells = " + intersect_union.size() + "]");
         });
     }
-
-
 
     return tripRequest;
 }).call(this)

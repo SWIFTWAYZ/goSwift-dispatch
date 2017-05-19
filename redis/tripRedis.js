@@ -3,7 +3,6 @@
  */
 
 var redis = require("ioredis");
-var s2common = require("../s2geometry/s2common").s2common;
 var logger = require("../config/logutil").logger;
 
 function isEmptyObject(obj) {
