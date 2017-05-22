@@ -91,23 +91,6 @@ var provider = (function() {
         }
     }
 
-    /**
-     * get leaf S2's parent at level 12-14. Then check if each of the leaf's parent
-     * IDs are members of city_cells redis key (i.e. valid grid cells). if so, add
-     * the driver's position key to the grid cell.
-     * @param leaf_id
-     */
-    provider.addDriverPosition = function (leaf_id,vehicle_id) {
-        provider.getCellforVehicleKey(leaf_id,vehicle_id,function(grid_cell){
-            if(grid_cell === 0) return;
-            client.sadd("city_cells:" + grid_cell, leaf_id).then(function(results){
-                logger.log("adding key = " + leaf_id + "-to grid|"+grid_cell+ " = results: "+results);
-            }).catch(function(error){
-                logger.log('error = '+error);
-            });;
-        });
-    }
-
     provider.getVehiclePositionByTime = function(vehicle_id,secondsAgo,cb){
         var now = new Date().getTime();
         var before = now - secondsAgo * 1000;
@@ -173,6 +156,64 @@ var provider = (function() {
         });
     }
 
+    provider.getVehicleCell = function(vehicle_id,cb){
+        client.zrange(VEHICLE_KEY+vehicle_id,0,-1).then(function(s2cell_id) {
+            var vehicleKey = s2cell_id[0];
+            if(vehicleKey === undefined){
+                cb(null);
+                return;
+            }
+            logger.log("current cell positions = " + s2cell_id + "-" + vehicleKey);
+            var array = s2common.getParentIdArray(vehicleKey, 12, 3);
+            //should we also check?? > keys cell:2203795067297071104
+            //var promises = new Array();
+            array.forEach(function(item){
+                (new Promise(function(resolve,reject){
+                    resolve(item.pos());
+                })).then(function(results){
+                    logger.log("results..."+results);
+                    client.sismember(CITY_CELLS,results).then(function(data){
+                        //logger.log("promises all resolved = "+results + "-cellid="+item.pos());
+                        if(data){
+                            logger.log("is-member of city_cells = "+data + "? - cellid="+item.pos());
+                            cb(item.pos());
+                        }
+                    });
+                });
+            });
+            });
+        }
+
+
+    provider.changeCellPosition = function(newDriverPos,vehicle_id,timestamp,cb){
+        //first remove vehicle from cell its exiting
+        //then add vehicle to cell its entering. Use redis transactions for this
+        var new_cell = s2common.getParentIdAtLevel(12,newDriverPos);
+        logger.log("new grid = " + new_cell + ", vehicle_id = "+vehicle_id + ", enters..."+newDriverPos)
+        provider.getVehicleCell(vehicle_id,function(old_cell){
+            logger.log("got cell for vehiclekey? = " + old_cell + "=vehicle_id :"+vehicle_id+"}");
+            client.multi()
+                .zrem(CELL_KEY + old_cell, vehicle_id)
+                .zadd(CELL_KEY + new_cell, timestamp, vehicle_id)
+                .exec().then(function (results) {
+                cb(results);
+            });
+        });
+    }
+
+    /**
+     * When vehicle exits a cell, we remove/delete vehicle_id from CELL_KEY
+     * @param driverKey
+     * @param vehicle_id
+     * @param timestamp
+     */
+    provider.leaveCityCell = function(driverKey,vehicle_id,cb){
+        provider.getCellforVehicleKey(driverKey,vehicle_id,function(grid_cell) {
+            client.zrem(CELL_KEY +grid_cell,vehicle_id).then(function(results){
+                cb(results);
+            });
+        });
+    }
     /**
      * Create unique parent cell id each time a driver is created under
      * driver_cell set. No duplicate cell ids
@@ -207,7 +248,6 @@ var provider = (function() {
         //driver_cells - we retrieve driver quadKeys from VEHICLE_KEY
         logger.log(driver_key);
         client.zrange(VEHICLE_KEY+driver_key,0,-1,'withscores').then(function(celldata){
-            //logger.log("positions for vehicle id = "+ driver_key );
             logger.log("driver = " + driver_key + ", positions = " + JSON.stringify(celldata));
             cb(celldata);
         }).catch(function(error){
@@ -241,17 +281,6 @@ var provider = (function() {
         }
     }
 
-    provider.getCellIdsInCellArray = function(cellId_array){
-        //check the level of s2cell grid_ids and make sure they are between 12 - 14
-        //if so, query redis for cells that meet criteria
-        var array = new Array();
-        cellId_array.forEach(function(each_cell){
-            var cellIds = getCellIdsInCell(each_cell);
-            arra.push(cellIds);
-        });
-        return array;
-    }
-
     /**
      * retrieve keys from driver hashset
      * @type {Array}
@@ -269,16 +298,30 @@ exports.provider = provider;
 
 //2203795067297071104
 //2203793418029629440
-/*provider.getDriversInCell("2203793418029629440",function(data){
- logger.log("driver locations in cell = " + data);
- });*/
+
+
+var vehicle_id59 = "004461";
+var ts = new Date().getTime();
+provider.changeCellPosition("2203840188725229341",vehicle_id59,ts,function(results){
+    logger.log(results);
+});
+
+/*provider.getVehicleCell(vehicle_id59,function(results){
+    logger.log("current pos = " + results);
+});*/
+
 /*
-provider.getCellforVehicleKey("2203795001640038161","004455",function(cell){
+provider.getCellforVehicleKey("2203795001640038161","004469",function(cell){
  logger.log("-get cell id for vehicle  = " + cell);
- });
+ });*/
+
+/*var vehicle_id59 = "004460";
+ provider.leaveCityCell("2203795001640038161",vehicle_id59,function(response){
+ logger.log("removing vehicle id = " + vehicle_id59 + "-"+response);
+ })*/
 
 //provider.addDriverPosition("2203795003930470261");
-
+/*
 var ts = new Date().getTime();
 try{
     var vehiclekey = "2203802065219101569";
@@ -310,7 +353,7 @@ try{
 }catch(error){
     logger.log(error);
 }
-*/
+
 var driver_id2 = "004471";
 provider.getDriverPositions(driver_id2,function(results){
     logger.log("position of "+ driver_id2 + ", positions = " + results);
@@ -320,4 +363,4 @@ var grid_key = "2203795067297071104";
 var grid_key2 = "2203794861138657280";
 provider.getDriversInCell(grid_key,function(data){
     logger.log("drivers within grid cell = " +grid_key+"-"+ JSON.stringify(data));
-})
+})*/
