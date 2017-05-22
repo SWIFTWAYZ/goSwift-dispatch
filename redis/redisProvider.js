@@ -76,9 +76,44 @@ var provider = (function() {
         return promise;
     }
 
+    provider.getCellforVehicleKey2 = function(vehicleKey,vehicle_id,cb){
+        var cellArray = s2common.getParentIdArray(vehicleKey,12,3);
+        var promises = [];
+        //client.multi();
+        cellArray.forEach(function(item){
+            //promises.push(client.sismember(CITY_CELLS,item.pos()));
+            promises.push(provider.isMemberOfCityCells(item.pos()))
+            logger.log("forEach push promises for item = "+ item.pos());
+        });
+
+        Promise.all(promises).then(function(results){
+            if(results){
+                logger.log("promises running = "+results);
+            }
+        });
+    }
+
     provider.getCellforVehicleKey = function(vehicleKey,vehicle_id,cb){
         var cellArray = s2common.getParentIdArray(vehicleKey,12,3);
-        for(var i = 0; i < cellArray.length; i++){
+        cellArray.forEach(function(item) {
+            (new Promise(function (resolve, reject) {
+                resolve(item.pos())
+            })).then(function (results) {
+                provider.isMemberOfCityCells(results).then(function (cell) {
+                    //logger.log("loop2, index = " + "cell=" + cell);
+                    if (cell > 0) {
+                        logger.log("loop isMember = " + "cell=" + cell);
+                        cb(cell);
+                    }
+                });
+            });
+        });
+
+
+
+        //-------------------------
+
+            /*for(var i = 0; i < cellArray.length; i++){
             var item = cellArray[i].pos();
             provider.isMemberOfCityCells(item).then(function(cell){
                 if(cell > 0){
@@ -88,7 +123,7 @@ var provider = (function() {
             }).catch(function(error){
                 logger.log("not a member = " + error);
             });
-        }
+        }*/
     }
 
     provider.getVehiclePositionByTime = function(vehicle_id,secondsAgo,cb){
@@ -148,7 +183,7 @@ var provider = (function() {
                     .zadd(CELL_KEY + grid_cell,timestamp,vehicle_id)
                     .zadd(key, timestamp, driverKey)
                     .exec().then(function (results) {
-                    logger.log("adding vehicle to key = " + key + ", results =" + results);
+                    logger.log("adding " + key +"/key=" +driverKey+"/cell="+grid_cell+", results =" + results);
                 }).catch(function(error){
                     logger.log('error = '+error);
                 });
@@ -267,7 +302,6 @@ var provider = (function() {
         }
         else {
             client.zrange(CELL_KEY + s2cell_id,0,-1,'withscores').then(function (results) {
-                //logger.log(results);
                 if (results.length > 0) {
                     var array = _.toArray(results);
                     cb(array);
@@ -301,11 +335,11 @@ exports.provider = provider;
 //2203793418029629440
 
 
-var vehicle_id59 = "004461";
+/*var vehicle_id59 = "004461";
 var ts = new Date().getTime();
 provider.changeCellPosition("2203840188725229341",vehicle_id59,ts,function(results){
     logger.log(results);
-});
+});*/
 
 /*provider.getVehicleCell(vehicle_id59,function(results){
     logger.log("current pos = " + results);
@@ -322,38 +356,39 @@ provider.getCellforVehicleKey("2203795001640038161","004469",function(cell){
  })*/
 
 //provider.addDriverPosition("2203795003930470261");
-/*
+
 var ts = new Date().getTime();
 try{
-    var vehiclekey = "2203802065219101569";
-    var vehicle2   = "2203787314152141717";
-    var vehicle3   = "2203797838024789103";
-    var vehicle4   = "2203798923659060959";
+    var vehiclekey = "2203840532358176487";
+    var vehicle2   = "2203803946975095603";
+    var vehicle3   = "2203792415811550533";
+    var vehicle4   = "2203806913340145105";
 
     var vehicleId = "004458";
 
-    provider.addVehiclePosition(vehiclekey,"004469",ts);
-    provider.addVehiclePosition(vehicle2,"004470",ts+80);
-    provider.addVehiclePosition(vehicle3,"004471",ts+120);
-    provider.addVehiclePosition(vehicle4,"004472",ts+150);
+    //provider.addVehiclePosition(vehiclekey,"004473",ts);
+    provider.addVehiclePosition(vehicle2,"004474",ts+80);
+    /*provider.addVehiclePosition(vehicle3,"004475",ts+120);
+    provider.addVehiclePosition(vehicle4,"004476",ts+150);*/
 
-    //14900 - 9800 (at 9:02 pm)
-    provider.getVehiclePositionByTime(vehicleId,14900,function(results){
-        logger.log(results);
-    });
-
-    provider.getVehiclePosition(vehicleId,function(results){
-        logger.log(">>> positions for vehicle_id = " + vehicleId + " [total pos = "+results.length);
+    /*provider.getVehiclePosition(vehicle2,function(results){
+        logger.log(">>> positions for vehicle_id = " + vehicle2 + " [total pos = "+results.length);
         results.forEach(function(item){
-            logger.log("vehicle_id:" + vehicleId + " - [" + item +"]");
+            logger.log("vehicle_id:" + vehicle2 + " - [" + item +"]");
         });
     });
-    logger.log("adding to cell id = -------" + vehiclekey +
-        "=["+s2common.getParentIdAtLevel(12,vehiclekey)+"]------");
+    logger.log("adding to cell id = -------" + vehicle2 +
+        "=["+s2common.getParentIdAtLevel(12,vehicle2)+"]------");*/
 
 }catch(error){
     logger.log(error);
 }
+/*
+
+ //14900 - 9800 (at 9:02 pm)
+ provider.getVehiclePositionByTime(vehicleId,14900,function(results){
+ logger.log(results);
+ });
 
 var driver_id2 = "004471";
 provider.getDriverPositions(driver_id2,function(results){
