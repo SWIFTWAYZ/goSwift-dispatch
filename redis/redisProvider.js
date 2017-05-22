@@ -167,15 +167,16 @@ var provider = (function() {
             var array = s2common.getParentIdArray(vehicleKey, 12, 3);
             //should we also check?? > keys cell:2203795067297071104
             //var promises = new Array();
+
             array.forEach(function(item){
                 (new Promise(function(resolve,reject){
                     resolve(item.pos());
                 })).then(function(results){
-                    logger.log("results..."+results);
+                    //logger.log("results..."+results);
                     client.sismember(CITY_CELLS,results).then(function(data){
-                        //logger.log("promises all resolved = "+results + "-cellid="+item.pos());
+                        logger.log("promise resolved? = "+data + "-cellid="+results);
                         if(data){
-                            logger.log("is-member of city_cells = "+data + "? - cellid="+item.pos());
+                            logger.log("is-member of city_cells = "+data+" ? - cellid="+item.pos());
                             cb(item.pos());
                         }
                     });
@@ -189,7 +190,7 @@ var provider = (function() {
         //first remove vehicle from cell its exiting
         //then add vehicle to cell its entering. Use redis transactions for this
         var new_cell = s2common.getParentIdAtLevel(12,newDriverPos);
-        logger.log("new grid = " + new_cell + ", vehicle_id = "+vehicle_id + ", enters..."+newDriverPos)
+        logger.log("vehicle_id = "+vehicle_id +"> enters grid = " + new_cell + "/"+newDriverPos);
         provider.getVehicleCell(vehicle_id,function(old_cell){
             logger.log("got cell for vehiclekey? = " + old_cell + "=vehicle_id :"+vehicle_id+"}");
             client.multi()
