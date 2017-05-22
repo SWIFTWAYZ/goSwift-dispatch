@@ -24,11 +24,18 @@ var provider = (function() {
         }
     });
 
+    client.monitor(function (err, monitor) {
+        // Entering monitoring mode.
+        monitor.on('monitor', function (time, args, source, database) {
+            logger.debug(time + ": " + args);
+        });
+    });
     /**
      * Create a redis service instance to localhost. Will
      * change to connect to correct environment
      */
     function provider(){
+        logger.log("CREATING REDIS PROVIDER()");
         client.on('error',function(err,data){
             if(err.message.startsWith("connect ECONNREFUSED")){
                 console.log("server connection failed...");
@@ -328,7 +335,8 @@ var provider = (function() {
     }
 
     return provider;
-})();
+
+}).call(this);
 exports.provider = provider;
 
 //2203795067297071104
