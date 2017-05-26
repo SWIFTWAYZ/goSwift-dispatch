@@ -1,5 +1,5 @@
 # goSwift-dispatch (Uber)
-This is a real-time service to handle the dispatching of taxis to passengers 
+Uber-like real-time service to handle the dispatching of taxis to passengers 
 
 This service is developed using server-side Javascript running in Node.js
 Dispatch is meant to handle all the real-time requests such as:-
