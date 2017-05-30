@@ -11,28 +11,28 @@ var s2common = require("./s2common").s2common;
 var redis = require("../redis/redisProvider").provider;
 var logger = require("../config/logutil").logger;
 
-function getS2CapRadius(latLng,radius_in_meters){
+function getS2CapRadius(latLng, radius_in_meters) {
     var s2cap_ts;
-    if(latLng !== null && typeof(latLng) === 'object') {
+    if (latLng !== null && typeof(latLng) === 'object') {
         var radius_radians = s2common.EarthMetersToRadians(radius_in_meters);
         var axis_height = (radius_radians * radius_radians) / 2;
         s2cap_ts = new s2.S2Cap(latLng.normalized().toPoint(), axis_height);
-        var area = (2 * Math.PI * Math.max(0.0,axis_height)) * constants.KEARTH_CIRCUMFERENCE_METERS;
+        var area = (2 * Math.PI * Math.max(0.0, axis_height)) * constants.KEARTH_CIRCUMFERENCE_METERS;
     }
     return s2cap_ts;
 }
 
-var S2CircleCoverer = (function(){
+var S2CircleCoverer = (function () {
     var S2CircleCoverer,
         s2cap,
         axis_height;
 
     var S2CircleCoverer = {};
 
-   S2CircleCoverer.setS2CapRadius = function(latLng,radius_in_meters){
+    S2CircleCoverer.setS2CapRadius = function (latLng, radius_in_meters) {
         //this.s2cap = s2cap;
         //this.radius - radius_in_meters;
-        if(latLng !== null && typeof(latLng) === 'object') {
+        if (latLng !== null && typeof(latLng) === 'object') {
             var radius_radians = EarthMetersToRadians(radius_in_meters);
             axis_height = (radius_radians * radius_radians) / 2;
             s2cap = new s2.S2Cap(latLng.normalized().toPoint(), axis_height);
@@ -40,7 +40,7 @@ var S2CircleCoverer = (function(){
         }
     }
 
-    S2CircleCoverer.getS2CapRadius = function(){
+    S2CircleCoverer.getS2CapRadius = function () {
         return s2cap;
     }
 
@@ -55,7 +55,7 @@ var S2CircleCoverer = (function(){
      * @param cells
      * @returns {null}
      */
-    S2CircleCoverer.getCovering = function(lat,lon,radius,min,max,cells){
+    S2CircleCoverer.getCovering = function (lat, lon, radius, min, max, cells) {
         var counter = 0;
         var covering_area = 0;
         var covering = new s2.S2RegionCoverer();
@@ -63,13 +63,13 @@ var S2CircleCoverer = (function(){
         covering.setMaxLevel(max);
         covering.setMaxCells(cells);
 
-        var centre_gps = new s2.S2LatLng.fromDegrees(lat,lon);
-        var cap2 = getS2CapRadius(centre_gps,radius);
+        var centre_gps = new s2.S2LatLng.fromDegrees(lat, lon);
+        var cap2 = getS2CapRadius(centre_gps, radius);
         var results = covering.getCoveringCells(cap2);
 
         //console.log("{"+'"type":"FeatureCollection","features":[');
         //dont really need this loop except for being verbose. turn it off in production
-        results.forEach(function(record){
+        results.forEach(function (record) {
             var cell = new s2.S2Cell(record);
             //console.log(JSON.stringify(cell.toGEOJSON())+"," );
             counter++;
@@ -77,7 +77,7 @@ var S2CircleCoverer = (function(){
             covering_area += cell_area;
         });
         //console.log("]}");
-        logger.log("no. of cells in region = " + counter + "-> area = " +covering_area);
+        logger.log("no. of cells in region = " + counter + "-> area = " + covering_area);
         return results;
     }
 
@@ -88,7 +88,7 @@ var S2CircleCoverer = (function(){
      * @param max
      * @param cells
      */
-    S2CircleCoverer.getSquareCovering = function(rect_latlng,min,max,cells){
+    S2CircleCoverer.getSquareCovering = function (rect_latlng, min, max, cells) {
         var counter = 0;
         var covering_area = 0;
         var city_covering = new s2.S2RegionCoverer();
@@ -97,14 +97,14 @@ var S2CircleCoverer = (function(){
         city_covering.setMaxCells(cells);
 
         var results = city_covering.getCoveringCells(rect_latlng);
-        results.forEach(function(record){
+        results.forEach(function (record) {
             var cell = new s2.S2Cell(record);
             counter++;
             var cell_area = cell.approxArea() * constants.KEARTH_CIRCUMFERENCE_METERS;
             covering_area += cell_area;
-            logger.log(JSON.stringify(cell.toGEOJSON())+",");
+            logger.log(JSON.stringify(cell.toGEOJSON()) + ",");
         });
-        logger.log("no. of cells in region = " + counter + "-> area = " +covering_area);
+        logger.log("no. of cells in region = " + counter + "-> area = " + covering_area);
         return results;
     }
 
@@ -113,13 +113,13 @@ var S2CircleCoverer = (function(){
      * @param next_cell_id
      * @returns {Array}
      */
-    S2CircleCoverer.divide = function(next_cell_id){
+    S2CircleCoverer.divide = function (next_cell_id) {
 
         var level = next_cell_id.level(); //e.g. 10
         var divided_cell_id;
         var divided_cell;
         var children = new Array(4);
-        for(var i = 0; i < 4; i++) {
+        for (var i = 0; i < 4; i++) {
             divided_cell_id = next_cell_id.child(i);
             divided_cell = new s2.S2Cell(divided_cell_id);
             children.push(divided_cell);
@@ -129,16 +129,16 @@ var S2CircleCoverer = (function(){
         return children;
     }
 
-    S2CircleCoverer.initialise = function(lat,lon,radius){
+    S2CircleCoverer.initialise = function (lat, lon, radius) {
         //min_level,max_level,max_cells
         var min = constants.S2_CELL_MIN_LEVEL;
         var max = constants.S2_CELL_MAX_LEVEL;
         var max_cells = constants.DEFAULT_CITY_MAX_CELLS;
-        var city_grid = this.getCovering(lat,lon,radius,min,max,max_cells);//s2circle.S2CircleCoverer
+        var city_grid = this.getCovering(lat, lon, radius, min, max, max_cells);//s2circle.S2CircleCoverer
         //add code to check if redis is connected and ready?
-        city_grid.forEach(function(city_cell){
+        city_grid.forEach(function (city_cell) {
             var city_s2cell = new s2.S2Cell(city_cell)
-            var area = (city_s2cell.approxArea()*1000000*1000 * 40075.017).toFixed(0);
+            var area = (city_s2cell.approxArea() * 1000000 * 1000 * 40075.017).toFixed(0);
             //logger.log("adding id="+city_cell.id + ":/to city grid at level = "+
             //    city_s2cell.level +"->>["+(area)+"]");
             //console.log(JSON.stringify(city_s2cell.toGEOJSON())+",");
@@ -151,4 +151,4 @@ var S2CircleCoverer = (function(){
 
 exports.S2CircleCoverer = S2CircleCoverer;
 
-S2CircleCoverer.initialise(0,0,100);
+S2CircleCoverer.initialise(0, 0, 100);

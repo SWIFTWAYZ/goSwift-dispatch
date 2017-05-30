@@ -9,27 +9,28 @@ function isEmptyObject(obj) {
     return !Object.keys(obj).length;
 }
 
-var tripService = (function(){
+var tripService = (function () {
     var TRIP_KEY = "trip:";
 
-var client = new redis();
-    function tripService(){
+    var client = new redis();
+
+    function tripService() {
     };
 
-    tripService.isTripCreated = function(trip_id,cb){
+    tripService.isTripCreated = function (trip_id, cb) {
         //hget trip:01234 vehicle_id >> hgetall trip:01234
-        var key = TRIP_KEY+trip_id;
-        client.hgetall(key).then(function(results){
+        var key = TRIP_KEY + trip_id;
+        client.hgetall(key).then(function (results) {
             //logger.log(results.vehicle_id);
             cb(results);
         });
     }
 
-    tripService.createTripKey = function(trip_id,vehicle_id,start_time,end_time){
-        return new Promise(function(resolved,rejected){
-            var key = TRIP_KEY+trip_id;
-            if(end_time > 0 ){
-                client.hmset(key,"vehicle_id",vehicle_id,"end_time",end_time).then(function(data){
+    tripService.createTripKey = function (trip_id, vehicle_id, start_time, end_time) {
+        return new Promise(function (resolved, rejected) {
+            var key = TRIP_KEY + trip_id;
+            if (end_time > 0) {
+                client.hmset(key, "vehicle_id", vehicle_id, "end_time", end_time).then(function (data) {
                     resolved(data + "- trip ended");
                 });
                 return;
@@ -49,16 +50,16 @@ var client = new redis();
             }
         });
     }
-    tripService.startTrip = function(trip_id,vehicle_id,start_time){
-        tripService.createTripKey(trip_id,vehicle_id,start_time,0).then(function(data){
+    tripService.startTrip = function (trip_id, vehicle_id, start_time) {
+        tripService.createTripKey(trip_id, vehicle_id, start_time, 0).then(function (data) {
             logger.log(data);
         });
     }
 
-    tripService.endTrip = function(trip_id,vehicle_id,end_time){
+    tripService.endTrip = function (trip_id, vehicle_id, end_time) {
         //check if trip isValid before ending trip
         //var tt = new Date().getTime();
-        tripService.createTripKey(trip_id,vehicle_id,0,end_time).then(function(data){
+        tripService.createTripKey(trip_id, vehicle_id, 0, end_time).then(function (data) {
             logger.log(data);
         });
     }
@@ -69,11 +70,11 @@ var client = new redis();
 exports.tripRequest = tripService;
 
 /*var hash_table = {
-    cell_id:"2203795067297071104",
-    vehicle:"zdw065gp",
-    timestamp:"1492783299"
-};
-client.hmset("vehicle:12345",hash_table);*/
+ cell_id:"2203795067297071104",
+ vehicle:"zdw065gp",
+ timestamp:"1492783299"
+ };
+ client.hmset("vehicle:12345",hash_table);*/
 //var tstamp = new Date().getTime();
 //tripService.startTrip("01232","004458",tstamp);
 //var tstamp = new Date().getTime();
@@ -81,10 +82,10 @@ client.hmset("vehicle:12345",hash_table);*/
 
 //scan 0 count 3 match trip:*
 
-tripService.isTripCreated("01234",function(results){
+tripService.isTripCreated("01234", function (results) {
     logger.log(JSON.stringify(results));
-    logger.log(results.vehicle_id + "-"+results.start_time);
-    if(isEmptyObject(results)){
+    logger.log(results.vehicle_id + "-" + results.start_time);
+    if (isEmptyObject(results)) {
         logger.log("HGETALL returned empty");
     }
 })

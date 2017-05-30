@@ -34,10 +34,10 @@ var logger = require("./config/logutil").logger;
 var app = express();
 logger.log(JSON.stringify(init.server));
 
-app.set("port",process.env.PORT||init.server['port']);
+app.set("port", process.env.PORT || init.server['port']);
 
-app.listen(app.get('port'),function(err,data){
-    if(err){
+app.listen(app.get('port'), function (err, data) {
+    if (err) {
         console.error("error message ->" + err);
         return;
     }
@@ -48,16 +48,16 @@ app.listen(app.get('port'),function(err,data){
     var cityhub = init.city.name;
     var hub_centre = init.city.centre;
 
-    logger.log("Indexing cells for " + cityhub + ","+hub_centre +
-        "--[radius ->" + radius + "-centred at = "+lat + ","+lon+"]");
+    logger.log("Indexing cells for " + cityhub + "," + hub_centre +
+        "--[radius ->" + radius + "-centred at = " + lat + "," + lon + "]");
 
-    s2circle.S2CircleCoverer.initialise(lat,lon,radius);
-    logger.log("server running on port:"  + init.server.port);
+    s2circle.S2CircleCoverer.initialise(lat, lon, radius);
+    logger.log("server running on port:" + init.server.port);
 });
 
-app.all("*",function(req,res){
-        logger.log("request coming ...." + req);
-        res.send("responding with text....." + JSON.stringify(init));
-        //res.sendStatus(200);
+app.all("*", function (req, res) {
+    logger.log("request coming ...." + req);
+    res.send("responding with text....." + JSON.stringify(init));
+    //res.sendStatus(200);
 });
 
