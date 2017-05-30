@@ -248,19 +248,33 @@ var s2common = (function(){
         //return intersectArray;
     };
 
-    s2common.addDriversFromFile = function(){
-        var sandton_near = new s2.S2CellId("2203792318518001664").getEdgeNeighbors();
-        logger.log("edge neighbors = "+sandton_near);
+    s2common.getDriversFromFile2 = function(cb){
+        var promises = [];
+        var filename = '/Users/tinyiko/WebstormProjects/GoSwift/server/config/seeds/Gps_dump3.csv';
+        s2common.readDrivers(filename).then(function(data){
 
-        var sandton = new s2.S2CellId.fromToken("1e95715000000000");
-        logger.log("cell-id from token = " + sandton.id);
+            data.forEach(function(each_driver) {
+                var lat = each_driver.latitude;
+                var lon = each_driver.longitude;
+                var s2cell_id = s2common.s2CellIDfromLatLng(lat,lon);
+                promises.push(s2cell_id.pos());
+            });
+            cb(promises);
+            //return promises;
+        }).catch(function(error){
+            console.log("Error logged : " +error);
+        });
+        //return promises;
+    }
+
+    s2common.addDriversFromFile = function(){
         var filename = '/Users/tinyiko/WebstormProjects/GoSwift/server/config/seeds/Gps_dump3.csv';
         s2common.readDrivers(filename).then(function(data){
             data.forEach(function(each_driver) {
                 var lat = each_driver.latitude;
                 var lon = each_driver.longitude;
                 var s2cell_id = s2common.s2CellIDfromLatLng(lat,lon);
-                logger.log("cell_id = " + s2cell_id.id + "["+lat+","+lon + "]="+sandton.contains(s2cell_id));
+               // logger.log("cell_id = " + s2cell_id.id + "["+lat+","+lon + "]="+sandton.contains(s2cell_id));
                 //console.log(s2cell_id.id.toString());
             });
         }).catch(function(error){

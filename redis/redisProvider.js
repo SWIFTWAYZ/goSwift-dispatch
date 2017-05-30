@@ -27,7 +27,7 @@ var provider = (function() {
     client.monitor(function (err, monitor) {
         // Entering monitoring mode.
         monitor.on('monitor', function (time, args, source, database) {
-            logger.debug(time + ": " + args);
+            //logger.debug(time + ": " + args);
         });
     });
     /**
@@ -65,7 +65,7 @@ var provider = (function() {
     provider.isMemberOfCityCells = function(item){
         var promise = new Promise(function(resolve,reject){
             client.sismember(CITY_CELLS,item).then(function(results) {
-                logger.log("ismember? item = "+ item + ",response = " + results);
+                //logger.log("ismember? item = "+ item + ",response = " + results);
                 //resolve(item);
                 if (results === 1) {
                     //if item is a member of cell, we return the key
@@ -92,85 +92,75 @@ var provider = (function() {
             promises.push(provider.isMemberOfCityCells(item.pos()))
             logger.log("forEach push promises for item = "+ item.pos());
         });
-
-        Promise.all(promises).then(function(results){
-            if(results){
-                logger.log("promises running = "+results);
-            }
-        });
     }
 
-    provider.getCellforVehicleKey = function(vehicleKey,vehicle_id,cb){
-        var cellArray = s2common.getParentIdArray(vehicleKey,12,3);
-        cellArray.forEach(function(item) {
-            (new Promise(function (resolve, reject) {
-                resolve(item.pos())
-            })).then(function (results) {
-                provider.isMemberOfCityCells(results).then(function (cell) {
-                    //logger.log("loop2, index = " + "cell=" + cell);
-                    if (cell > 0) {
-                        logger.log("loop isMember = " + "cell=" + cell);
-                        cb(cell);
-                    }
+    provider.getCellforVehicleKey = function(vehicleKey,vehicle_id){
+        //do we return a promise here or use a callback??
+        return new Promise(function(resolved,rejected){
+            var cellArray = s2common.getParentIdArray(vehicleKey,12,3);
+            cellArray.forEach(function(item,index) {
+                (new Promise(function (resolve, reject) {
+                    resolve(item.pos())
+                })).then(function (results) {
+                    provider.isMemberOfCityCells(results).then(function (cell) {
+                        //logger.log("loop2, index = " + "cell=" + cell);
+                        if (cell > 0) {
+                            logger.log("index = ["+index+"],vehicle="+ +vehicle_id + "-cell=" + cell);
+                            //cb(cell);
+                            resolved(cell);
+                        }else{
+                            resolved(null);
+                        }
+                    });
                 });
             });
         });
-
-
-
-        //-------------------------
-
-            /*for(var i = 0; i < cellArray.length; i++){
-            var item = cellArray[i].pos();
-            provider.isMemberOfCityCells(item).then(function(cell){
-                if(cell > 0){
-                    logger.log("loop, index = " + i + "cell="+cell);
-                    cb(cell);
-                }
-            }).catch(function(error){
-                logger.log("not a member = " + error);
-            });
-        }*/
     }
 
-    provider.getVehiclePositionByTime = function(vehicle_id,secondsAgo,cb){
-        var now = new Date().getTime();
-        var before = now - secondsAgo * 1000;
-        var minutesAgo = ((secondsAgo * 1000)/60000).toFixed(0);
-        logger.log("minutes to go back from NOW --- " +minutesAgo+ "min");
-        client.zrangebyscore(VEHICLE_KEY+vehicle_id,before,now,'withscores').then(function(results){
+    provider.getVehiclePositionByTime = function(vehicle_id,secondsAgo){
+        return new Promise(function(resolve,reject){
+            var now = new Date().getTime();
+            var before = now - secondsAgo * 1000;
+            var minutesAgo = ((secondsAgo * 1000)/60000).toFixed(0);
+            logger.log("minutes to go back from NOW --- " +minutesAgo+ "min");
+            client.zrangebyscore(VEHICLE_KEY+vehicle_id,before,now,'withscores').then(function(results){
                 logger.log("----rangebyscore >>> " +before + ">"+ results.length);
-                //logger.log(results);
-                cb(results);
-        }).catch(function(error){
-            logger.log('error = '+error);
-        });;
+                //cb(results);
+                resolve(results);
+            }).catch(function(error){
+                logger.log('error = '+error);
+                reject(error);
+            });;
+        });
     }
 
-    provider.getVehiclePosition = function(vehicle_id,cb){
-            client.zrange(VEHICLE_KEY+vehicle_id,0,-1).then(function(results){
+    provider.getVehiclePosition = function(vehicle_id){
+        return client.zrange(VEHICLE_KEY+vehicle_id,0,-1);
+            /*.then(function(results){
                 cb(results);
             }).catch(function(error){
                 logger.log('error = '+error);
-            });
+            });*/
     }
 
-    provider.getVehiclePositionByRange = function(vehicle,index_start,index_end,cb){
-            client.zrange(VEHICLE_KEY+vehicle,index_start,index_end,'withscores').then(function(results){
+    provider.getVehiclePositionByRange = function(vehicle,index_start,index_end){
+            return client.zrange(VEHICLE_KEY+vehicle,index_start,index_end,'withscores');
+                /*.then(function(results){
                 logger.log(results);
                 cb(results);
             }).catch(function(error){
                 logger.log('error = '+error);
-            });;
+            });;*/
     }
 
-    provider.getVehiclePositionAndScore = function(vehicle_id,cb){
-            client.zrange(VEHICLE_KEY+vehicle_id,0,-1,'withscores').then(function(results){
+    provider.getVehiclePositionAndScore = function(vehicle_id){
+            return client.zrange(VEHICLE_KEY+vehicle_id,0,-1,'withscores');
+                /*.then(function(results){
                 logger.log(results);
                 cb(results);
         }).catch(function(error){
                 logger.log('error = '+error);
-            });;
+            });;*/
     }
 
     /**
@@ -181,67 +171,83 @@ var provider = (function() {
      * @param timestamp
      */
     provider.addVehiclePosition = function(driverKey,vehicle_id,timestamp){
-        //var hexKey = new s2.S2CellId(driverKey).toToken();
-        var key = VEHICLE_KEY + vehicle_id;
-        provider.getCellforVehicleKey(driverKey,vehicle_id,function(grid_cell){
-            logger.log("did we get cell for vehiclekey? = " + grid_cell + "={"+driverKey+"}");
-            if(grid_cell > 0) {
-                client.multi()
-                    .zadd(CELL_KEY + grid_cell,timestamp,vehicle_id)
-                    .zadd(key, timestamp, driverKey)
-                    .exec().then(function (results) {
-                    logger.log("adding " + key +"/key=" +driverKey+"/cell="+grid_cell+", results =" + results);
-                }).catch(function(error){
-                    logger.log('error = '+error);
-                });
-            }
+        return new Promise(function(resolve,reject){
+            //var hexKey = new s2.S2CellId(driverKey).toToken();
+            var key = VEHICLE_KEY + vehicle_id;
+            provider.getCellforVehicleKey(driverKey,vehicle_id).then(function(grid_cell){
+                logger.log("did we get cell for vehiclekey? = " + grid_cell + "={"+driverKey+"}");
+                if(grid_cell > 0) {
+                    client.multi()
+                        .zadd(CELL_KEY + grid_cell,timestamp,vehicle_id)
+                        .zadd(key, timestamp, driverKey)
+                        .exec().then(function (results) {
+                        logger.log("adding " + key +"/key=" +driverKey+"/cell="+grid_cell+", results =" + results);
+                        resolve(results);
+                    }).catch(function(error){
+                        logger.log('error = '+error);
+                        reject(error);
+                    });
+                }
+            });
         });
+
     }
 
-    provider.getVehicleCell = function(vehicle_id,cb){
-        client.zrange(VEHICLE_KEY+vehicle_id,0,-1).then(function(s2cell_id) {
-            var vehicleKey = s2cell_id[0];
-            if(vehicleKey === undefined){
-                cb(null);
-                return;
-            }
-            logger.log("current cell positions = " + s2cell_id + "-" + vehicleKey);
-            var array = s2common.getParentIdArray(vehicleKey, 12, 3);
-            //should we also check?? > keys cell:2203795067297071104
-            //var promises = new Array();
+    provider.getVehicleCell = function(vehicle_id){
+        return new Promise(function(resolved,rejected){
+            client.zrange(VEHICLE_KEY+vehicle_id,0,-1).then(function(s2cell_id) {
+                var vehicleKey = s2cell_id[0];
+                logger.log("vehicle id ="+ vehicle_id + "....count = "+s2cell_id.length);
+                if(vehicleKey === undefined || s2cell_id.length == 0){
+                    resolved(null);
+                    return;
+                }
+                logger.log("current cell positions = [" + s2cell_id.length + "] -" + vehicleKey);
+                var array = s2common.getParentIdArray(vehicleKey, 12, 3);
+                //should we also check?? > keys cell:2203795067297071104
+                //var promises = new Array();
 
-            array.forEach(function(item){
-                (new Promise(function(resolve,reject){
-                    resolve(item.pos());
-                })).then(function(results){
-                    //logger.log("results..."+results);
-                    client.sismember(CITY_CELLS,results).then(function(data){
-                        logger.log("promise resolved? = "+data + "-cellid="+results);
-                        if(data){
-                            logger.log("is-member of city_cells = "+data+" ? - cellid="+item.pos());
-                            cb(item.pos());
-                        }
+                array.forEach(function(item){
+                    (new Promise(function(resolve,reject){
+                        resolve(item.pos());
+                    })).then(function(results){
+                        //logger.log("results..."+results);
+                        client.sismember(CITY_CELLS,results).then(function(data){
+                            logger.log("promise resolved? = "+data + "-cellid="+results);
+                            if(data){
+                                logger.log("is-member of city_cells = "+data+" ? - cellid="+item.pos());
+                                //cb(null,item.pos());
+                                resolved(item.pos())
+                            }
+                        });
+                    }).catch(function(error){
+                        //cb(error,null);
+                        rejected(error);
                     });
                 });
             });
-            });
+        });
         }
 
 
-    provider.changeCellPosition = function(newDriverPos,vehicle_id,timestamp,cb){
+    provider.changeCellPosition = function(newDriverPos,vehicle_id,timestamp){
         //first remove vehicle from cell its exiting
         //then add vehicle to cell its entering. Use redis transactions for this
-        var new_cell = s2common.getParentIdAtLevel(12,newDriverPos);
-        logger.log("vehicle_id = "+vehicle_id +"> enters grid = " + new_cell + "/"+newDriverPos);
-        provider.getVehicleCell(vehicle_id,function(old_cell){
-            logger.log("got cell for vehiclekey? = " + old_cell + "=vehicle_id :"+vehicle_id+"}");
-            client.multi()
-                .zrem(CELL_KEY + old_cell, vehicle_id)
-                .zadd(CELL_KEY + new_cell, timestamp, vehicle_id)
-                .exec().then(function (results) {
-                cb(results);
+        return new Promise(function(resolve,reject){
+            var new_cell = s2common.getParentIdAtLevel(12,newDriverPos);
+            logger.log("vehicle_id = "+vehicle_id +"> enters grid = " + new_cell + "/"+newDriverPos);
+            provider.getVehicleCell(vehicle_id,function(old_cell){
+                logger.log("got cell for vehiclekey? = " + old_cell + "=vehicle_id :"+vehicle_id+"}");
+                client.multi()
+                    .zrem(CELL_KEY + old_cell, vehicle_id)
+                    .zadd(CELL_KEY + new_cell, timestamp, vehicle_id)
+                    .exec().then(function (results) {
+                    //cb(results);
+                    resolve(results);
+                });
             });
         });
+
     }
 
     /**
@@ -287,15 +293,18 @@ var provider = (function() {
      * retrieve parent_ids from the driver_cell set
      * @param driver_id
      */
-    provider.getDriverPositions = function(driver_key,cb){
+    provider.getDriverPositions = function(driver_key){
         //driver_cells - we retrieve driver quadKeys from VEHICLE_KEY
-        logger.log(driver_key);
-        client.zrange(VEHICLE_KEY+driver_key,0,-1,'withscores').then(function(celldata){
-            logger.log("driver = " + driver_key + ", positions = " + JSON.stringify(celldata));
-            cb(celldata);
-        }).catch(function(error){
-            var err_msg = "error retrieving position for driver id = ";
-            cb(err_msg + driver_key);
+        return new Promise(function(resolve,reject)
+        {
+            client.zrange(VEHICLE_KEY + driver_key, 0, -1, 'withscores').then(function (celldata) {
+                //cb(celldata);
+                resolve(celldata);
+            }).catch(function (error) {
+                var err_msg = "error retrieving position for driver id = ";
+                //cb(err_msg + driver_key);
+                reject(err_msg + driver_key);
+            });
         });
     }
 
@@ -303,24 +312,31 @@ var provider = (function() {
      * Retrieve all drivers that are in a given cell
      * @param s2cell_id
      */
-    provider.getDriversInCell = function(s2cell_id,cb){
-        if(new s2.S2CellId(s2cell_id).isLeaf()){
-            cb(null);
-        }
-        else {
-            client.zrange(CELL_KEY + s2cell_id,0,-1,'withscores').then(function (results) {
-                if (results.length > 0) {
-                    var array = _.toArray(results);
-                    cb(array);
-                }
-                else {
-                    logger.log("no members " + results);
-                    cb(null);
-                }
-            }).catch(function(error){
-                logger.log('error = '+error);
-            });;
-        }
+    provider.getDriversInCell = function(s2cell_id){
+        return new Promise(function(resolve,reject)
+        {
+            if (new s2.S2CellId(s2cell_id).isLeaf()) {
+                //cb(null);
+                resolve(null);
+            }
+            else {
+                client.zrange(CELL_KEY + s2cell_id, 0, -1, 'withscores').then(function (results) {
+                    if (results.length > 0) {
+                        var array = _.toArray(results);
+                        //cb(array);
+                        resolve(array);
+                    }
+                    else {
+                        logger.log("no members " + results);
+                        //cb(null);
+                        resolve(null);
+                    }
+                }).catch(function (error) {
+                    logger.log('error = ' + error);
+                    reject(error);
+                });
+            }
+        });
     }
 
     /**
@@ -339,25 +355,46 @@ var provider = (function() {
 }).call(this);
 exports.provider = provider;
 
+
+/*s2common.getDriversFromFile2(function(data){
+    logger.log("size of data = " + data.length);
+    var time = new Date().getTime();
+    data.forEach(function(item){
+        //logger.log("item = "+ item);
+        provider.addVehiclePosition(item,"004467",time).then(function(results){
+            logger.log(results);
+        })
+    })
+});*/
+
 //2203795067297071104
 //2203793418029629440
 
 
-/*var vehicle_id59 = "004461";
-var ts = new Date().getTime();
-provider.changeCellPosition("2203840188725229341",vehicle_id59,ts,function(results){
-    logger.log(results);
-});*/
+var vehicle_id59 = "004468";
 
-/*provider.getVehicleCell(vehicle_id59,function(results){
+provider.getDriverPositions(vehicle_id59).then(function(celldata){
+    logger.log("driver = " + vehicle_id59 + ", positions = " + celldata);//JSON.stringify(celldata));
+})
+
+provider.getDriversInCell("2203688414669176832").then(function(data){
+    logger.log("drivers in cell = "+data);
+});
+
+/*var ts = new Date().getTime();
+provider.changeCellPosition("2203840188725229341",vehicle_id59,ts).then(function(results){
+    logger.log(results);
+});
+
+provider.getVehicleCell(vehicle_id59).then(function(results){
     logger.log("current pos = " + results);
 });*/
 
 /*
-provider.getCellforVehicleKey("2203795001640038161","004469",function(cell){
+provider.getCellforVehicleKey("2203795001640038161","004469").then(function(cell){
  logger.log("-get cell id for vehicle  = " + cell);
- });*/
-
+ });
+*/
 /*var vehicle_id59 = "004460";
  provider.leaveCityCell("2203795001640038161",vehicle_id59,function(response){
  logger.log("removing vehicle id = " + vehicle_id59 + "-"+response);
@@ -365,6 +402,7 @@ provider.getCellforVehicleKey("2203795001640038161","004469",function(cell){
 
 //provider.addDriverPosition("2203795003930470261");
 
+/*--
 var ts = new Date().getTime();
 try{
     var vehiclekey = "2203840532358176487";
@@ -374,11 +412,14 @@ try{
 
     var vehicleId = "004458";
 
-    //provider.addVehiclePosition(vehiclekey,"004473",ts);
+    provider.addVehiclePosition(vehiclekey,"004473",ts);
     provider.addVehiclePosition(vehicle2,"004474",ts+80);
-    /*provider.addVehiclePosition(vehicle3,"004475",ts+120);
-    provider.addVehiclePosition(vehicle4,"004476",ts+150);*/
+    provider.addVehiclePosition(vehicle3,"004475",ts+120);
+    provider.addVehiclePosition(vehicle4,"004476",ts+150);
 
+    provider.getVehicleCell("004473").then(function(results){
+            logger.log("getVehicleCell" +"/"+ results);
+    });
     /*provider.getVehiclePosition(vehicle2,function(results){
         logger.log(">>> positions for vehicle_id = " + vehicle2 + " [total pos = "+results.length);
         results.forEach(function(item){
@@ -387,12 +428,13 @@ try{
     });
     logger.log("adding to cell id = -------" + vehicle2 +
         "=["+s2common.getParentIdAtLevel(12,vehicle2)+"]------");*/
-
+/*--
 }catch(error){
     logger.log(error);
 }
-/*
 
+
+/*
  //14900 - 9800 (at 9:02 pm)
  provider.getVehiclePositionByTime(vehicleId,14900,function(results){
  logger.log(results);
