@@ -49,7 +49,7 @@ var tripCreator = (function () {
         return promise;
     }
 
-    tripCreator.getDriversFromFile2 = function (cb) {
+    tripCreator.logVehicleTrip = function (vehicle_id) {
         var filename = '/Users/tinyiko/WebstormProjects/GoSwift/docs/S2/routes/Paulshof_waypoints.txt';
         tripCreator.readDrivers(filename).then(function (data) {
 
@@ -59,7 +59,7 @@ var tripCreator = (function () {
                 var s2cell_id = s2common.s2CellIdKeyFromLatLng(lat, lon);
                 var tstamp = new Date().getTime();
 
-                client.addVehiclePosition(s2cell_id, "004468", tstamp).then(function (results) {
+                client.addVehiclePosition(s2cell_id, vehicle_id, tstamp).then(function (results) {
                     logger.log("...."+s2cell_id + ",with timestamp = "+ tstamp + ".results = "+results);
                 }).catch(function (error) {
                     logger.error("vehicle not added " + error);
@@ -98,6 +98,8 @@ var tripCreator = (function () {
 
 exports.tripRequest = tripCreator;
 
-new tripCreator().print("trip to sandton");
+//new tripCreator().print("trip to sandton");
 
-tripCreator.getDriversFromFile2();
+tripCreator.logVehicleTrip("004469");
+
+

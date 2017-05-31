@@ -3,9 +3,9 @@
  */
 "use strict";
 
+var _ = require("lodash");
 var redis = require("ioredis");
 var s2 = require("nodes2ts");
-var _ = require("underscore");
 var s2common = require("../s2geometry/s2common").s2common;
 var logger = require("../config/logutil").logger;
 
@@ -14,7 +14,8 @@ var provider = (function () {
     var TRIP_KEY = "trip:",
         CITY_CELLS = "city_cells",
         CELL_KEY = "cell:",
-        VEHICLE_KEY = "vehicle:";
+        VEHICLE_KEY = "vehicle:",
+        CURR_VEHICLE_CELL = "vehicle_cell:";
 
     //var gridArray = null;
     var client = new redis({
@@ -106,7 +107,7 @@ var provider = (function () {
                     provider.isMemberOfCityCells(results).then(function (cell) {
                         //logger.log("loop2, index = " + "cell=" + cell);
                         if (cell > 0) {
-                            logger.log("index = [" + index + "],vehicle=" + +vehicle_id + "-cell=" + cell);
+                            //logger.log("index = [" + index + "],vehicle=" + +vehicle_id + "-cell=" + cell);
                             //cb(cell);
                             resolved(cell);
                         } else {
@@ -165,6 +166,28 @@ var provider = (function () {
          });;*/
     }
 
+    provider.removeVehicleCell = function(vehicle_id,timestamp,cellId){
+        return new Promise(function(resolve,reject){
+            var vehicle_cell_key = CURR_VEHICLE_CELL+vehicle_id;
+            client.zrange(vehicle_cell_key,0,-1).then(function(cell_vehicle) {
+                //logger.log("ZRANGE --> vehicle_cell:" + cell_vehicle + ":"+cell_vehicle.length);
+                if(cell_vehicle.length === 0){
+                    logger.log("skip = "+ cell_vehicle + "->"+cellId);
+                    client.zadd(vehicle_cell_key, timestamp, cellId)
+                    resolve(cell_vehicle);
+                    //return;
+                }
+                else{
+                    logger.log("remove2 = "+ cell_vehicle);
+                    client.zrem(vehicle_cell_key,cell_vehicle).then(function (results) {
+                        client.zadd(vehicle_cell_key, timestamp, cellId)
+                        logger.log("actually removed = " + results);
+                        resolve(results);
+                    });
+                }
+            });
+        });
+    }
     /**
      * This method uses redis transactions to ensure driver_key is added to CELL_KEY
      * and VEHICLE_KEY as an atomic transaction.
@@ -176,26 +199,31 @@ var provider = (function () {
         return new Promise(function (resolve, reject) {
             //var hexKey = new s2.S2CellId(driverKey).toToken();
             var key = VEHICLE_KEY + vehicle_id;
+            var vehicle_cell_key = CURR_VEHICLE_CELL + vehicle_id;
             provider.getCellforVehicleKey(driverKey, vehicle_id).then(function (grid_cell) {
-                logger.log("did we get cell for vehiclekey? = " + grid_cell + "={" + driverKey + "}");
+                logger.log("vehiclekey = " + driverKey + "-->" + ":" + grid_cell);
+                //logger.log("vehicle_cell = " + vehicle_cell_key);
                 if (grid_cell > 0) {
-                    client.multi()
-                        .zadd(CELL_KEY + grid_cell, timestamp, vehicle_id)
-                        .zadd(key, timestamp, driverKey)
-                        .exec().then(function (results) {
-                        logger.log("adding " + key + "/key=" + driverKey + "/cell=" + grid_cell + ", results =" + results);
-                        resolve(results);
-                    }).catch(function (error) {
-                        logger.log('error = ' + error);
+                    //provider.removeVehicleCell(vehicle_id,timestamp,grid_cell).then(function (removed) {
+                        logger.log("removed ? = " + "/=");
+                        client.multi()
+                        //.zrem(vehicle_cell_key,"") -- delete member of vehicle_cell
+                            .zadd(CELL_KEY + grid_cell, timestamp, vehicle_id)
+                            .zadd(vehicle_cell_key, timestamp, grid_cell)
+                            .zadd(key, timestamp, driverKey)
+                            .exec()
+                            .then(function (results) {
+                                logger.log("adding " + key + "/key=" + driverKey + "/cell=" + grid_cell + ", results =" + results);
+                                resolve(results);
+                            })
+                    //})
+                        .catch(function (error) {
+                        logger.log("Error with addVehiclePosition: " + error);
                         reject(error);
                     });
                 }
-            }).catch(function (error) {
-                logger.log("Error with addVehiclePosition: " + error);
-                reject(error);
             });
         });
-
     }
 
     provider.getVehicleCell = function (vehicle_id) {
@@ -358,6 +386,7 @@ var provider = (function () {
 }).call(this);
 exports.provider = provider;
 
+//provider.removeVehicleCell("004469");
 
 /*s2common.getDriversFromFile2(function(data){
  logger.log("size of data = " + data.length);
@@ -373,6 +402,8 @@ exports.provider = provider;
 //add new method to geocode each cell and store in a new datastructure
 //that holds both the cell_id, the centroid gps and the name of surburb
 
+//add method which given a rider location, can retrieve all vehicles in ascending
+//order that are closest to the rider using a s2circlecoverer.
 
 //2203795067297071104
 //2203793418029629440
