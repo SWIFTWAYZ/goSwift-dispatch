@@ -102,6 +102,6 @@ exports.tripRequest = tripCreator;
 
 //new tripCreator().print("trip to sandton");
 
-tripCreator.logVehicleTrip("004469");
+tripCreator.logVehicleTrip("004467");
 
 

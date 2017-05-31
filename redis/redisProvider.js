@@ -85,7 +85,7 @@ var provider = (function () {
         return promise;
     }
 
-    provider.getCellforVehicleKey2 = function (vehicleKey, vehicle_id, cb) {
+    provider.getVehicleGridCell2 = function (vehicleKey, vehicle_id, cb) {
         var cellArray = s2common.getParentIdArray(vehicleKey, 12, 3);
         var promises = [];
         //client.multi();
@@ -96,7 +96,7 @@ var provider = (function () {
         });
     }
 
-    provider.getCellforVehicleKey = function (vehicleKey, vehicle_id) {
+    provider.getVehicleGridCell = function (vehicleKey, vehicle_id) {
         //do we return a promise here or use a callback??
         return new Promise(function (resolved, rejected) {
             var cellArray = s2common.getParentIdArray(vehicleKey, 12, 3);
@@ -184,7 +184,7 @@ var provider = (function () {
             var vehicle_key = VEHICLE_KEY + vehicle_id;
             var vehicle_cell_key = CURR_VEHICLE_CELL + vehicle_id;
 
-            provider.getCellforVehicleKey(driverKey, vehicle_id).then(function (grid_cell) {
+            provider.getVehicleGridCell(driverKey, vehicle_id).then(function (grid_cell) {
                 var grid_key = CELL_KEY + grid_cell;
                 //logger.log("vehiclekey = " + driverKey + "-->" + ":" + grid_cell);
                 if (grid_cell > 0) {
@@ -246,7 +246,7 @@ var provider = (function () {
 
 
     provider.changeCellPosition = function (newDriverPos, vehicle_id, timestamp) {
-        //first remove vehicle from cell its exiting
+        //first remove vehicle from cell the driver is exiting
         //then add vehicle to cell its entering. Use redis transactions for this
         return new Promise(function (resolve, reject) {
             var new_cell = s2common.getParentIdAtLevel(12, newDriverPos);
@@ -272,7 +272,7 @@ var provider = (function () {
      * @param timestamp
      */
     provider.leaveCityCell = function (driverKey, vehicle_id, cb) {
-        provider.getCellforVehicleKey(driverKey, vehicle_id, function (grid_cell) {
+        provider.getVehicleGridCell(driverKey, vehicle_id, function (grid_cell) {
             client.zrem(CELL_KEY + grid_cell, vehicle_id).then(function (results) {
                 cb(results);
             });
@@ -412,7 +412,7 @@ exports.provider = provider;
  });*/
 
 /*
- provider.getCellforVehicleKey("2203795001640038161","004469").then(function(cell){
+ provider.getVehicleGridCell("2203795001640038161","004469").then(function(cell){
  logger.log("-get cell id for vehicle  = " + cell);
  });
  */
