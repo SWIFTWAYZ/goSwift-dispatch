@@ -139,31 +139,14 @@ var provider = (function () {
 
     provider.getVehiclePosition = function (vehicle_id) {
         return client.zrange(VEHICLE_KEY + vehicle_id, 0, -1);
-        /*.then(function(results){
-         cb(results);
-         }).catch(function(error){
-         logger.log('error = '+error);
-         });*/
     }
 
     provider.getVehiclePositionByRange = function (vehicle, index_start, index_end) {
         return client.zrange(VEHICLE_KEY + vehicle, index_start, index_end, 'withscores');
-        /*.then(function(results){
-         logger.log(results);
-         cb(results);
-         }).catch(function(error){
-         logger.log('error = '+error);
-         });;*/
     }
 
     provider.getVehiclePositionAndScore = function (vehicle_id) {
         return client.zrange(VEHICLE_KEY + vehicle_id, 0, -1, 'withscores');
-        /*.then(function(results){
-         logger.log(results);
-         cb(results);
-         }).catch(function(error){
-         logger.log('error = '+error);
-         });;*/
     }
 
     provider.removeVehicleCell = function(vehicle_id,timestamp,cellId){
@@ -197,31 +180,30 @@ var provider = (function () {
      */
     provider.addVehiclePosition = function (driverKey, vehicle_id, timestamp) {
         return new Promise(function (resolve, reject) {
-            //var hexKey = new s2.S2CellId(driverKey).toToken();
-            var key = VEHICLE_KEY + vehicle_id;
+
+            var vehicle_key = VEHICLE_KEY + vehicle_id;
             var vehicle_cell_key = CURR_VEHICLE_CELL + vehicle_id;
+
             provider.getCellforVehicleKey(driverKey, vehicle_id).then(function (grid_cell) {
-                logger.log("vehiclekey = " + driverKey + "-->" + ":" + grid_cell);
-                //logger.log("vehicle_cell = " + vehicle_cell_key);
+                var grid_key = CELL_KEY + grid_cell;
+                //logger.log("vehiclekey = " + driverKey + "-->" + ":" + grid_cell);
                 if (grid_cell > 0) {
-                    //provider.removeVehicleCell(vehicle_id,timestamp,grid_cell).then(function (removed) {
-                        logger.log("removed ? = " + "/=");
                         client.multi()
-                        //.zrem(vehicle_cell_key,"") -- delete member of vehicle_cell
-                            .zadd(CELL_KEY + grid_cell, timestamp, vehicle_id)
+                            .zadd(grid_key, timestamp, vehicle_id)
                             .zadd(vehicle_cell_key, timestamp, grid_cell)
-                            .zadd(key, timestamp, driverKey)
+                            .zadd(vehicle_key, timestamp, driverKey)
                             .exec()
                             .then(function (results) {
-                                logger.log("adding " + key + "/key=" + driverKey + "/cell=" + grid_cell + ", results =" + results);
+                                logger.log("add " + vehicle_key + "/key=" + driverKey + "/cell=" + grid_cell +
+                                    ", results =" + results);
                                 resolve(results);
-                            })
-                    //})
-                        .catch(function (error) {
+                            }).catch(function (error) {
                         logger.log("Error with addVehiclePosition: " + error);
                         reject(error);
                     });
                 }
+            }).catch(function(lastError){
+                logger.log("lastError:"+lastError);
             });
         });
     }

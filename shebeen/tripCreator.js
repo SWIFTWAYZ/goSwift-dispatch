@@ -50,7 +50,9 @@ var tripCreator = (function () {
     }
 
     tripCreator.logVehicleTrip = function (vehicle_id) {
-        var filename = '/Users/tinyiko/WebstormProjects/GoSwift/docs/S2/routes/Paulshof_waypoints.txt';
+        var filename = '/Users/tinyiko/WebstormProjects/GoSwift/docs/S2/routes/Woodmead_waypoints.txt';
+        //Paulshof_waypoints.txt,Springs_edge_waypoints.txt
+
         tripCreator.readDrivers(filename).then(function (data) {
 
             data.forEach(function (each_driver) {
@@ -60,7 +62,7 @@ var tripCreator = (function () {
                 var tstamp = new Date().getTime();
 
                 client.addVehiclePosition(s2cell_id, vehicle_id, tstamp).then(function (results) {
-                    logger.log("...."+s2cell_id + ",with timestamp = "+ tstamp + ".results = "+results);
+                    //logger.log("...."+s2cell_id + ",with timestamp = "+ tstamp + ".results = "+results);
                 }).catch(function (error) {
                     logger.error("vehicle not added " + error);
                 });
