@@ -17,7 +17,6 @@ var provider = (function () {
         VEHICLE_KEY = "vehicle:",
         CURR_VEHICLE_CELL = "vehicle_cell:";
 
-    //var gridArray = null;
     var client = new redis({
         retryStrategy: function (times) {
             var delay = Math.min(times * 50, 2000);
@@ -64,7 +63,7 @@ var provider = (function () {
     }
 
     //----------methods to add driver position--------------------------
-    provider.isMemberOfCityCells = function (item) {
+    provider.isMemberOfGrid = function (item) {
         var promise = new Promise(function (resolve, reject) {
             client.sismember(CITY_CELLS, item).then(function (results) {
                 //logger.log("ismember? item = "+ item + ",response = " + results);
@@ -91,7 +90,7 @@ var provider = (function () {
         //client.multi();
         cellArray.forEach(function (item) {
             //promises.push(client.sismember(CITY_CELLS,item.pos()));
-            promises.push(provider.isMemberOfCityCells(item.pos()))
+            promises.push(provider.isMemberOfGrid(item.pos()))
             logger.log("forEach push promises for item = " + item.pos());
         });
     }
@@ -104,7 +103,7 @@ var provider = (function () {
                 (new Promise(function (resolve, reject) {
                     resolve(item.pos())
                 })).then(function (results) {
-                    provider.isMemberOfCityCells(results).then(function (cell) {
+                    provider.isMemberOfGrid(results).then(function (cell) {
                         //logger.log("loop2, index = " + "cell=" + cell);
                         if (cell > 0) {
                             //logger.log("index = [" + index + "],vehicle=" + +vehicle_id + "-cell=" + cell);
@@ -149,20 +148,20 @@ var provider = (function () {
         return client.zrange(VEHICLE_KEY + vehicle_id, 0, -1, 'withscores');
     }
 
-    provider.removeVehicleCell = function(vehicle_id,timestamp,cellId){
-        return new Promise(function(resolve,reject){
-            var vehicle_cell_key = CURR_VEHICLE_CELL+vehicle_id;
-            client.zrange(vehicle_cell_key,0,-1).then(function(cell_vehicle) {
+    provider.removeVehicleCell = function (vehicle_id, timestamp, cellId) {
+        return new Promise(function (resolve, reject) {
+            var vehicle_cell_key = CURR_VEHICLE_CELL + vehicle_id;
+            client.zrange(vehicle_cell_key, 0, -1).then(function (cell_vehicle) {
                 //logger.log("ZRANGE --> vehicle_cell:" + cell_vehicle + ":"+cell_vehicle.length);
-                if(cell_vehicle.length === 0){
-                    logger.log("skip = "+ cell_vehicle + "->"+cellId);
+                if (cell_vehicle.length === 0) {
+                    logger.log("skip = " + cell_vehicle + "->" + cellId);
                     client.zadd(vehicle_cell_key, timestamp, cellId)
                     resolve(cell_vehicle);
                     //return;
                 }
-                else{
-                    logger.log("remove2 = "+ cell_vehicle);
-                    client.zrem(vehicle_cell_key,cell_vehicle).then(function (results) {
+                else {
+                    logger.log("remove2 = " + cell_vehicle);
+                    client.zrem(vehicle_cell_key, cell_vehicle).then(function (results) {
                         client.zadd(vehicle_cell_key, timestamp, cellId)
                         logger.log("actually removed = " + results);
                         resolve(results);
@@ -188,22 +187,22 @@ var provider = (function () {
                 var grid_key = CELL_KEY + grid_cell;
                 //logger.log("vehiclekey = " + driverKey + "-->" + ":" + grid_cell);
                 if (grid_cell > 0) {
-                        client.multi()
-                            .zadd(grid_key, timestamp, vehicle_id)
-                            .zadd(vehicle_cell_key, timestamp, grid_cell)
-                            .zadd(vehicle_key, timestamp, driverKey)
-                            .exec()
-                            .then(function (results) {
-                                logger.log("add " + vehicle_key + "/key=" + driverKey + "/cell=" + grid_cell +
-                                    ", results =" + results);
-                                resolve(results);
-                            }).catch(function (error) {
+                    client.multi()
+                        .zadd(grid_key, timestamp, vehicle_id)
+                        .zadd(vehicle_cell_key, timestamp, grid_cell)
+                        .zadd(vehicle_key, timestamp, driverKey)
+                        .exec()
+                        .then(function (results) {
+                            logger.log("add " + vehicle_key + "/key=" + driverKey + "/cell=" + grid_cell +
+                                ", results =" + results);
+                            resolve(results);
+                        }).catch(function (error) {
                         logger.log("Error with addVehiclePosition: " + error);
                         reject(error);
                     });
                 }
-            }).catch(function(lastError){
-                logger.log("lastError:"+lastError);
+            }).catch(function (lastError) {
+                logger.log("lastError:" + lastError);
             });
         });
     }
