@@ -380,8 +380,9 @@ exports.provider = provider;
  })
  });*/
 
-//add new method to geocode each cell and store in a new datastructure
-//that holds both the cell_id, the centroid gps and the name of surburb
+//add new method to geocode each cell and store in a new data structure
+//that holds both the cell_id, the centroid gps and the name of suburb
+// (e.g. 2203795067297071104, "-26.139121769,28.045368762", "Woodmead - Austin street"
 
 //add method which given a rider location, can retrieve all vehicles in ascending
 //order that are closest to the rider using a s2circlecoverer.
