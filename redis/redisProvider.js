@@ -118,7 +118,28 @@ var provider = (function () {
         });
     }
 
-    provider.getVehiclePositionByTime = function (vehicle_id, secondsAgo) {
+    provider.getVehiclePosWithScore = function (vehicle_id) {
+        return client.zrange(VEHICLE_KEY + vehicle_id, 0, -1, 'withscores');
+    }
+
+    /**
+     * Get vehicle positions by setting a start and end timestamp to narrow the search
+     * @param vehicle
+     * @param index_start
+     * @param index_end
+     * @returns {*}
+     */
+    provider.getVehiclePosByTimeRange = function (vehicle, index_start, index_end) {
+        return client.zrange(VEHICLE_KEY + vehicle, index_start, index_end, 'withscores');
+    }
+
+    /**
+     * Get vehicle positions from X seconds ago, note that the current implementation
+     * stores timestamp in milliseconds and not seconds (new Date().getTime());
+     * @param vehicle_id
+     * @param secondsAgo
+     */
+    provider.getVehiclePosByTime = function (vehicle_id, secondsAgo) {
         return new Promise(function (resolve, reject) {
             var now = new Date().getTime();
             var before = now - secondsAgo * 1000;
@@ -140,14 +161,8 @@ var provider = (function () {
         return client.zrange(VEHICLE_KEY + vehicle_id, 0, -1);
     }
 
-    provider.getVehiclePositionByRange = function (vehicle, index_start, index_end) {
-        return client.zrange(VEHICLE_KEY + vehicle, index_start, index_end, 'withscores');
-    }
-
-    provider.getVehiclePositionAndScore = function (vehicle_id) {
-        return client.zrange(VEHICLE_KEY + vehicle_id, 0, -1, 'withscores');
-    }
-
+    //re-look at this implemetation, what do we do when driver goes off-line?
+    //when do we remove driver from cell?
     provider.removeVehicleCell = function (vehicle_id, timestamp, cellId) {
         return new Promise(function (resolve, reject) {
             var vehicle_cell_key = CURR_VEHICLE_CELL + vehicle_id;
@@ -170,6 +185,7 @@ var provider = (function () {
             });
         });
     }
+
     /**
      * This method uses redis transactions to ensure driver_key is added to CELL_KEY
      * and VEHICLE_KEY as an atomic transaction.
@@ -218,14 +234,11 @@ var provider = (function () {
                 }
                 logger.log("current cell positions = [" + s2cell_id.length + "] -" + vehicleKey);
                 var array = s2common.getParentIdArray(vehicleKey, 12, 3);
-                //should we also check?? > keys cell:2203795067297071104
-                //var promises = new Array();
 
                 array.forEach(function (item) {
                     (new Promise(function (resolve, reject) {
                         resolve(item.pos());
                     })).then(function (results) {
-                        //logger.log("results..."+results);
                         client.sismember(CITY_CELLS, results).then(function (data) {
                             logger.log("promise resolved? = " + data + "-cellid=" + results);
                             if (data) {
@@ -235,7 +248,6 @@ var provider = (function () {
                             }
                         });
                     }).catch(function (error) {
-                        //cb(error,null);
                         rejected(error);
                     });
                 });
@@ -243,6 +255,20 @@ var provider = (function () {
         });
     }
 
+    provider.getVehiclesInCellArray = function(cell_array){
+        return new Promise(function(resolve,reject){
+            var p2;
+            var p = client.pipeline()
+            cell_array.forEach(function(s2cell_id){
+                p2 = p.zrange(CELL_KEY+s2cell_id,0,-1)
+            });
+            p2.exec().then(function(results){
+                resolve(results);
+            })
+        }).catch(function(error){
+            logger.log("getVehiclesInCellArray:"+ error);
+        })
+    }
 
     provider.changeCellPosition = function (newDriverPos, vehicle_id, timestamp) {
         //first remove vehicle from cell the driver is exiting
@@ -335,12 +361,10 @@ var provider = (function () {
                 client.zrange(CELL_KEY + s2cell_id, 0, -1, 'withscores').then(function (results) {
                     if (results.length > 0) {
                         var array = _.toArray(results);
-                        //cb(array);
                         resolve(array);
                     }
                     else {
                         logger.log("no members " + results);
-                        //cb(null);
                         resolve(null);
                     }
                 }).catch(function (error) {
@@ -368,6 +392,20 @@ var provider = (function () {
 exports.provider = provider;
 
 //provider.removeVehicleCell("004469");
+
+var cellArray = ["2203792181079048192",
+        "2203795067297071104",
+        "2203794654980210688",
+        "2203794517541257216",
+        "2203794380102303744",
+        "2203794242663350272"];
+
+provider.getVehiclesInCellArray(cellArray).then(function(data){
+    logger.log("pipeline request results = "+ data.length);
+    data.forEach(function(item,index){
+        logger.log(item[1]);
+    })
+})
 
 /*s2common.getDriversFromFile2(function(data){
  logger.log("size of data = " + data.length);
@@ -457,7 +495,7 @@ exports.provider = provider;
 
  /*
  //14900 - 9800 (at 9:02 pm)
- provider.getVehiclePositionByTime(vehicleId,14900,function(results){
+ provider.getVehiclePosByTime(vehicleId,14900,function(results){
  logger.log(results);
  });
 
