@@ -151,7 +151,7 @@ exports.tripRequest = tripRequest;
 
 tripRequest.getVehiclesNearRider(-26.023825, 28.036000,function(vehicles){
     //logger.log("getVehiclesNear size = " + vehicles[0].length/2);
-    logger.log("getVehiclesNear = "+ vehicles);
+    //logger.log("getVehiclesNear = "+ vehicles);
 });
 //-26.270155, 28.438425 (Spring - outside)
 //-26.152353, 28.255995 (Boksburg - outside)

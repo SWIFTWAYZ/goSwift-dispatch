@@ -162,18 +162,47 @@ var provider = (function () {
         return client.zrange(VEHICLE_KEY + vehicle_id, 0, -1);
     }
 
+    /**
+     * Given an array of vehicles Ids, we retrieve vehicle location s2keys
+     * stored in redis's vehicle:id key (e.g. vehicle:4524)
+     * @param vehiclesArray
+     * @param cb
+     */
+
+    var vehicleObj = function(vehicle_id,key,time){
+        this.vehicle_id = vehicle_id;
+        this.s2key = key;
+        this.tstamp = time;
+    }
+
     provider.getVehiclePosFromArray = function(vehiclesArray,cb){
         var p = client.pipeline()
         var p2;
         logger.log("vehicles in Array = "+ vehiclesArray.length + "->"+ vehiclesArray[0]);
         vehiclesArray.forEach(function(item){
             p2 = p.zrange(VEHICLE_KEY+item,0,-1,'withscores')
-        })
-
+        });
         p2.exec().then(function(vehicle_locations){
+            //--------------------------------------------
+
+            var vehicleObjectArray = [];
+
+            vehicle_locations.forEach(function(vehicle,index){
+               if(vehicle !== null && vehicle.length > 0) {
+                   var obj = new vehicleObj(vehiclesArray[index],vehicle[1][0],vehicle[1][1]);
+                   vehicleObjectArray.push(obj);
+                   //vehicle represents the array of s2 positions from vehicle_key
+                   //vehicleArray contains the vehicle_ids contained in the s2cells in the rider vicinity
+
+                    //logger.log("vehicle item = " + vehiclesArray[index] + "/"+vehicle[1][0] + "/"+vehicle[1][1]);
+                   logger.log(JSON.stringify(obj));
+               }
+            });
+
             //create an object that stores, vehicle_id, s2key_id,timestamp
-            logger.log("pipeline()->exec()->" + vehicle_locations.length + "-"+vehicle_locations);
-            cb(vehicle_locations);
+            //logger.log("pipeline()->exec()->" + vehicle_locations.length + "-"+vehicle_locations[0]);
+            cb(vehicleObjectArray);
+            //----------------------------------------------
         });
     }
 
