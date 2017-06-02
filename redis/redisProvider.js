@@ -162,6 +162,21 @@ var provider = (function () {
         return client.zrange(VEHICLE_KEY + vehicle_id, 0, -1);
     }
 
+    provider.getVehiclePosFromArray = function(vehiclesArray,cb){
+        var p = client.pipeline()
+        var p2;
+        logger.log("vehicles in Array = "+ vehiclesArray.length + "->"+ vehiclesArray[0]);
+        vehiclesArray.forEach(function(item){
+            p2 = p.zrange(VEHICLE_KEY+item,0,-1,'withscores')
+        })
+
+        p2.exec().then(function(vehicle_locations){
+            //create an object that stores, vehicle_id, s2key_id,timestamp
+            logger.log("pipeline()->exec()->" + vehicle_locations.length + "-"+vehicle_locations);
+            cb(vehicle_locations);
+        });
+    }
+
     //re-look at this implemetation, what do we do when driver goes off-line?
     //when do we remove driver from cell?
     provider.removeVehicleCell = function (vehicle_id, timestamp, cellId) {
@@ -265,9 +280,9 @@ var provider = (function () {
         return new Promise(function(resolve,reject){
             var p2;
             var p = client.pipeline()
-            //logger.log("cell array = "+ cell_array + JSON.stringify(cell_array));
+            logger.log("cell array = "+ cell_array);
             if(cell_array.length === 0) {
-                resolve(null)
+                reject(null)
                 return;
             }
             cell_array.forEach(function(s2cell_id){

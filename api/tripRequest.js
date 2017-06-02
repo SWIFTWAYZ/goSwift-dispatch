@@ -89,8 +89,8 @@ var tripRequest = (function(){
     }
 
     /**
-     * Retrieve vehicles that are within the radius (see RIDER_GEO_RADIUS in constants.js)
-     * of the rider requesting a trip.
+     * Retrieve vehicles that are within the radius of the rider requesting a trip.
+     * (see RIDER_GEO_RADIUS in constants.js)
      * @param lat
      * @param lon
      * @param cb
@@ -101,6 +101,7 @@ var tripRequest = (function(){
                 var cellArray = cells.getCellIds().map(function(item){
                     return item.pos();
                 });
+                //retrieve from redis vehicles in rider cells within radius
                 redis.getVehiclesInCellArray(cellArray).then(function(data){
                     var cellsWithVehicles = [];
                     //logger.log("pipeline request results = "+ data.length);
@@ -108,10 +109,22 @@ var tripRequest = (function(){
                         //logger.log(cellArray[index] + "="+ JSON.stringify(item) +"/"+ item[1]);
                         if(item[1] !== null && item[1].length > 0){
                             logger.log("push vehicles index = "+index +"->"+ item[1]);
-                            cellsWithVehicles.push(item[1]);
+
+                            var vehicles_with_scores = item[1];
+                            vehicles_with_scores.forEach(function(x,index){
+                                if(index%2 === 0){
+                                    //logger.log(x + "->"+item[1][index]);
+                                    cellsWithVehicles.push(x);
+                                }
+                            })
+                            //cellsWithVehicles.push(item[1]);
+                            //sub-query to retrieve the latest location of each vehicle from vehicle:4481?
                         }
                     });
-                    cb(cellsWithVehicles);
+                    redis.getVehiclePosFromArray(cellsWithVehicles,function(results){
+                        cb(results);
+                    });
+                    //cb(cellsWithVehicles);
                 });
             });
     }
@@ -130,9 +143,15 @@ exports.tripRequest = tripRequest;
 //-26.029433325,28.033954797
 //-26.217146, 28.356669
 
-tripRequest.getVehiclesNearRider(-26.073008866,28.026688399,function(vehicles){
-    logger.log("getVehiclesNear = " + vehicles);
+//-26.023825, 28.036000  (2 vehicles)
+//-26.114097,  28.156122 (0 vehicles)
+//-26.059825,  28.021906 (8 vehicles)
+//-26.104628,28.053901 (has 22 vehicles)
+//-26.073008866,28.026688399 (has vehicles)
 
+tripRequest.getVehiclesNearRider(-26.023825, 28.036000,function(vehicles){
+    //logger.log("getVehiclesNear size = " + vehicles[0].length/2);
+    logger.log("getVehiclesNear = "+ vehicles);
 });
 //-26.270155, 28.438425 (Spring - outside)
 //-26.152353, 28.255995 (Boksburg - outside)
