@@ -184,17 +184,13 @@ var provider = (function () {
         });
         p2.exec().then(function(vehicle_locations){
             //--------------------------------------------
-
             var vehicleObjectArray = [];
-
             vehicle_locations.forEach(function(vehicle,index){
                if(vehicle !== null && vehicle.length > 0) {
                    var obj = new vehicleObj(vehiclesArray[index],vehicle[1][0],vehicle[1][1]);
                    vehicleObjectArray.push(obj);
                    //vehicle represents the array of s2 positions from vehicle_key
                    //vehicleArray contains the vehicle_ids contained in the s2cells in the rider vicinity
-
-                    //logger.log("vehicle item = " + vehiclesArray[index] + "/"+vehicle[1][0] + "/"+vehicle[1][1]);
                    logger.log(JSON.stringify(obj));
                }
             });
