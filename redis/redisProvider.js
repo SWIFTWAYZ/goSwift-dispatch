@@ -27,7 +27,8 @@ var provider = (function () {
     client.monitor(function (err, monitor) {
         // Entering monitoring mode.
         monitor.on('monitor', function (time, args, source, database) {
-            //logger.debug(time + ": " + args);
+            logger.debug(time + ": " + args);
+            //console.log(args);
         });
     });
     /**
@@ -255,12 +256,22 @@ var provider = (function () {
         });
     }
 
+    /**
+     * Retrieves all vehicles contained in the given cell array
+     * @param cell_array
+     * @returns {*}
+     */
     provider.getVehiclesInCellArray = function(cell_array){
         return new Promise(function(resolve,reject){
             var p2;
             var p = client.pipeline()
+            //logger.log("cell array = "+ cell_array + JSON.stringify(cell_array));
+            if(cell_array.length === 0) {
+                resolve(null)
+                return;
+            }
             cell_array.forEach(function(s2cell_id){
-                p2 = p.zrange(CELL_KEY+s2cell_id,0,-1)
+                p2 = p.zrange(CELL_KEY+s2cell_id,0,-1,'withscores')
             });
             p2.exec().then(function(results){
                 resolve(results);
@@ -392,7 +403,7 @@ var provider = (function () {
 exports.provider = provider;
 
 //provider.removeVehicleCell("004469");
-
+/*
 var cellArray = ["2203792181079048192",
         "2203795067297071104",
         "2203794654980210688",
@@ -403,9 +414,9 @@ var cellArray = ["2203792181079048192",
 provider.getVehiclesInCellArray(cellArray).then(function(data){
     logger.log("pipeline request results = "+ data.length);
     data.forEach(function(item,index){
-        logger.log(item[1]);
+        logger.log(item);
     })
-})
+})*/
 
 /*s2common.getDriversFromFile2(function(data){
  logger.log("size of data = " + data.length);

@@ -5,6 +5,7 @@
 
 var s2 = require("nodes2ts");
 var _ = require('underscore');
+var _lo = require("lodash");
 var redis = require("../redis/redisProvider").provider;
 var init = require("../config/init");
 var constant = require('../constants');
@@ -62,7 +63,7 @@ var tripRequest = (function(){
      * @param cust_scap
      */
 
-    tripRequest.getIntersectRadiusCells = function(lat,lon,radius){
+    tripRequest.getIntersectRadiusCells = function(lat,lon,radius,cb){
         redis.getCityGrid(function(data){
             var min = constant.S2_CELL_MIN_LEVEL;
             var max = constant.S2_CELL_MAX_LEVEL;
@@ -83,7 +84,36 @@ var tripRequest = (function(){
 
             logger.log ("city cells = " + cityRegion.size() + ", rider cells = " + riderRegion.size() +
                 " - [intersecting cells = " + intersect_union.size() + "]");
+            cb(intersect_union);
         });
+    }
+
+    /**
+     * Retrieve vehicles that are within the radius (see RIDER_GEO_RADIUS in constants.js)
+     * of the rider requesting a trip.
+     * @param lat
+     * @param lon
+     * @param cb
+     */
+    tripRequest.getVehiclesNearRider = function(lat,lon,cb){
+        tripRequest.getIntersectRadiusCells(lat,lon,
+            constant.RIDER_GEO_RADIUS,function(cells){
+                var cellArray = cells.getCellIds().map(function(item){
+                    return item.pos();
+                });
+                redis.getVehiclesInCellArray(cellArray).then(function(data){
+                    var cellsWithVehicles = [];
+                    //logger.log("pipeline request results = "+ data.length);
+                    data.forEach(function(item,index){
+                        //logger.log(cellArray[index] + "="+ JSON.stringify(item) +"/"+ item[1]);
+                        if(item[1] !== null && item[1].length > 0){
+                            logger.log("push vehicles index = "+index +"->"+ item[1]);
+                            cellsWithVehicles.push(item[1]);
+                        }
+                    });
+                    cb(cellsWithVehicles);
+                });
+            });
     }
 
     return tripRequest;
@@ -97,8 +127,13 @@ exports.tripRequest = tripRequest;
 //triprequest.getIntersectRadiusCells(27.8778444,-25.86465,constant.RIDER_GEO_RADIUS);
 //triprequest.getIntersectRadiusCells(-26.104628,28.053901,constant.RIDER_GEO_RADIUS);
 //triprequest.getIntersectRadiusCells(27.8778444,-25.86465,constant.RIDER_GEO_RADIUS);
-tripRequest.getIntersectRadiusCells(-26.217146, 28.356669,constant.RIDER_GEO_RADIUS);
+//-26.029433325,28.033954797
+//-26.217146, 28.356669
 
+tripRequest.getVehiclesNearRider(-26.073008866,28.026688399,function(vehicles){
+    logger.log("getVehiclesNear = " + vehicles);
+
+});
 //-26.270155, 28.438425 (Spring - outside)
 //-26.152353, 28.255995 (Boksburg - outside)
 //27.8778444,-25.864647 (outside edge cells)
