@@ -97,7 +97,7 @@ var tripRequest = (function(){
      * @param cb
      */
 
-    var comp = function(x,cell){
+    var posData = function(x,cell){
         this.x = x;
     this.cell_id = cell;
 };
@@ -112,16 +112,15 @@ var tripRequest = (function(){
                 redis.getVehiclesInCellArray(cellArray).then(function(data){
                     var cellsWithVehicles = [];
                     data.forEach(function(item,index){
-                        logger.log("cell_id = " + cellArray[index]);
+                        logger.log("cell_id = " + cellArray[index] +"-"+ item[1].length/2);
                         if(item[1] !== null && item[1].length > 0){
-                            //var vehicles_with_scores = item[1];
-                            //vehicles_with_scores.forEach(function(x,index2){
+                            //logger.log(item);
                             item[1].forEach(function(x,index2){
                                 if(index2%2 === 0){
-                                    //how to get the cell whose vehicles are near rider.
+                                    //currently only retrieve 1 s2key under vehicle:xxxx, should we get the latest
+                                    // 10 or 20 s2keys by timestamp age and filter to ensure is within rider cells
                                     logger.log("push vehicle = "+ x + "->"+cellArray[index]);
-                                      cellsWithVehicles.push(new comp(x,cellArray[index]));
-                                    //cellsWithVehicles.push(x);
+                                      cellsWithVehicles.push(new posData(x,cellArray[index]));
                                 }
                             })
                         }
@@ -156,20 +155,34 @@ exports.tripRequest = tripRequest;
 //-26.059825,  28.021906 (8 vehicles)
 //-26.104628,28.053901 (has 11 vehicles)
 //-26.073008866,28.026688399 (has vehicles)
+//-26.264848,  28.623590 (no vehicles)
+//-26.057642,  28.022582 (cross main/william nicol)
 
-tripRequest.getVehiclesNearRider(-26.023825, 28.036000,function(vehicles){
-    //logger.log("getVehiclesNear size = " + vehicles[0].length/2);
+String.prototype.padLeft = function(char, length) {
+    return char.repeat(Math.max(0, length - this.length)) + this;
+}
+
+String.prototype.convertToLatLng = function(){
+    var latlng =  new s2.S2CellId(this).toLatLng();
+    return latlng;
+}
+
+tripRequest.getVehiclesNearRider(-26.057642,28.022582,function(vehicles){
     var val = _.isArray(vehicles);
-    logger.log("---------------------------------------")
+    logger.log("---------------------------------------");
     logger.log("getVehiclesNear = "+ vehicles.length);
-    vehicles.forEach(function(each_vehicle){
-        logger.log(each_vehicle.vehicle_id+"->"+each_vehicle.s2key +"=/"+each_vehicle.tstamp + "--/"+each_vehicle.cell);
+    vehicles.forEach(function(vehicle){
+        //console.log("adf".padLeft('0',6));
+        var vehiclePos = vehicle.s2key;
+        logger.log(vehicle.vehicle_id.padLeft('0',6)+"->"+vehiclePos +
+            vehiclePos.convertToLatLng().toStringDegrees()+
+            "=/"+vehicle.tstamp + "--/"+vehicle.cell + "-"+vehicle.vehicle_id);
     });
 });
 //-26.270155, 28.438425 (Spring - outside)
 //-26.152353, 28.255995 (Boksburg - outside)
 //27.8778444,-25.864647 (outside edge cells)
-//-26.240749, 28.376074
+//-26.240749, 28.376074 ()
 //-26.217146, 28.356669 //near the edge
 
 //-26.264848,  28.623590 (Delmas)
