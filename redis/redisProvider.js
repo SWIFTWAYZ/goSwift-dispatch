@@ -27,7 +27,7 @@ var provider = (function () {
     client.monitor(function (err, monitor) {
         // Entering monitoring mode.
         monitor.on('monitor', function (time, args, source, database) {
-            logger.debug(time + ": " + args);
+            //logger.debug(time + ": " + args);
             //console.log(args);
         });
     });
@@ -169,17 +169,26 @@ var provider = (function () {
      * @param cb
      */
 
-    var vehicleObj = function(vehicle_id,key,time){
+    var vehicleObj = function(vehicle_id,key,time,cell){
         this.vehicle_id = vehicle_id;
         this.s2key = key;
         this.tstamp = time;
+        this.cell = cell;
     }
 
+    /**
+     * Pipeline to retrieve vehicle positions (s2keys) with timestamp given
+     * an array of vehicle ids (->zrange vehicle:004467 0 -1 withscores)
+     * @param vehiclesArray
+     * @param cb
+     */
     provider.getVehiclePosFromArray = function(vehiclesArray,cb){
         var p = client.pipeline()
         var p2;
         logger.log("vehicles in Array = "+ vehiclesArray.length + "->"+ vehiclesArray[0]);
-        vehiclesArray.forEach(function(item){
+        vehiclesArray.forEach(function(composite){ //item
+            var item = composite.x;
+            logger.log(item + "---"+composite.cell_id);
             p2 = p.zrange(VEHICLE_KEY+item,0,-1,'withscores')
         });
         p2.exec().then(function(vehicle_locations){
@@ -187,16 +196,17 @@ var provider = (function () {
             var vehicleObjectArray = [];
             vehicle_locations.forEach(function(vehicle,index){
                if(vehicle !== null && vehicle.length > 0) {
-                   var obj = new vehicleObj(vehiclesArray[index],vehicle[1][0],vehicle[1][1]);
+                   var obj = new vehicleObj(vehiclesArray[index].x,vehicle[1][0],vehicle[1][1],vehiclesArray[index].cell_id);
                    vehicleObjectArray.push(obj);
                    //vehicle represents the array of s2 positions from vehicle_key
                    //vehicleArray contains the vehicle_ids contained in the s2cells in the rider vicinity
-                   logger.log(JSON.stringify(obj));
+                   //logger.log(index +"-"+JSON.stringify(obj));
                }
             });
 
             //create an object that stores, vehicle_id, s2key_id,timestamp
             //logger.log("pipeline()->exec()->" + vehicle_locations.length + "-"+vehicle_locations[0]);
+            logger.log("vehicleObjectArray length = " + vehicleObjectArray.length);
             cb(vehicleObjectArray);
             //----------------------------------------------
         });
@@ -264,6 +274,12 @@ var provider = (function () {
         });
     }
 
+    /**
+     * This method used vehicle_id to retrieve 1st cell (s2cell[0]) and
+     * work out the parent cell (level 12 - 14) of such a cell_key
+     * Do we need this method if we have VEHICLE_CELL key?
+     * @param vehicle_id
+     */
     provider.getVehicleCell = function (vehicle_id) {
         return new Promise(function (resolved, rejected) {
             client.zrange(VEHICLE_KEY + vehicle_id, 0, -1).then(function (s2cell_id) {
@@ -298,6 +314,7 @@ var provider = (function () {
 
     /**
      * Retrieves all vehicles contained in the given cell array
+     * -> zrange vehicle:004467 0 -1 withscores
      * @param cell_array
      * @returns {*}
      */
@@ -305,9 +322,9 @@ var provider = (function () {
         return new Promise(function(resolve,reject){
             var p2;
             var p = client.pipeline()
-            logger.log("cell array = "+ cell_array);
+            //logger.log("cell array = "+ cell_array);
             if(cell_array.length === 0) {
-                reject(null)
+                reject(null);
                 return;
             }
             cell_array.forEach(function(s2cell_id){
@@ -315,9 +332,10 @@ var provider = (function () {
             });
             p2.exec().then(function(results){
                 resolve(results);
+            }).catch(function(error){
+            //logger.log("getVehiclesInCellArray:"+ error);
+            reject("getVehiclesInCellArray:"+ error);
             })
-        }).catch(function(error){
-            logger.log("getVehiclesInCellArray:"+ error);
         })
     }
 

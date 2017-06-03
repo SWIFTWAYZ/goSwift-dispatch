@@ -135,5 +135,3 @@ exports.tripRequest = tripCreator;
 
 tripCreator.logVehicleTrip("004467");
 //tripCreator.readCellsInHex();
-
-
