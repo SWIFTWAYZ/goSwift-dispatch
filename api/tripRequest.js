@@ -12,6 +12,7 @@ var constant = require('../constants');
 var s2circle = require("../s2geometry/s2circlecoverer");
 var s2common = require("../s2geometry/s2common").s2common;
 var logger = require("../config/logutil").logger
+var xmlBuilderFactory = require("../shebeen/xmlBuilderFactory").xmlBuilderFactory;
 
 var tripRequest = (function(){
 
@@ -114,11 +115,20 @@ var tripRequest = (function(){
                  * code used to display rider cells information
                  */
                 (function(){
-                    console.log("--------------cellArray ----------------");
-                        cellArray.forEach(function(one_cell){
+
+                        cells.getCellIds().forEach(function(one_cell){
+                            console.log("--------------cellArray ----------------");
                             //logger.log(s2common)
+                            var s2cell = new s2.S2Cell(one_cell)
+                            for(var i = 0; i < 4; i++){
+                                var latlng = new s2.S2LatLng.fromPoint(s2cell.getVertex(i));
+                                logger.log("cell, i="+ i +"-" + latlng.lngDegrees.toNumber() +","+latlng.latDegrees.toNumber());
+                            }
+                            var latlng = new s2.S2LatLng.fromPoint(s2cell.getVertex(0));
+                            logger.log("cell, i="+ i +"-" + latlng.lngDegrees.toNumber() +","+latlng.latDegrees.toNumber());
+                            console.log("--------------cellArray ----------------");
                         })
-                    console.log("--------------cellArray ----------------");
+
                 }).call(this)
                 //retrieve from redis vehicles in rider cells within radius
                 redis.getVehiclesInCellArray(cellArray).then(function(data){
@@ -176,7 +186,7 @@ String.prototype.padLeft = function(char, length) {
 
 String.prototype.convertToLatLng = function(){
     var latlng =  new s2.S2CellId(this).toLatLng();
-    return latlng;
+    return latlng.lngDegrees.toFixed(6)+","+latlng.latDegrees.toFixed(6);
 }
 
 tripRequest.getVehiclesNearRider(-26.057642,28.022582,function(vehicles){
@@ -186,10 +196,16 @@ tripRequest.getVehiclesNearRider(-26.057642,28.022582,function(vehicles){
     vehicles.forEach(function(vehicle){
         //console.log("adf".padLeft('0',6));
         var vehiclePos = vehicle.s2key;
-        logger.log(vehicle.vehicle_id.padLeft('0',6)+"->"+vehiclePos +
-            vehiclePos.convertToLatLng().toStringDegrees()+
-            "=/"+vehicle.tstamp + "--/"+vehicle.cell + "-"+vehicle.vehicle_id);
+        var vehicle_gps =  vehicle.s2key.convertToLatLng();
+        logger.log(vehicle.vehicle_id.padLeft('0',6)+"->"+vehiclePos + "/"
+           + vehicle_gps+ "=/"+vehicle.tstamp + "--/"+vehicle.cell + "-"+vehicle.vehicle_id);
+
     });
+
+    var vehicleArray = vehicles.map(function(item){
+        return item.s2key.convertToLatLng();
+    });
+    var xmlBuilder = new xmlBuilderFactory("S2_Edenvale_cells.kml",vehicleArray);
 });
 //-26.270155, 28.438425 (Spring - outside)
 //-26.152353, 28.255995 (Boksburg - outside)

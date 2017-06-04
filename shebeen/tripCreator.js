@@ -97,7 +97,6 @@ var tripCreator = (function () {
                 }).catch(function (error) {
                     logger.error("vehicle not added " + error);
                 });
-
             });
             //cb(promises);
             //return promises;

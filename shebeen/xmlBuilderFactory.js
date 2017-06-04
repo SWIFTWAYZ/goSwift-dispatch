@@ -13,9 +13,10 @@ var xmlBuilderFactory = (function(){
      * GPS track points
      */
     function xmlBuilderFactory(document_name,cellArray){
-        var buildersList = builder.create("xml")
-            .att({"version":"1.0", "encoding":"UTF-8"})
-            .ele("kml").att({"xmlns":"http://www.opengis.net/kml/2.2",
+        var buildersList = builder.create("kml")
+            .att({"xmlns":"http://www.opengis.net/kml/2.2",
+        //create("?xml").att({"version":"1.0", "encoding":"UTF-8"})
+            //.ele("kml").att({"xmlns":"http://www.opengis.net/kml/2.2",
                 "xmlns:gx":"http://www.google.com/kml/ext/2.2",
                 "xmlns:kml":"http://www.opengis.net/kml/2.2",
                 "xmlns:atom":"http://www.w3.org/2005/Atom"})
@@ -27,13 +28,13 @@ var xmlBuilderFactory = (function(){
                 buildersList
                     .ele("Placemark")
                     .ele("Point")
-                    .ele("coordinates",item +","+item)
+                    .ele("coordinates",item)
             });
             cellArray.forEach(function(item){
                 //buildersList.
         })
         var xml = buildersList.end({pretty: true});
-        logger.log(xml);
+        console.log(xml);
     }
 
     /**
@@ -62,4 +63,9 @@ var xmlBuilderFactory = (function(){
 
 exports.xmlBuilderFactory = xmlBuilderFactory;
 
-var xmlBuilder = new xmlBuilderFactory("S2_Edenvale_cells.kml",["26.0001","27.00023","27.45678"]);
+/*
+var xmlBuilder = new xmlBuilderFactory("S2_Edenvale_cells.kml",
+    ["28.033954797,-26.029433325",
+    "28.023715353,-26.060654974",
+    "28.033840468,-26.100056928"]);
+*/
