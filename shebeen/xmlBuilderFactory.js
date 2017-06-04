@@ -12,17 +12,28 @@ var xmlBuilderFactory = (function(){
      * factory function to build an XMl document with cellArray and
      * GPS track points
      */
-    function xmlBuilderFactory(builder,document_name){
-            builder
+    function xmlBuilderFactory(document_name,cellArray){
+        var buildersList = builder.create("xml")
             .att({"version":"1.0", "encoding":"UTF-8"})
             .ele("kml").att({"xmlns":"http://www.opengis.net/kml/2.2",
                 "xmlns:gx":"http://www.google.com/kml/ext/2.2",
                 "xmlns:kml":"http://www.opengis.net/kml/2.2",
                 "xmlns:atom":"http://www.w3.org/2005/Atom"})
             .ele("Document")
-            .ele("name",document_name);
+            .ele("name",document_name).up();
 
             //var item = xml.ele("name");
+            cellArray.forEach(function(item){
+                buildersList
+                    .ele("Placemark")
+                    .ele("Point")
+                    .ele("coordinates",item +","+item)
+            });
+            cellArray.forEach(function(item){
+                //buildersList.
+        })
+        var xml = buildersList.end({pretty: true});
+        logger.log(xml);
     }
 
     /**
@@ -41,23 +52,14 @@ var xmlBuilderFactory = (function(){
      *  Add gps points to XML builder file
      * @param pointArray
      */
-    xmlBuilderFactory.addPoints = function(buildersList,pointArray){
-        pointArray.forEach(function(item){
-            buildersList
-                .ele("Placemark")
-                .ele("Point")
-                .ele("coordinates",item +","+item)
-        });
+    xmlBuilderFactory.addPoint = function(pointArray){
+            pointArray.forEach(function(point){
+                //create placemarks of all the points in array
+            })
     }
     return xmlBuilderFactory;
 }).call(this);
 
 exports.xmlBuilderFactory = xmlBuilderFactory;
 
-var buildersList = builder.create("xml");
-var xmlBuilder = new xmlBuilderFactory(buildersList,"S2_Edenvale_cells.kml");
-xmlBuilderFactory.addPoints(buildersList,["26.0001","27.00023","27.45678"]);
-
-var xml = buildersList.end({pretty: true});
-logger.log(xml);
-
+var xmlBuilder = new xmlBuilderFactory("S2_Edenvale_cells.kml",["26.0001","27.00023","27.45678"]);
