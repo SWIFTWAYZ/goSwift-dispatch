@@ -10,7 +10,8 @@ var redis = require("../redis/redisProvider").provider;
 var init = require("../config/init");
 var constant = require('../constants');
 var s2circle = require("../s2geometry/s2circlecoverer");
-var logger = require("../config/logutil").logger;
+var s2common = require("../s2geometry/s2common").s2common;
+var logger = require("../config/logutil").logger
 
 var tripRequest = (function(){
 
@@ -108,6 +109,17 @@ var tripRequest = (function(){
                 var cellArray = cells.getCellIds().map(function(item){
                     return item.pos().toString();
                 });
+
+                /**
+                 * code used to display rider cells information
+                 */
+                (function(){
+                    console.log("--------------cellArray ----------------");
+                        cellArray.forEach(function(one_cell){
+                            //logger.log(s2common)
+                        })
+                    console.log("--------------cellArray ----------------");
+                }).call(this)
                 //retrieve from redis vehicles in rider cells within radius
                 redis.getVehiclesInCellArray(cellArray).then(function(data){
                     var cellsWithVehicles = [];
