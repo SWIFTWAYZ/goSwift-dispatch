@@ -114,22 +114,23 @@ var tripRequest = (function(){
                 /**
                  * code used to display rider cells information
                  */
+                /*
                 (function(){
-
+                        console.log("--------------cellArray ----------------");
                         cells.getCellIds().forEach(function(one_cell){
-                            console.log("--------------cellArray ----------------");
-                            //logger.log(s2common)
                             var s2cell = new s2.S2Cell(one_cell)
                             for(var i = 0; i < 4; i++){
                                 var latlng = new s2.S2LatLng.fromPoint(s2cell.getVertex(i));
-                                logger.log("cell, i="+ i +"-" + latlng.lngDegrees.toNumber() +","+latlng.latDegrees.toNumber());
+                                logger.log("cell, i="+ i +"(" + latlng.lngDegrees.toNumber() +","+latlng.latDegrees.toNumber()+")");
                             }
                             var latlng = new s2.S2LatLng.fromPoint(s2cell.getVertex(0));
-                            logger.log("cell, i="+ i +"-" + latlng.lngDegrees.toNumber() +","+latlng.latDegrees.toNumber());
+                            logger.log("cell, i="+ i +"(" + latlng.lngDegrees.toNumber() +","+latlng.latDegrees.toNumber()+")");
                             console.log("--------------cellArray ----------------");
                         })
 
-                }).call(this)
+                }).call(this)*/
+                var vertex = s2common.getVertexArrayfromCells(cells);
+                logger.log("Vertex array = "+ vertex.length);
                 //retrieve from redis vehicles in rider cells within radius
                 redis.getVehiclesInCellArray(cellArray).then(function(data){
                     var cellsWithVehicles = [];

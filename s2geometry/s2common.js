@@ -224,6 +224,27 @@ var s2common = (function(){
         }
     }
 
+    s2common.getVertexArrayfromCells = function(cells){
+        console.log("--------------cellArray ----------------");
+        var totalVertexArray = [];
+        cells.getCellIds().forEach(function(one_cell){
+            var vertex = [];
+            var s2cell = new s2.S2Cell(one_cell)
+            for(var i = 0; i < 4; i++){
+                var latlng = new s2.S2LatLng.fromPoint(s2cell.getVertex(i));
+                logger.log("cell, i="+ i +"(" + latlng.lngDegrees.toNumber() +","+latlng.latDegrees.toNumber()+")");
+                vertex.push(latlng.lngDegrees.toNumber() +","+latlng.latDegrees.toNumber());
+            }
+            var latlng = new s2.S2LatLng.fromPoint(s2cell.getVertex(0));
+            logger.log("cell, i="+ i +"(" + latlng.lngDegrees.toNumber() +","+latlng.latDegrees.toNumber()+")");
+            vertex.push(latlng.lngDegrees.toNumber() +","+latlng.latDegrees.toNumber());
+            console.log("--------------cellArray ----------------");
+            totalVertexArray.push(vertex);
+        });
+
+        return totalVertexArray;
+    }
+
     /***
      * Method returns an intersection set for two cellId Arrays
      * @param s2cellIds_A
