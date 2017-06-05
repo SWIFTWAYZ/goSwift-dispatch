@@ -114,21 +114,7 @@ var tripRequest = (function(){
                 /**
                  * code used to display rider cells information
                  */
-                /*
-                (function(){
-                        console.log("--------------cellArray ----------------");
-                        cells.getCellIds().forEach(function(one_cell){
-                            var s2cell = new s2.S2Cell(one_cell)
-                            for(var i = 0; i < 4; i++){
-                                var latlng = new s2.S2LatLng.fromPoint(s2cell.getVertex(i));
-                                logger.log("cell, i="+ i +"(" + latlng.lngDegrees.toNumber() +","+latlng.latDegrees.toNumber()+")");
-                            }
-                            var latlng = new s2.S2LatLng.fromPoint(s2cell.getVertex(0));
-                            logger.log("cell, i="+ i +"(" + latlng.lngDegrees.toNumber() +","+latlng.latDegrees.toNumber()+")");
-                            console.log("--------------cellArray ----------------");
-                        })
 
-                }).call(this)*/
                 var vertex = s2common.getVertexArrayfromCells(cells);
                 logger.log("Vertex array = "+ vertex.length);
                 //retrieve from redis vehicles in rider cells within radius
@@ -143,7 +129,7 @@ var tripRequest = (function(){
                                     //currently only retrieve 1 s2key under vehicle:xxxx, should we get the latest
                                     // 10 or 20 s2keys by timestamp age and filter to ensure is within rider cells
                                     logger.log("push vehicle = "+ x + "->"+cellArray[index]);
-                                      cellsWithVehicles.push(new posData(x,cellArray[index]));
+                                    cellsWithVehicles.push(new posData(x,cellArray[index]));
                                 }
                             })
                         }
@@ -206,7 +192,7 @@ tripRequest.getVehiclesNearRider(-26.057642,28.022582,function(vehicles){
     var vehicleArray = vehicles.map(function(item){
         return item.s2key.convertToLatLng();
     });
-    var xmlBuilder = new xmlBuilderFactory("S2_Edenvale_cells.kml",vehicleArray);
+    var xmlBuilder = xmlBuilderFactory.buildWayPoints("S2_Edenvale_cells.kml",vehicleArray);
 });
 //-26.270155, 28.438425 (Spring - outside)
 //-26.152353, 28.255995 (Boksburg - outside)
