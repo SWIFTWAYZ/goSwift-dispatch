@@ -185,31 +185,35 @@ var provider = (function () {
     provider.getVehiclePosFromArray = function(vehiclesArray,cb){
         var p = client.pipeline()
         var p2;
-        logger.log("vehicles in Array = "+ vehiclesArray.length + "->"+ vehiclesArray[0]);
-        vehiclesArray.forEach(function(composite){ //item
-            var item = composite.x;
-            logger.log(item + "---"+composite.cell_id);
-            p2 = p.zrange(VEHICLE_KEY+item,0,-1,'withscores')
-        });
-        p2.exec().then(function(vehicle_locations){
-            //--------------------------------------------
-            var vehicleObjectArray = [];
-            vehicle_locations.forEach(function(vehicle,index){
-               if(vehicle !== null && vehicle.length > 0) {
-                   var obj = new vehicleObj(vehiclesArray[index].x,vehicle[1][0],vehicle[1][1],vehiclesArray[index].cell_id);
-                   vehicleObjectArray.push(obj);
-                   //vehicle represents the array of s2 positions from vehicle_key
-                   //vehicleArray contains the vehicle_ids contained in the s2cells in the rider vicinity
-                   //logger.log(index +"-"+JSON.stringify(obj));
-               }
+        logger.log("vehicles in Array = "+ vehiclesArray.length + "->"+ vehiclesArray);
+        if(vehiclesArray.length === 0){
+            cb(null);
+            return;
+        }
+        else {
+            vehiclesArray.forEach(function (composite) { //item
+                var item = composite.x;
+                logger.log(item + "---" + composite.cell_id);
+                p2 = p.zrange(VEHICLE_KEY + item, 0, -1, 'withscores')
             });
+            p2.exec().then(function (vehicle_locations) {
+                //--------------------------------------------
+                var vehicleObjectArray = [];
+                vehicle_locations.forEach(function (vehicle, index) {
+                    if (vehicle !== null && vehicle.length > 0) {
+                        //vehicle represents the array of s2 positions from vehicle_key
+                        var obj = new vehicleObj(vehiclesArray[index].x, vehicle[1][0], vehicle[1][1], vehiclesArray[index].cell_id);
+                        vehicleObjectArray.push(obj);
+                    }
+                });
 
-            //create an object that stores, vehicle_id, s2key_id,timestamp
-            //logger.log("pipeline()->exec()->" + vehicle_locations.length + "-"+vehicle_locations[0]);
-            logger.log("vehicleObjectArray length = " + vehicleObjectArray.length);
-            cb(vehicleObjectArray);
-            //----------------------------------------------
-        });
+                //create an object that stores, vehicle_id, s2key_id,timestamp
+                //logger.log("pipeline()->exec()->" + vehicle_locations.length + "-"+vehicle_locations[0]);
+                logger.log("vehicleObjectArray length = " + vehicleObjectArray.length);
+                cb(vehicleObjectArray);
+                //----------------------------------------------
+            });
+        }
     }
 
     //re-look at this implemetation, what do we do when driver goes off-line?

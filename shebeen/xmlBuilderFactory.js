@@ -60,6 +60,7 @@ var xmlBuilderFactory = (function(){
             cellArray2.forEach(function (item) {
                 buildersList
                     .ele("Placemark")
+                    .ele("name","key").up()
                     .ele("Point")
                     .ele("coordinates", item)
             });
@@ -73,19 +74,88 @@ var xmlBuilderFactory = (function(){
      * @param document_name
      * @param cellArray
      */
-     xmlBuilderFactory.buildWayPoints = function(document_name,cellArray){
+     xmlBuilderFactory.buildWayPoints = function(document_name,cellArray,s2array){
         var buildersList = builder.create("kml")
             .att({"xmlns":"http://www.opengis.net/kml/2.2",
                 "xmlns:gx":"http://www.google.com/kml/ext/2.2",
                 "xmlns:kml":"http://www.opengis.net/kml/2.2",
                 "xmlns:atom":"http://www.w3.org/2005/Atom"})
             .ele("Document")
-            .ele("name",document_name).up();
+            .ele("name",document_name).up()
+
+            //style xml for waypoints
+            .ele("Style").att("id","s_ylw-pushpin_hl")
+             .ele("IconStyle")
+             .ele("color",'ff4038fc').up()
+             .ele("scale","0.590909")
+             .ele("Icon")
+            .ele("hotSpot").att("x","32").att("y","1").att("xunits","pixels").att("yunits","xunits").up()
+             .ele("href","http://maps.google.com/mapfiles/kml/paddle/wht-stars.png").up()
+             .up().up().up().up()
+
+            /*
+            <StyleMap id="m_ylw-pushpin">
+             <Pair>
+             <key>normal</key>
+             <styleUrl>#s_ylw-pushpin</styleUrl>
+            </Pair>
+            </StyleMap>*/
+             .ele("StyleMap").att("id","m_ylw-pushpin")
+             .ele("Pair")
+            .ele("key","normal").up()
+            .ele("styleUrl","#s_ylw-pushpin").up()
+            .up().up()
+            /*
+
+             .ele("Style").att("id","s_ylw-pushpin_hl")
+             .ele("IconStyle")
+             .ele("color",'ff4038fc').up()
+             .ele("scale","0.590909")
+             .ele("Icon")
+             .ele("href","http://maps.google.com/mapfiles/kml/paddle/wht-stars.png").up()
+             .up().up().up()
+             .ele("width",width)
+             .up().up().up()
+             .ele("StyleMap").att("id","default0")
+             .ele("Pair")
+
+             <StyleMap id="m_ylw-pushpin">
+             <Pair>
+             <key>normal</key>
+             <styleUrl>#s_ylw-pushpin</styleUrl>
+             </Pair>
+             </StyleMap>
+
+            .ele("StyleMap").att("id","m_ylw-pushpin")
+            .ele("Pair")
+            .ele("key","normal")
+            .ele("styleUrl","#s_ylw-pushpin").up()
+            .up().up()
+
+
+
+             <Style id="s_ylw-pushpin_hl">
+             <IconStyle>
+             <color>ff4038fc</color>
+             <scale>0.590909</scale>
+             <Icon>
+             <href>http://maps.google.com/mapfiles/kml/paddle/wht-stars.png</href>
+             </Icon>
+             <hotSpot x="32" y="1" xunits="pixels" yunits="pixels"/>
+             </IconStyle>
+             <LabelStyle>
+             <color>003eff3e</color>
+             <scale>0.9</scale>
+             </LabelStyle>
+             </Style>
+             */
 
             //var item = xml.ele("name");
-            cellArray.forEach(function(item){
+            cellArray.forEach(function(item,index){
                 buildersList
                     .ele("Placemark")
+                    .ele("styleUrl","#m_ylw-pushpin").up()
+                    .ele("name",s2array[index]).up()
                     .ele("Point")
                     .ele("coordinates",item)
             });
@@ -134,6 +204,6 @@ var waypoints = ["28.033954797,-26.029433325", "28.023715353,-26.060654974", "28
 var cells = redis.getCityGrid(function(cells){
     //logger.log("GRID ==="+cells);
     var s2cells = s2common.getVertexArrayfromCells(cells);
-    xmlBuilderFactory.buildCells("S2_Paulshof_cells.kml",s2cells,waypoints,"ff1334fc","2.1");
+    xmlBuilderFactory.buildCells("S2_Paulshof_cells.kml",s2cells,waypoints,"#008000","2.1");
 });
 */

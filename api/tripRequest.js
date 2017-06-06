@@ -68,7 +68,7 @@ var tripRequest = (function(){
     tripRequest.getIntersectRadiusCells = function(lat,lon,radius,cb){
         redis.getCityGrid(function(data){
             var min = constant.S2_CELL_MIN_LEVEL;
-            var max = 16;//constant.S2_CELL_MAX_LEVEL;
+            var max = constant.RIDER_S2_MAX_LEVEL;
             var no_of_cells = constant.DEFAULT_RIDER_MAX_CELLS;
 
             var riderSphere = s2circle.S2CircleCoverer.getCovering(lat,lon,radius,min,max,no_of_cells);
@@ -118,7 +118,7 @@ var tripRequest = (function(){
                 var vertex = s2common.getVertexArrayfromCells(cellArray);
                 logger.log("Vertex array = "+ vertex.length);
                 //var s2cells = s2common.getVertexArrayfromCells(cells);
-                xmlBuilderFactory.buildCells("S2_Paulshof_cells.kml",vertex,null,"#ffff00","2.1");
+                xmlBuilderFactory.buildCells("S2_Paulshof_cells.kml",vertex,null,"#ff3eff3e","2.1");
 
                 //retrieve from redis vehicles in rider cells within radius
                 redis.getVehiclesInCellArray(cellArray).then(function(data){
@@ -141,7 +141,7 @@ var tripRequest = (function(){
                         cb(results);
                     });
                 }).catch(function(error){
-                    logger.log("getVehiclesNearRider, "+error)
+                    logger.log("getVehiclesNearRider, "+error.stack);
                     reject(error);
                 });
             });
@@ -152,6 +152,14 @@ var tripRequest = (function(){
 
 exports.tripRequest = tripRequest;
 
+String.prototype.padLeft = function(char, length) {
+    return char.repeat(Math.max(0, length - this.length)) + this;
+}
+
+String.prototype.convertToLatLng = function(){
+    var latlng =  new s2.S2CellId(this).toLatLng();
+    return latlng.lngDegrees.toFixed(6)+","+latlng.latDegrees.toFixed(6);
+}
 /***
  * testing ......
  */
@@ -165,23 +173,17 @@ exports.tripRequest = tripRequest;
 //-26.023825, 28.036000  (2 vehicles)
 //-26.114097,  28.156122 (0 vehicles)
 //-26.059825,  28.021906 (8 vehicles)
-//-26.104628,28.053901 (has 11 vehicles)
+//-26.104628,28.053901 (has 11 vehicles - sandton)
 //-26.073008866,28.026688399 (has vehicles)
 //-26.264848,  28.623590 (no vehicles)
-//-26.057642,  28.022582 (cross main/william nicol)
+//-26.057642,  28.022582 (cross main/william nicol - 9 vehicles)
 
-String.prototype.padLeft = function(char, length) {
-    return char.repeat(Math.max(0, length - this.length)) + this;
-}
-
-String.prototype.convertToLatLng = function(){
-    var latlng =  new s2.S2CellId(this).toLatLng();
-    return latlng.lngDegrees.toFixed(6)+","+latlng.latDegrees.toFixed(6);
-}
-
-tripRequest.getVehiclesNearRider(-26.057642,28.022582,function(vehicles){
-    var val = _.isArray(vehicles);
+tripRequest.getVehiclesNearRider(-26.136211, 28.389541,function(vehicles){
+    //var val = _.isArray(vehicles);
     logger.log("---------------------------------------");
+    if(vehicles === null){
+        return null;
+    }
     logger.log("getVehiclesNear = "+ vehicles.length);
     vehicles.forEach(function(vehicle){
         //console.log("adf".padLeft('0',6));
@@ -195,7 +197,12 @@ tripRequest.getVehiclesNearRider(-26.057642,28.022582,function(vehicles){
     var vehicleArray = vehicles.map(function(item){
         return item.s2key.convertToLatLng();
     });
-    var xmlBuilder = xmlBuilderFactory.buildWayPoints("S2_Edenvale_cells.kml",vehicleArray);
+
+    var s2_vehicles = vehicles.map(function(item){
+        //return item.vehicle_id + "/"+item.s2key;
+        return item.s2key;
+    })
+    var xmlBuilder = xmlBuilderFactory.buildWayPoints("S2_Edenvale_cells.kml",vehicleArray,s2_vehicles);
 });
 //-26.270155, 28.438425 (Spring - outside)
 //-26.152353, 28.255995 (Boksburg - outside)
@@ -204,3 +211,7 @@ tripRequest.getVehiclesNearRider(-26.057642,28.022582,function(vehicles){
 //-26.217146, 28.356669 //near the edge
 
 //-26.264848,  28.623590 (Delmas)
+//-26.083709,  28.355121 (Benoni)
+//-26.115579,  28.372062 (Benoni-2)
+//-26.122485,  28.407961 (completely outside)
+//-26.136211, 28.389541 (edge-case)
