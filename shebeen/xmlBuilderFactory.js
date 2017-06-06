@@ -19,7 +19,7 @@ var xmlBuilderFactory = (function(){
      * @param document_name
      * @param cellArray
      */
-    xmlBuilderFactory.buildCells = function(document_name,cellArray,color_code,width){
+    xmlBuilderFactory.buildCells = function(document_name,cellArray,cellArray2,color_code,width){
         var buildersList = builder.create("kml")
             .att({"xmlns":"http://www.opengis.net/kml/2.2",
                 "xmlns:gx":"http://www.google.com/kml/ext/2.2",
@@ -38,21 +38,32 @@ var xmlBuilderFactory = (function(){
             .ele("styleUrl","#default")
             .up().up().up();
 
-        cellArray.forEach(function(item){
+        if(cellArray !== null) {
+            cellArray.forEach(function (item) {
 
-            var stringBuild="";
-            for(var i = 0; i < item.length; i++){
-                stringBuild = stringBuild + item[i] + ",0 ";
-                if(i === 4) {
-                    buildersList
-                        .ele("Placemark")
-                        .ele("styleUrl", "#default0").up()
-                        .ele("LineString")
-                        .ele("coordinates", stringBuild)
+                var stringBuild = "";
+                for (var i = 0; i < item.length; i++) {
+                    stringBuild = stringBuild + item[i] + ",0 ";
+                    if (i === 4) {
+                        buildersList
+                            .ele("Placemark")
+                            .ele("styleUrl", "#default0").up()
+                            .ele("LineString")
+                            .ele("coordinates", stringBuild)
+                    }
                 }
-            }
-            logger.log(stringBuild);
-        });
+                //logger.log(stringBuild);
+            });
+        }
+
+        if(cellArray2 !== null) {
+            cellArray2.forEach(function (item) {
+                buildersList
+                    .ele("Placemark")
+                    .ele("Point")
+                    .ele("coordinates", item)
+            });
+        }
         var xml = buildersList.end({pretty: true});
         console.log(xml);
     }
@@ -118,9 +129,11 @@ var xmlBuilder = xmlBuilderFactory.buildWayPoints("S2_Edenvale_cells.kml",
     "28.033840468,-26.100056928"]);*/
 
 //var cells = ["2203795067297071104","2203801664366837760","2203792455956955136","2203681267843596288","2203794242663350272"];
-
+var waypoints = ["28.033954797,-26.029433325", "28.023715353,-26.060654974", "28.033840468,-26.100056928"];
+/*
 var cells = redis.getCityGrid(function(cells){
-    logger.log("GRID ==="+cells);
+    //logger.log("GRID ==="+cells);
     var s2cells = s2common.getVertexArrayfromCells(cells);
-    xmlBuilderFactory.buildCells("S2_Paulshof_cells.kml",s2cells,"ff1334fc","2.1");
+    xmlBuilderFactory.buildCells("S2_Paulshof_cells.kml",s2cells,waypoints,"ff1334fc","2.1");
 });
+*/

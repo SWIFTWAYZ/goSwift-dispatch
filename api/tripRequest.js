@@ -68,7 +68,7 @@ var tripRequest = (function(){
     tripRequest.getIntersectRadiusCells = function(lat,lon,radius,cb){
         redis.getCityGrid(function(data){
             var min = constant.S2_CELL_MIN_LEVEL;
-            var max = constant.S2_CELL_MAX_LEVEL;
+            var max = 16;//constant.S2_CELL_MAX_LEVEL;
             var no_of_cells = constant.DEFAULT_RIDER_MAX_CELLS;
 
             var riderSphere = s2circle.S2CircleCoverer.getCovering(lat,lon,radius,min,max,no_of_cells);
@@ -115,8 +115,11 @@ var tripRequest = (function(){
                  * code used to display rider cells information
                  */
 
-                var vertex = s2common.getVertexArrayfromCells(cells);
+                var vertex = s2common.getVertexArrayfromCells(cellArray);
                 logger.log("Vertex array = "+ vertex.length);
+                //var s2cells = s2common.getVertexArrayfromCells(cells);
+                xmlBuilderFactory.buildCells("S2_Paulshof_cells.kml",vertex,null,"#ffff00","2.1");
+
                 //retrieve from redis vehicles in rider cells within radius
                 redis.getVehiclesInCellArray(cellArray).then(function(data){
                     var cellsWithVehicles = [];

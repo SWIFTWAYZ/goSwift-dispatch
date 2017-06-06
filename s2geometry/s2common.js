@@ -225,20 +225,20 @@ var s2common = (function(){
     }
 
     s2common.getVertexArrayfromCells = function(cells){
-        console.log("--------------cellArray ----------------");
+        //console.log("--------------cellArray ----------------");
         var totalVertexArray = [];
         cells.forEach(function(one_cell,index){
             var vertex = [];
             var s2cell = new s2.S2Cell(new s2.S2CellId(one_cell));//new s2.S2Cell(one_cell)
             for(var i = 0; i < 4; i++){
                 var latlng = new s2.S2LatLng.fromPoint(s2cell.getVertex(i));
-                logger.log("cell, i="+ i +"(" + latlng.lngDegrees.toNumber() +","+latlng.latDegrees.toNumber()+")");
+                //logger.log("cell, i="+ i +"(" + latlng.lngDegrees.toNumber() +","+latlng.latDegrees.toNumber()+")");
                 vertex.push(latlng.lngDegrees.toNumber() +","+latlng.latDegrees.toNumber());
             }
             var latlng = new s2.S2LatLng.fromPoint(s2cell.getVertex(0));
-            logger.log("cell, i="+ i +"(" + latlng.lngDegrees.toNumber() +","+latlng.latDegrees.toNumber()+")");
+            //logger.log("cell, i="+ i +"(" + latlng.lngDegrees.toNumber() +","+latlng.latDegrees.toNumber()+")");
             vertex.push(latlng.lngDegrees.toNumber() +","+latlng.latDegrees.toNumber());
-            console.log("--------------cellArray ----------------" + vertex[index]);
+            //console.log("--------------cellArray ----------------");
             totalVertexArray.push(vertex);
         });
 
