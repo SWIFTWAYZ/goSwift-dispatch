@@ -83,7 +83,6 @@ var tripCreator = (function () {
         //Paulshof_waypoints.txt,Springs_edge_waypoints.txt,Woodmead_waypoints,Taxi_locations_grid
 
         var id = parseInt(vehicle_id);
-
         tripCreator.readDriversGPS(filename).then(function (data) {
 
             data.forEach(function (each_driver) {
@@ -103,24 +102,6 @@ var tripCreator = (function () {
         }).catch(function (error) {
             console.log("Error logged : " + error);
             return false;
-        });
-    }
-
-    tripCreator.prototype.print = function (msg) {
-        console.log(" print message from = " + JSON.stringify(this === that) + "/" + msg);
-        //coord.coordinates[i].lat + "," + coord.coordinates[i].lng;
-        //trip[i].lat + "," + trip[i].lng;
-        var trip = '{"gps": [' +
-            '{ "lat":"-122.420017", "lng":"37.780096" },' +
-            '{ "lat":"-122.420017", "lng":"37.780096" },' +
-            '{ "lat":"-122.420017", "lng":"37.780096" },' +
-            '{ "lat":"-122.420017", "lng":"37.780096" }' +
-            ']}';
-
-        var trips = JSON.parse(trip);
-        //console.log(trips);
-        trips.gps.forEach(function (item, index) {
-            console.log("gps# " + index + "-" + JSON.stringify(item));
         });
     }
 

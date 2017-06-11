@@ -185,7 +185,7 @@ var provider = (function () {
     provider.getVehiclePosFromArray = function(vehiclesArray,cb){
         var p = client.pipeline()
         var p2;
-        logger.log("vehicles in Array = "+ vehiclesArray.length + "->"+ vehiclesArray);
+        logger.log("vehicles in Array = "+ vehiclesArray.length + "->");
         if(vehiclesArray.length === 0){
             cb(null);
             return;
@@ -193,7 +193,7 @@ var provider = (function () {
         else {
             vehiclesArray.forEach(function (composite) { //item
                 var item = composite.x;
-                logger.log(item + "---" + composite.cell_id);
+                //logger.log(item + "---" + composite.cell_id);
                 p2 = p.zrange(VEHICLE_KEY + item, 0, -1, 'withscores')
             });
             p2.exec().then(function (vehicle_locations) {
@@ -332,6 +332,7 @@ var provider = (function () {
                 return;
             }
             cell_array.forEach(function(s2cell_id){
+                //logger.log("ZRANGE --->" + CELL_KEY+s2cell_id);
                 p2 = p.zrange(CELL_KEY+s2cell_id,0,-1,'withscores')
             });
             p2.exec().then(function(results){
