@@ -223,7 +223,7 @@ var s2common = (function(){
         }
     }
 
-    s2common.getVertexArrayfromCells = function(cells){
+    s2common.createCellRectArray = function(cells){
         var totalVertexArray = [];
         cells.forEach(function(one_cell,index){
             var vertex = [];
@@ -234,7 +234,11 @@ var s2common = (function(){
             }
             var latlng = new s2.S2LatLng.fromPoint(s2cell.getVertex(0));
             vertex.push(latlng.lngDegrees.toNumber() +","+latlng.latDegrees.toNumber());
-            var cell_obj = {cell_vertex:vertex,s2_id:one_cell};
+            var cell_obj = {
+                cell_vertex:vertex,
+                s2_id:one_cell,
+                s2_level: s2cell.level
+            };
             totalVertexArray.push(cell_obj);
         });
 

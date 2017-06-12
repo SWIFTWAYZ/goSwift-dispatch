@@ -126,7 +126,8 @@ var xmlBuilderFactory = (function(){
                         .ele("ExtendedData")
                         .ele("SchemaData").att("schemaUrl", "#GO_SWIFT_Phase_1")
                         .ele("SimpleData", item).att("name", "GPS").up()
-                        .ele("SimpleData", s2cell_Array[index].s2key).att("name", "S2Cell")
+                        .ele("SimpleData", s2cell_Array[index].s2key).att("name", "s2CellId").up()
+                        .ele("SimpleData",s2cell_Array[index].s2_level).att("cell","s2cell")//comment, how to retrieve vehicle pos s2_cell (12-16)
                         .up().up().up()
                         .ele("Point")
                         .ele("coordinates", item)
@@ -154,7 +155,7 @@ var waypoints = ["28.033954797,-26.029433325", "28.023715353,-26.060654974", "28
 
 //--- get all cells and build the joburg city grid kml file
 var cells = redis.getCityGrid(function(cells){
-    var s2cells = s2common.getVertexArrayfromCells(cells);
+    var s2cells = s2common.createCellRectArray(cells);
     //xmlBuilderFactory.buildCells("S2_JHB_grid_cells.kml",s2cells,null,"#ff4038fc","2.1");
 
 });
