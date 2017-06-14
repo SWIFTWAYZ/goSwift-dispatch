@@ -117,28 +117,32 @@ var xmlBuilderFactory = (function(){
 
             //var item = xml.ele("name");
 
-            cellArray.forEach(function(item,index){
-                if(s2cell_Array[index] !== undefined) {
+            //cellArray.forEach(function(item,index){
+             s2cell_Array.forEach(function(item,index){
+                //if(s2cell_Array[index] !== undefined) {
                     //logger.log("results index = " + index + "-" + JSON.stringify(item));
                     buildersList
                         .ele("Placemark")
                         .ele("styleUrl", "#m_ylw-pushpin").up()
-                        .ele("name", s2cell_Array[index].vehicle_id).up()
+                        //.ele("name", s2cell_Array[index].vehicle_id).up()
+                        .ele("name", item.vehicle_id).up()
                         .ele("ExtendedData")
                         .ele("SchemaData").att("schemaUrl", "#GO_SWIFT_Phase_1")
-                        .ele("SimpleData", item).att("name", "GPS").up()
-                        .ele("SimpleData", s2cell_Array[index].s2key).att("name", "s2CellId").up()
-                        .ele("SimpleData",s2cell_Array[index].s2_level).att("cell","s2cell")//comment, how to retrieve vehicle pos s2_cell (12-16)
+                        .ele("SimpleData", item.latlng).att("name", "GPS").up()
+                        //.ele("SimpleData", s2cell_Array[index].s2key).att("name", "s2CellId").up()
+                        //.ele("SimpleData",s2cell_Array[index].s2_level).att("cell","s2cell")//comment, how to retrieve vehicle pos s2_cell (12-16)
+                        .ele("SimpleData", item.s2key).att("name", "s2CellId").up()
+                        .ele("SimpleData",item.s2_level).att("cell","s2cell")
                         .up().up().up()
                         .ele("Point")
-                        .ele("coordinates", item)
-                }
+                        .ele("coordinates", item.latlng)
+                //}
             });
             cellArray.forEach(function(item){
                 //buildersList.
         })
         var xml = buildersList.end({pretty: true});
-        //console.log(xml);
+        console.log(xml);
         xmlBuilderFactory.createFile(document_name,xml);
     }
 

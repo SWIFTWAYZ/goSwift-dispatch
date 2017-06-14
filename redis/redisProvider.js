@@ -169,13 +169,22 @@ var provider = (function () {
      * @param cb
      */
 
-    var vehicleObj = function(vehicle_id,key,time,cell){
+    var vehicleObj = function(vehicle_id,key,time,cell,gps_latlng,level){
         this.vehicle_id = vehicle_id;
         this.s2key = key;
         this.tstamp = time;
         this.cell = cell;
+        this.latlng = gps_latlng;
+        this.s2_level = level;
     }
 
+    String.prototype.convertToLatLng = function(){
+        var latlng =  new s2.S2CellId(this).toLatLng();
+        return latlng.lngDegrees.toFixed(6)+","+latlng.latDegrees.toFixed(6);
+    }
+    String.prototype.getS2CellLevel = function(){
+        return new s2.S2CellId(this).level();
+    }
     /**
      * Pipeline to retrieve vehicle positions (s2keys) with timestamp given
      * an array of vehicle ids (->zrange vehicle:004467 0 -1 withscores)
@@ -202,7 +211,11 @@ var provider = (function () {
                 vehicle_locations.forEach(function (vehicle, index) {
                     if (vehicle !== null && vehicle.length > 0) {
                         //vehicle represents the array of s2 positions from vehicle_key
-                        var obj = new vehicleObj(vehiclesArray[index].vehicle_id, vehicle[1][0], vehicle[1][1], vehiclesArray[index].cell_id);
+                        var s2_key = vehicle[1][0];
+                        var latlng = s2_key.convertToLatLng();
+                        var level = s2_key.getS2CellLevel();
+                        var obj = new vehicleObj(vehiclesArray[index].vehicle_id, vehicle[1][0], vehicle[1][1],
+                            vehiclesArray[index].cell_id,latlng,level);
                         vehicleObjectArray.push(obj);
                     }
                 });

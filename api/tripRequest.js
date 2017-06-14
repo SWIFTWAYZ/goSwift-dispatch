@@ -26,7 +26,7 @@ String.prototype.convertToLatLng = function(){
 Array.prototype.stringify = function(){
     this.forEach(function(item,index){
         if(item === undefined){
-            logger.log("vehicle at index = "+index + ", is removed");
+            //logger.log("vehicle at index = "+index + ", is removed");
         }else {
             logger.log(JSON.stringify(item));
         }
@@ -93,14 +93,16 @@ var tripRequest = (function(){
 
         //var intersecting = new s2.S2CellUnion();
         var counter = 1;
-        var vehiclesInRadius = vehicles.map(function(item,index){
+        var vehiclesInRadius = vehicles.filter(function(item,index){
             var cell_item = new s2.S2CellId(item.s2key);
-            if(cellsRegion.contains(cell_item)){
-                counter++
+            return cellsRegion.contains(cell_item);
+
+                /*counter++;
                 logger.log( "filtered: vehicle id=/" + item.s2key +"/"+item.vehicle_id);
-                return item;
-            }
-        });
+                return item;*/
+            });
+
+        logger.log("filterVehiclesInRadius old size = "+ vehicles.length + ", new size = "+vehiclesInRadius.length);
         cb(vehiclesInRadius);
     }
 
@@ -260,7 +262,9 @@ exports.tripRequest = tripRequest;
 //-26.102310,  28.089150 (Alex)
 //-26.011190,  28.200219 (Thembisa)
 //-26.062455,  28.047267
-tripRequest.getVehiclesNearRider(-26.102310,  28.089150,function(vehicles,cells,cells_12){
+//-26.137895,  28.237409 (OR Tambo)
+
+tripRequest.getVehiclesNearRider(-26.137895,  28.237409 ,function(vehicles,cells,cells_12){
 
     var rectcell = s2common.createCellRectArray(cells);
     var rectcell_12 = s2common.createCellRectArray(cells_12);
@@ -269,11 +273,19 @@ tripRequest.getVehiclesNearRider(-26.102310,  28.089150,function(vehicles,cells,
         var tstamp = new Date().getTime();
 
         if(vehicles !== null) {
-            var vehicleArray = vehicles.map(function(item){
+            //var vehicleArray = vehicles.map(function(item){
+            var vehicleArray = geoRadiusVehicles.map(function(item){
                 //logger.log("vehicles = " + JSON.stringify(item));
                 return item.s2key.convertToLatLng();
             });
-            logger.log("No. of vehicles = " + vehicles.length);
+            logger.log("No. of vehicles = " + vehicles.length + "- new size = "+ vehicleArray.length);
+
+            logger.log("---------------------------------------")
+            logger.log("vehicleArray" + vehicleArray );
+            logger.log("---------------------------------------")
+            logger.log("geoRadiusVehicles" + JSON.stringify(geoRadiusVehicles));
+            logger.log("---------------------------------------")
+
             geoRadiusVehicles.stringify();
             var filename = "S2_vehicles_" + tstamp + ".kml";
             xmlBuilderFactory.buildVehicleLocations(filename,vehicleArray, geoRadiusVehicles);
