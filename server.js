@@ -27,7 +27,7 @@ var express = require("express");
 //var redis = require("./redis/redisProvider");
 var s2circle = require("./s2geometry/s2circlecoverer");
 var init = require("./config/init");
-var uuid = require('node-uuid');
+//var uuid = require('node-uuid');
 var path = require('path');
 var logger = require("./config/logutil").logger;
 

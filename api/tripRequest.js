@@ -14,6 +14,25 @@ var s2common = require("../s2geometry/s2common").s2common;
 var logger = require("../config/logutil").logger;
 var xmlBuilderFactory = require("../shebeen/xmlBuilderFactory").xmlBuilderFactory;
 
+String.prototype.padLeft = function(char, length) {
+    return char.repeat(Math.max(0, length - this.length)) + this;
+}
+
+String.prototype.convertToLatLng = function(){
+    var latlng =  new s2.S2CellId(this).toLatLng();
+    return latlng.lngDegrees.toFixed(6)+","+latlng.latDegrees.toFixed(6);
+}
+
+Array.prototype.stringify = function(){
+    this.forEach(function(item,index){
+        if(item === undefined){
+            logger.log("vehicle at index = "+index + ", is removed");
+        }else {
+            logger.log(JSON.stringify(item));
+        }
+    })
+}
+
 var tripRequest = (function(){
 
     function tripRequest(){
@@ -30,7 +49,7 @@ var tripRequest = (function(){
      */
     //getRiderGeoSquare
     tripRequest.getIntersectSquareCells = function(rect){
-        redis.getCityGrid(function(data){
+        redis.getCityGrid().then(function(data){
             var lo = new s2.S2LatLng.fromDegrees(-26.135891, 28.117186);
             var hi = new s2.S2LatLng.fromDegrees(-26.129719, 28.131236);
             var riderSquare = s2.S2LatLngRect.fromLatLng(lo, hi);
@@ -66,8 +85,11 @@ var tripRequest = (function(){
         var cellsRegion = new s2.S2CellUnion();
         cellsRegion.initRawCellIds(s2_cellsB);
         cellsRegion.normalize();
-
-        logger.log("cellsRegion size = "+cellsRegion + "- vehicles = "+vehicles[0].cell_id);
+        if(vehicles === null){
+            cb(null);
+            return;
+        }
+        logger.log("cellsRegion size = "+cellsRegion + "- vehicles = "+vehicles.length);
 
         //var intersecting = new s2.S2CellUnion();
         var counter = 1;
@@ -75,7 +97,7 @@ var tripRequest = (function(){
             var cell_item = new s2.S2CellId(item.s2key);
             if(cellsRegion.contains(cell_item)){
                 counter++
-                logger.log( "cellsRegions item=" +counter+  "/" + item.s2key);
+                logger.log( "filtered: vehicle id=/" + item.s2key +"/"+item.vehicle_id);
                 return item;
             }
         });
@@ -83,12 +105,13 @@ var tripRequest = (function(){
     }
 
     tripRequest.getIntersectRadiusCells2 = function(min,max,no_of_cells,lat,lon,radius,cb){
-        redis.getCityGrid(function(data){
+        redis.getCityGrid().then(function(data){
             /*var min = constant.S2_CELL_MIN_LEVEL;
             var max = constant.RIDER_S2_MAX_LEVEL;
             var no_of_cells = constant.DEFAULT_RIDER_MAX_CELLS;*/
 
             var riderSphere = s2circle.S2CircleCoverer.getCovering(lat,lon,radius,min,max,no_of_cells);
+
             var cityRegion = new s2.S2CellUnion(init.city.lat,init.city.lon);
             cityRegion.initFromIds(data);
             cityRegion.normalize();
@@ -118,14 +141,12 @@ var tripRequest = (function(){
      */
 
     tripRequest.getIntersectRadiusCells = function(lat,lon,radius,cb){
-        redis.getCityGrid(function(data){
+        redis.getCityGrid().then(function(data){
             var min = constant.S2_CELL_MIN_LEVEL;
             var max = constant.RIDER_S2_MAX_LEVEL;
             var no_of_cells = constant.DEFAULT_RIDER_MAX_CELLS;
 
             var riderSphere = s2circle.S2CircleCoverer.getCovering(lat,lon,radius,min,max,no_of_cells);
-            //logger.log("city lat_lon = " + init.city.lat+","+init.city.lon);
-            //do we actually need the city latlon to initialize S2CellUnion?
             var cityRegion = new s2.S2CellUnion(init.city.lat,init.city.lon);
             cityRegion.initFromIds(data);
             cityRegion.normalize();
@@ -157,10 +178,11 @@ var tripRequest = (function(){
      * @param cb
      */
 
-    var posData = function(x,cell){
-        this.x = x;
-    this.cell_id = cell;
-};
+    var posData = function(id,cell){
+        this.vehicle_id = id;
+        this.cell_id = cell;
+    };
+
     tripRequest.getVehiclesNearRider = function(lat,lon,cb){
         logger.log("rider location = " + lat+","+lon);
         tripRequest.getIntersectRadiusCells2(12,12,9,lat,lon, constant.RIDER_GEO_RADIUS,function(cells){
@@ -185,21 +207,22 @@ var tripRequest = (function(){
                          * code used to display rider cells information
                          */
 
-                        //retrieve from redis vehicles in rider cells within radius
-                        //upscale the cells in cellArray to level 12 (larger cells), then retrieve
-                        //the vehicles in those cells and then filter by cellArray
+                        //retrieve from redis vehicles in rider cells within radius, start by retrieving
+                        //all vehicles at level-12 and then filter late to cells within geo-radius (level 12 -16)
+
                         redis.getVehiclesInCellArray(cellArray).then(function(data){
                             var cellsWithVehicles = [];
                             data.forEach(function(item,index){
-                                logger.log("cell_id = " + cellArray[index] +"-"+ item[1].length/2);
+                                logger.log("No. of vehicles found = "+ item[1].length/2 +", in cell = "+ cellArray[index]);
                                 if(item[1] !== null && item[1].length > 0){
                                     //logger.log(item);
-                                    item[1].forEach(function(x,index2){
+                                    item[1].forEach(function(vehicle_id,index2){
                                         if(index2%2 === 0){
                                             //currently only retrieve 1 s2key under vehicle:xxxx, should we get the latest
-                                            // 10 or 20 s2keys by timestamp age and filter to ensure is within rider cells
-                                            //logger.log("push vehicle = "+ x + "->"+cellArray[index]);
-                                            cellsWithVehicles.push(new posData(x,cellArray[index]));
+                                            // 10-20 s2keys by timestamp age and filter to ensure is within rider cells
+                                            var p = new posData(vehicle_id,cellArray[index])
+                                            //logger.log("posData add to cellsWithVehicles = " + JSON.stringify(p));
+                                            cellsWithVehicles.push(p);
                                         }
                                     })
                                 }
@@ -212,8 +235,7 @@ var tripRequest = (function(){
                             logger.log("getVehiclesNearRider, "+error.stack);
                             reject(error);
                         });
-                })
-
+                });
             });
     }
 
@@ -222,59 +244,43 @@ var tripRequest = (function(){
 
 exports.tripRequest = tripRequest;
 
-String.prototype.padLeft = function(char, length) {
-    return char.repeat(Math.max(0, length - this.length)) + this;
-}
-
-String.prototype.convertToLatLng = function(){
-    var latlng =  new s2.S2CellId(this).toLatLng();
-    return latlng.lngDegrees.toFixed(6)+","+latlng.latDegrees.toFixed(6);
-}
 /***
  * testing ......
  */
 
-//	28.024187,-26.050388
+//-26.050388, 28.024187
 //-26.088443,  28.074722
 
 //-26.103217,  28.018408
 //-26.184800,  28.036211
 //-26.084080,  28.077604
-//-26.084080,   28.077604 (0 vehicles)
-tripRequest.getVehiclesNearRider(-26.103217,  28.018408,function(vehicles,cells,cells_12){
+//-26.084080,  28.077604 (0 vehicles)
+//-26.198977,  28.042292 (Joburg)
+//-26.142345,  28.037675 (Rosebank)
+//-26.102310,  28.089150 (Alex)
+//-26.011190,  28.200219 (Thembisa)
+//-26.062455,  28.047267
+tripRequest.getVehiclesNearRider(-26.102310,  28.089150,function(vehicles,cells,cells_12){
 
     var rectcell = s2common.createCellRectArray(cells);
     var rectcell_12 = s2common.createCellRectArray(cells_12);
+
     tripRequest.filterVehiclesInRadius(vehicles,cells_12,function(geoRadiusVehicles){
         var tstamp = new Date().getTime();
 
-        var vehicleArray = vehicles.map(function(item){
-            logger.log("vehicles = " + JSON.stringify(item));
-            return item.s2key.convertToLatLng();
-            /*return {
-                pos_gps: item.s2key.convertToLatLng(),
-                s2_cell: item.cells_12[index]
-            }*/
-        });
-
-        logger.log("results = "+ geoRadiusVehicles + "-length = "+ geoRadiusVehicles.length);
+        if(vehicles !== null) {
+            var vehicleArray = vehicles.map(function(item){
+                //logger.log("vehicles = " + JSON.stringify(item));
+                return item.s2key.convertToLatLng();
+            });
+            logger.log("No. of vehicles = " + vehicles.length);
+            geoRadiusVehicles.stringify();
+            var filename = "S2_vehicles_" + tstamp + ".kml";
+            xmlBuilderFactory.buildVehicleLocations(filename,vehicleArray, geoRadiusVehicles);
+        }
         var file = "S2_cells_"+tstamp+".kml";
         xmlBuilderFactory.buildCells(file,rectcell_12,null,"ffff6c91","2.1");
-        if(vehicles !== null) {
-            //logger.log("is vehicles null? = " + JSON.stringify(vehicles));
-            var filename = "S2_vehicles_" + tstamp + ".kml";
-            var xmlBuilder = xmlBuilderFactory.buildVehicleLocations(filename,vehicleArray, geoRadiusVehicles);
-        }
     })
-
-    if(vehicles !== null){
-        logger.log("No. of vehicles = " + vehicles.length);
-        var vehicleArray = vehicles.map(function(item){
-            return item.s2key.convertToLatLng();
-        });
-        //xmlBuilderFactory.buildCells("S2_Rider_cells.kml",rectcell,null,"ffff6c91","2.1");
-    //var xmlBuilder = xmlBuilderFactory.buildVehicleLocations("S2_Vehicles_paulshof_12.kml",vehicleArray,vehicles);
-    }
 });
 
 //triprequest.getIntersectRadiusCells(-26.104628,28.053901,constant.RIDER_GEO_RADIUS);

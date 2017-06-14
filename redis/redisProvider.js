@@ -192,7 +192,7 @@ var provider = (function () {
         }
         else {
             vehiclesArray.forEach(function (composite) { //item
-                var item = composite.x;
+                var item = composite.vehicle_id;
                 //logger.log(item + "---" + composite.cell_id);
                 p2 = p.zrange(VEHICLE_KEY + item, 0, -1, 'withscores')
             });
@@ -202,7 +202,7 @@ var provider = (function () {
                 vehicle_locations.forEach(function (vehicle, index) {
                     if (vehicle !== null && vehicle.length > 0) {
                         //vehicle represents the array of s2 positions from vehicle_key
-                        var obj = new vehicleObj(vehiclesArray[index].x, vehicle[1][0], vehicle[1][1], vehiclesArray[index].cell_id);
+                        var obj = new vehicleObj(vehiclesArray[index].vehicle_id, vehicle[1][0], vehicle[1][1], vehiclesArray[index].cell_id);
                         vehicleObjectArray.push(obj);
                     }
                 });
@@ -396,10 +396,8 @@ var provider = (function () {
      * with a radius (meters) configured in config/init.js as {radius: '32000'}
      * @returns {*}
      */
-    provider.getCityGrid = function (cb) {
-        client.smembers(CITY_CELLS).then(function (results) {
-            cb(results);
-        });
+    provider.getCityGrid = function () {
+        return client.smembers(CITY_CELLS);
     }
 
     /**

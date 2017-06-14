@@ -19,10 +19,11 @@ var xmlBuilderFactory = (function(){
         var file = path.join(__dirname,"../../output",filename);
         logger.log("writing to file.....->"+file);
         fs.writeFile(file,kml_buffer,function(err){
-            logger.log("error at writefile - > "+ err);
-            if(err)
+            if(err){
                 throw Error("error writing to file");
-                logger.log("successfully created file: "+kml_buffer);
+            }else{
+                logger.log("successfully created file: "+file);
+            }
         })
     }
 
@@ -80,7 +81,7 @@ var xmlBuilderFactory = (function(){
         }
         var xml = buildersList.end({pretty: true});
 
-        console.log(xml);
+        //console.log(xml);
         xmlBuilderFactory.createFile(document_name,xml);
     }
 
@@ -118,7 +119,7 @@ var xmlBuilderFactory = (function(){
 
             cellArray.forEach(function(item,index){
                 if(s2cell_Array[index] !== undefined) {
-                    logger.log("results index = " + index + "-" + JSON.stringify(item));
+                    //logger.log("results index = " + index + "-" + JSON.stringify(item));
                     buildersList
                         .ele("Placemark")
                         .ele("styleUrl", "#m_ylw-pushpin").up()
@@ -137,19 +138,14 @@ var xmlBuilderFactory = (function(){
                 //buildersList.
         })
         var xml = buildersList.end({pretty: true});
-        console.log(xml);
-         xmlBuilderFactory.createFile(document_name,xml);
+        //console.log(xml);
+        xmlBuilderFactory.createFile(document_name,xml);
     }
 
     return xmlBuilderFactory;
 }).call(this);
 
 exports.xmlBuilderFactory = xmlBuilderFactory;
-
-
-
-var cells = ["2203795067297071104","2203801664366837760","2203792455956955136","2203681267843596288","2203794242663350272"];
-var waypoints = ["28.033954797,-26.029433325", "28.023715353,-26.060654974", "28.033840468,-26.100056928"];
 
 //xmlBuilderFactory.buildVehicleLocations("waypoints.kml",waypoints,cells);
 
@@ -160,45 +156,3 @@ var cells = redis.getCityGrid(function(cells){
 
 });
 
-
-/*
- .ele("Style").att("id","s_ylw-pushpin_hl")
- .ele("IconStyle")
- .ele("color",'ff4038fc').up()
- .ele("scale","0.590909")
- .ele("Icon")
- .ele("href","http://maps.google.com/mapfiles/kml/paddle/wht-stars.png").up()
- .up().up().up()
- .ele("width",width)
- .up().up().up()
- .ele("StyleMap").att("id","default0")
- .ele("Pair")
-
- <StyleMap id="m_ylw-pushpin">
- <Pair>
- <key>normal</key>
- <styleUrl>#s_ylw-pushpin</styleUrl>
- </Pair>
- </StyleMap>
-
- .ele("StyleMap").att("id","m_ylw-pushpin")
- .ele("Pair")
- .ele("key","normal")
- .ele("styleUrl","#s_ylw-pushpin").up()
- .up().up()
-
- <Style id="s_ylw-pushpin_hl">
- <IconStyle>
- <color>ff4038fc</color>
- <scale>0.590909</scale>
- <Icon>
- <href>http://maps.google.com/mapfiles/kml/paddle/wht-stars.png</href>
- </Icon>
- <hotSpot x="32" y="1" xunits="pixels" yunits="pixels"/>
- </IconStyle>
- <LabelStyle>
- <color>003eff3e</color>
- <scale>0.9</scale>
- </LabelStyle>
- </Style>
- */

@@ -79,7 +79,7 @@ var tripCreator = (function () {
     }
 
     tripCreator.logVehicleTrip = function (vehicle_id) {
-        var filename = '/Users/tinyiko/WebstormProjects/GoSwift/docs/S2/routes/Paulshof_waypoints.txt';
+        var filename = '/Users/tinyiko/WebstormProjects/GoSwift/docs/S2/routes/Taxi_locations_13June_1.txt';
         //Paulshof_waypoints.txt,Springs_edge_waypoints.txt,Woodmead_waypoints,Taxi_locations_grid
 
         var id = parseInt(vehicle_id);
@@ -113,5 +113,5 @@ exports.tripRequest = tripCreator;
 
 //new tripCreator().print("trip to sandton");
 
-tripCreator.logVehicleTrip("004467");
+tripCreator.logVehicleTrip("5389");
 //tripCreator.readCellsInHex();

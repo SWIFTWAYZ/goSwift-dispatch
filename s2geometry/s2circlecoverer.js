@@ -65,10 +65,12 @@ var S2CircleCoverer = (function () {
 
         var centre_gps = new s2.S2LatLng.fromDegrees(lat, lon);
         var cap2 = getS2CapRadius(centre_gps, radius);
+
         var results = covering.getCoveringCells(cap2);
 
         //console.log("{"+'"type":"FeatureCollection","features":[');
         //dont really need this loop except for being verbose. turn it off in production
+
         results.forEach(function (record) {
             var cell = new s2.S2Cell(record);
             //console.log(JSON.stringify(cell.toGEOJSON())+"," );
@@ -151,4 +153,4 @@ var S2CircleCoverer = (function () {
 
 exports.S2CircleCoverer = S2CircleCoverer;
 
-S2CircleCoverer.initialise(0, 0, 100);
+//S2CircleCoverer.initialise(0, 0, 100);
