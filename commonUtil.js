@@ -5,6 +5,15 @@
 
 var logger = require("./config/logutil").logger;
 var _ = require("underscore");
+var lineReader = require('line-reader');
+var Promise = require("bluebird");
+
+var line_counter = 0;
+var unreached = [];
+var gpsPoint = function (lat, lon) {
+    this.latitude = lat;
+    this.longitude = lon;
+}
 
 function decimalToBinary(DecimalValue){
     var BinaryValue = '';
@@ -47,10 +56,33 @@ var arrayClone = function ( arr ) {
     }
 }
 
-exports.decimalToBinary = decimalToBinary
+    var readDriversGPS = function (filename) {
+    var readLine = Promise.promisify(lineReader.eachLine);
+    var promise = new Promise(function (resolve, reject) {
+        readLine(filename, function (line, last) {
+            var line_str = line.split(",");
+            unreached[line_counter] = new gpsPoint(line_str[0], line_str[1]);
+            line_counter++;
+            if (last) {
+                // or check if it's the last one
+                console.log("last item = " + last + "=" + line_counter);
+            }
+        }).then(function (results) {
+            //console.log("readline results :"+results);
+            resolve(unreached);
+        }).catch(function (error) {
+            reject(error.toString());
+        });
+    });
+    return promise;
+}
+
+exports.decimalToBinary = decimalToBinary;
+exports.readDriversGPS = readDriversGPS;
 
 var copy = arrayClone(['a','b','c']);
 var copy1 = deepCopy(['a','b','c']);
 
 logger.log('copied array1 = ' + JSON.stringify(copy))
 logger.log("copied array = " + JSON.stringify(copy1));
+

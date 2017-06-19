@@ -277,7 +277,7 @@ var provider = (function () {
         return new Promise(function(resolve,reject){
             var key = CURR_VEHICLE_CELL+vehicle_id;
            client.zrange(key,0,-1).then(function(results){
-               logger.log("Get current cell for vehicle_id : "+vehicle_id + "-results :"+results);
+               //logger.log("Get current cell for vehicle_id : "+vehicle_id + "-results :"+results);
                 resolve(results);
            })
         });
@@ -409,7 +409,7 @@ var provider = (function () {
         return new Promise(function (resolve, reject) {
             logger.log("vehicle_id = " + vehicle_id + " exists >"+fromCellkey + "/ and enters grid = " + toCellkey);
             //logger.log("got cell for vehiclekey? = " + fromCellkey + "=vehicle_id :" + vehicle_id + "}");
-                client.multi()
+                client.pipeline()
                     .zrem(CELL_KEY + fromCellkey, vehicle_id)
                     .zadd(CELL_KEY + toCellkey, timestamp, vehicle_id)
                     .zrem(CURR_VEHICLE_CELL+vehicle_id,fromCellkey)

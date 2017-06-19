@@ -28,24 +28,27 @@ var driverLocation = (function () {
         var s2_cellid = s2common.s2CellIdKeyFromLatLng(lat, lon);
         var new_cellid = s2common.getParentIdAtLevel(12,s2_cellid);
         var tstamp = new Date().getTime();
-        //logger.debug("log drivers GPS = "+s2_cellid);
 
         redis.getCurrentCellByVehicleId(vehicle_id).then(function(results){
+            //check new-cell and compare with current-cell, if same, just log vehicle position
+            logger.log("No changes to cells " + new_cellid + "==="+results[0]+
+                ", just log vehicle position -- "+s2_cellid);
+            if(new_cellid === results[0]){
+                redis.addVehiclePosition(s2_cellid,vehicle_id,tstamp);
+                return null;
+            };
+
             if(results.length > 0){
-                logger.log("get current cell of vehicle_id : "+ vehicle_id + "--results > "+ results + "--removing = "+results[0]);
+                //if changed, then call changeCellPosition()
+                logger.log("get current cell of vehicle_id : "+ vehicle_id + "--removing = "+results[0]);
                 redis.changeCellPosition(results[0],new_cellid,vehicle_id,tstamp);
                 redis.addVehiclePosition(s2_cellid,vehicle_id,tstamp);
             }
             else{
-                logger.log("NOTHING received - get current cell for vehicle_id : "+ vehicle_id);
-                //redis.addVehiclePosition(s2_cellid,vehicle_id,tstamp);
+                logger.log("No current vehicle cell for vehicle_id : "+ vehicle_id);
+                redis.addVehiclePosition(s2_cellid,vehicle_id,tstamp);
             }
             });
-        //first check new cell and compare with current cell, if same, just log vehicle position
-        //if changed, then call changeCellPosition()
-
-        //redis.addVehiclePosition();
-        //redis.changeCellPosition(null,null,vehicle_id,tstamp)
     }
 
     /**
@@ -161,4 +164,11 @@ exports.driverLocation = driverLocation;
 
 //driverLocation.listDriversInRadius("2203795001640038161", 100);
 
-driverLocation.logDriverGPSLocation("4524",-26.097747,28.032304);
+commons.readDriversGPS('/Users/tinyiko/WebstormProjects/GoSwift/docs/S2/routes/Taxi_locations_13June_1.txt').then(function(data){
+    logger.log(data.length);
+    data.forEach(function(item,index) {
+        logger.log(index + ", reading GPS = " + JSON.stringify(item));
+        driverLocation.logDriverGPSLocation("4524",item.latitude,item.longitude);
+    });
+})
+
