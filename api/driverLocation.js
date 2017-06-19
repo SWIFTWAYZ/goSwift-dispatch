@@ -16,6 +16,39 @@ var driverLocation = (function () {
     };
 
     /**
+     * function to log driver GPS in redis. The redis service
+     * checks first which cell does this GPS point belong to and it
+     * logs it into city_cells:xxxxx (where xxxx is cell_id of grid)
+     * @param user_id
+     * @param mobile
+     * @param lat
+     * @param lon
+     */
+    driverLocation.logDriverGPSLocation = function (vehicle_id, lat, lon) {
+        var s2_cellid = s2common.s2CellIdKeyFromLatLng(lat, lon);
+        var new_cellid = s2common.getParentIdAtLevel(12,s2_cellid);
+        var tstamp = new Date().getTime();
+        //logger.debug("log drivers GPS = "+s2_cellid);
+
+        redis.getCurrentCellByVehicleId(vehicle_id).then(function(results){
+            if(results.length > 0){
+                logger.log("get current cell of vehicle_id : "+ vehicle_id + "--results > "+ results + "--removing = "+results[0]);
+                redis.changeCellPosition(results[0],new_cellid,vehicle_id,tstamp);
+                redis.addVehiclePosition(s2_cellid,vehicle_id,tstamp);
+            }
+            else{
+                logger.log("NOTHING received - get current cell for vehicle_id : "+ vehicle_id);
+                //redis.addVehiclePosition(s2_cellid,vehicle_id,tstamp);
+            }
+            });
+        //first check new cell and compare with current cell, if same, just log vehicle position
+        //if changed, then call changeCellPosition()
+
+        //redis.addVehiclePosition();
+        //redis.changeCellPosition(null,null,vehicle_id,tstamp)
+    }
+
+    /**
      * given a leaf cell and a level, return its parent at that level
      * @param s2cell
      * @param parent_level
@@ -34,21 +67,6 @@ var driverLocation = (function () {
 
     driverLocation.EarthMetersToRadians = function (meters) {
         return (2 * Math.PI) * (meters / EARTH_CIRCUMFERENCE_METERS);
-    }
-
-    /**
-     * function to log driver GPS in redis. The redis service
-     * checks first which cell does this GPS point belong to and it
-     * logs it into city_cells:xxxxx (where xxxx is cell_id of grid)
-     * @param user_id
-     * @param mobile
-     * @param lat
-     * @param lon
-     */
-    driverLocation.logDriverGPSLocation = function (user_id, mobile, lat, lon) {
-        var s2_cellid = s2common.s2CellIdKeyFromLatLng(lat, lon);
-        //logger.debug("log drivers GPS = "+s2_cellid);
-        redis.addDriverPosition(s2_cellid);
     }
 
     /**
@@ -132,6 +150,7 @@ var driverLocation = (function () {
             logger.debug("error message = " + err);
         });
     }
+
     return driverLocation;
 }).call(this);
 
@@ -139,4 +158,7 @@ exports.driverLocation = driverLocation;
 
 //driverLocation.addDriversFromFile();
 //driverLocation.getParentCellAtlevel("2203794861138640897",12);
-driverLocation.listDriversInRadius("2203795001640038161", 100);
+
+//driverLocation.listDriversInRadius("2203795001640038161", 100);
+
+driverLocation.logDriverGPSLocation("4524",-26.097747,28.032304);

@@ -98,6 +98,10 @@ var provider = (function () {
         });
     }
 
+    provider.getVehicleGridCell_Level12 = function(vehicleKey,vehicle_id){
+        var parent_id = s2common.getParentIdAtLevel(12,vehicleKey);
+        return parent_id;
+    }
     provider.getVehicleGridCell = function (vehicleKey, vehicle_id) {
         //do we return a promise here or use a callback??
         return new Promise(function (resolved, rejected) {
@@ -106,6 +110,7 @@ var provider = (function () {
                 (new Promise(function (resolve, reject) {
                     resolve(item.pos())
                 })).then(function (results) {
+                    //is this test always necessesary
                     provider.isMemberOfGrid(results).then(function (cell) {
                         //logger.log("loop2, index = " + "cell=" + cell);
                         if (cell > 0) {
@@ -265,6 +270,20 @@ var provider = (function () {
     }
 
     /**
+     * get the current cell for a given vehicle_id
+     * @param vehicle_id
+     */
+    provider.getCurrentCellByVehicleId = function(vehicle_id){
+        return new Promise(function(resolve,reject){
+            var key = CURR_VEHICLE_CELL+vehicle_id;
+           client.zrange(key,0,-1).then(function(results){
+               logger.log("Get current cell for vehicle_id : "+vehicle_id + "-results :"+results);
+                resolve(results);
+           })
+        });
+    }
+
+    /**
      * This method uses redis transactions to ensure driver_key is added to CELL_KEY
      * and VEHICLE_KEY as an atomic transaction.
      * @param driverKey
@@ -276,14 +295,18 @@ var provider = (function () {
 
             var vehicle_key = VEHICLE_KEY + vehicle_id;
             var vehicle_cell_key = CURR_VEHICLE_CELL + vehicle_id;
+            //var vehicle_cell_key = CURR_VEHICLE_CELL;
 
-            provider.getVehicleGridCell(driverKey, vehicle_id).then(function (grid_cell) {
+            var grid_cell = s2common.getParentIdAtLevel(12,driverKey);
                 var grid_key = CELL_KEY + grid_cell;
-                //logger.log("vehiclekey = " + driverKey + "-->" + ":" + grid_cell);
+                logger.log("vehiclekey = " + driverKey + "--> vehicle_id = " +vehicle_id + "--> cell:" + grid_cell);
+                //zadd vehicle_cell:4524 1497887785 2203682917111037952
+
                 if (grid_cell > 0) {
                     client.multi()
                         .zadd(grid_key, timestamp, vehicle_id)
                         .zadd(vehicle_cell_key, timestamp, grid_cell)
+                        //.zadd(vehicle_cell_key, grid_cell, vehicle_id)
                         .zadd(vehicle_key, timestamp, driverKey)
                         .exec()
                         .then(function (results) {
@@ -298,7 +321,7 @@ var provider = (function () {
             }).catch(function (lastError) {
                 logger.log("lastError:" + lastError);
             });
-        });
+        //});
     }
 
     /**
@@ -384,11 +407,13 @@ var provider = (function () {
         //first remove vehicle from cell the driver is exiting
         //then add vehicle to cell its entering. Use redis transactions for this
         return new Promise(function (resolve, reject) {
-            logger.log("vehicle_id = " + vehicle_id + "> enters grid = " + toCellkey + "/" + toCellkey);
-            logger.log("got cell for vehiclekey? = " + fromCellkey + "=vehicle_id :" + vehicle_id + "}");
+            logger.log("vehicle_id = " + vehicle_id + " exists >"+fromCellkey + "/ and enters grid = " + toCellkey);
+            //logger.log("got cell for vehiclekey? = " + fromCellkey + "=vehicle_id :" + vehicle_id + "}");
                 client.multi()
                     .zrem(CELL_KEY + fromCellkey, vehicle_id)
                     .zadd(CELL_KEY + toCellkey, timestamp, vehicle_id)
+                    .zrem(CURR_VEHICLE_CELL+vehicle_id,fromCellkey)
+                    .zadd(CURR_VEHICLE_CELL+vehicle_id,timestamp,toCellkey)
                     .exec().then(function (results) {
                     //cb(results);
                     resolve(results);
@@ -499,7 +524,12 @@ var provider = (function () {
 }).call(this);
 exports.provider = provider;
 
-provider.changeCellPosition("2203794242663350272","2203682917111037952","4524",new Date().getTime());
+//provider.changeCellPosition("2203794242663350272","2203682917111037952","4524",new Date().getTime());
+
+/*provider.getCurrentCellByVehicleId("4524").then(function(data){
+    logger.log("results ----> "+ data);
+});
+*/
 /*
 var cellArray = ["2203792181079048192",
         "2203795067297071104",
