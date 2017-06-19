@@ -142,7 +142,7 @@ var xmlBuilderFactory = (function(){
                 //buildersList.
         })
         var xml = buildersList.end({pretty: true});
-        console.log(xml);
+        //console.log(xml);
         xmlBuilderFactory.createFile(document_name,xml);
     }
 

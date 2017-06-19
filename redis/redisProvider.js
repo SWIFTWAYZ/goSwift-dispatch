@@ -9,6 +9,8 @@ var s2 = require("nodes2ts");
 var s2common = require("../s2geometry/s2common").s2common;
 var logger = require("../config/logutil").logger;
 
+var total_millis = 0;
+
 var provider = (function () {
 
     var TRIP_KEY = "trip:",
@@ -28,7 +30,7 @@ var provider = (function () {
         // Entering monitoring mode.
         monitor.on('monitor', function (time, args, source, database) {
             //logger.debug(time + ": " + args);
-            //console.log(args);
+            console.log(args);
         });
     });
     /**
@@ -191,15 +193,18 @@ var provider = (function () {
      * @param vehiclesArray
      * @param cb
      */
-    provider.getVehiclePosFromArray = function(vehiclesArray,cb){
+    provider.getRedisVehiclePositions = function(vehiclesArray, cb){
+
         var p = client.pipeline()
         var p2;
-        logger.log("vehicles in Array = "+ vehiclesArray.length + "->");
+        var start_time = new Date().getTime();
+        //logger.log("vehicles in Array = "+ vehiclesArray.length + "->");
         if(vehiclesArray.length === 0){
             cb(null);
             return;
         }
         else {
+            logger.log("-------------------start pipeline-----------------------")
             vehiclesArray.forEach(function (composite) { //item
                 var item = composite.vehicle_id;
                 //logger.log(item + "---" + composite.cell_id);
@@ -207,6 +212,7 @@ var provider = (function () {
             });
             p2.exec().then(function (vehicle_locations) {
                 //--------------------------------------------
+                logger.log("-------------------end pipeline-----------------------")
                 var vehicleObjectArray = [];
                 vehicle_locations.forEach(function (vehicle, index) {
                     if (vehicle !== null && vehicle.length > 0) {
@@ -222,7 +228,11 @@ var provider = (function () {
 
                 //create an object that stores, vehicle_id, s2key_id,timestamp
                 //logger.log("pipeline()->exec()->" + vehicle_locations.length + "-"+vehicle_locations[0]);
-                logger.log("vehicleObjectArray length = " + vehicleObjectArray.length);
+                var end_time = new Date().getTime();
+                var interval = (end_time - start_time)/1000;
+                total_millis+=interval;
+                //logger.log("vehicleObjectArray length = " + vehicleObjectArray.length);
+                logger.log("getRedisVehiclePositions query duration = "+interval);
                 cb(vehicleObjectArray);
                 //----------------------------------------------
             });
@@ -349,30 +359,43 @@ var provider = (function () {
                 p2 = p.zrange(CELL_KEY+s2cell_id,0,-1,'withscores')
             });
             p2.exec().then(function(results){
+                /*results.forEach(function(item,count){
+                    //if(item[1] !== null && item[1].length > 0){
+                        //item[1].forEach(function(vehicle_id,index2) {
+                            console.log(count + ":---->" + (item[1].length > 0) + "|" + JSON.stringify(item));
+                      //  }
+                })*/
                 resolve(results);
             }).catch(function(error){
-            //logger.log("getVehiclesInCellArray:"+ error);
-            reject("getVehiclesInCellArray:"+ error);
+                logger.log("getVehiclesInCellArray:"+ error);
+                reject("getVehiclesInCellArray:"+ error);
             })
         })
     }
 
-    provider.changeCellPosition = function (newDriverPos, vehicle_id, timestamp) {
+    /**
+     * change cell position of vehicle using atomic transaction to remove and add to cell
+     * @param fromCellkey
+     * @param toCellkey
+     * @param vehicle_id
+     * @param timestamp
+     */
+    provider.changeCellPosition = function (fromCellkey,toCellkey, vehicle_id, timestamp) {
         //first remove vehicle from cell the driver is exiting
         //then add vehicle to cell its entering. Use redis transactions for this
         return new Promise(function (resolve, reject) {
-            var new_cell = s2common.getParentIdAtLevel(12, newDriverPos);
-            logger.log("vehicle_id = " + vehicle_id + "> enters grid = " + new_cell + "/" + newDriverPos);
-            provider.getVehicleCell(vehicle_id, function (old_cell) {
-                logger.log("got cell for vehiclekey? = " + old_cell + "=vehicle_id :" + vehicle_id + "}");
+            logger.log("vehicle_id = " + vehicle_id + "> enters grid = " + toCellkey + "/" + toCellkey);
+            logger.log("got cell for vehiclekey? = " + fromCellkey + "=vehicle_id :" + vehicle_id + "}");
                 client.multi()
-                    .zrem(CELL_KEY + old_cell, vehicle_id)
-                    .zadd(CELL_KEY + new_cell, timestamp, vehicle_id)
+                    .zrem(CELL_KEY + fromCellkey, vehicle_id)
+                    .zadd(CELL_KEY + toCellkey, timestamp, vehicle_id)
                     .exec().then(function (results) {
                     //cb(results);
                     resolve(results);
+                }).catch(function(error){
+                    logger.log("Error changeCellPosition:"+error.stack);
+                    reject("Error changeCellPosition:"+error);
                 });
-            });
         });
 
     }
@@ -476,7 +499,7 @@ var provider = (function () {
 }).call(this);
 exports.provider = provider;
 
-//provider.removeVehicleCell("004469");
+provider.changeCellPosition("2203794242663350272","2203682917111037952","4524",new Date().getTime());
 /*
 var cellArray = ["2203792181079048192",
         "2203795067297071104",

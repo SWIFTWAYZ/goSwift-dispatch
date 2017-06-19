@@ -79,7 +79,7 @@ var S2CircleCoverer = (function () {
             covering_area += cell_area;
         });
         //console.log("]}");
-        logger.log("no. of cells in region = " + counter + "-> area = " + covering_area);
+        //logger.log("no. of cells in region = " + counter + "-> area = " + covering_area);
         return results;
     }
 
