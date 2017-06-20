@@ -33,7 +33,7 @@ var driverLocation = (function () {
             //check new-cell and compare with current-cell, if same, just log vehicle position
             logger.log("No changes to cells " + new_cellid + "==="+results[0]+
                 ", just log vehicle position -- "+s2_cellid);
-            if(new_cellid === results[0]){
+            if(results[0] === undefined || new_cellid === results[0]){
                 redis.addVehiclePosition(s2_cellid,vehicle_id,tstamp);
                 return null;
             };
@@ -167,7 +167,7 @@ exports.driverLocation = driverLocation;
 commons.readDriversGPS('/Users/tinyiko/WebstormProjects/GoSwift/docs/S2/routes/Taxi_locations_13June_1.txt').then(function(data){
     logger.log(data.length);
     data.forEach(function(item,index) {
-        logger.log(index + ", reading GPS = " + JSON.stringify(item));
+        //logger.log(index + ", reading GPS = " + JSON.stringify(item));
         driverLocation.logDriverGPSLocation("4524",item.latitude,item.longitude);
     });
 })
