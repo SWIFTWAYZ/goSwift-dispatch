@@ -17,7 +17,7 @@ var provider = (function () {
         CITY_CELLS = "city_cells",
         CELL_KEY = "cell:",
         VEHICLE_KEY = "vehicle:",
-        CURR_VEHICLE_CELL = "vehicle_cell:";
+        CURR_VEHICLE_CELL = "vcell:";
 
     var client = new redis({
         retryStrategy: function (times) {
@@ -277,7 +277,7 @@ var provider = (function () {
         return new Promise(function(resolve,reject){
             var key = CURR_VEHICLE_CELL+vehicle_id;
            client.zrange(key,0,-1).then(function(results){
-               //logger.log("Get current cell for vehicle_id : "+vehicle_id + "-results :"+results);
+               logger.log("redis:getCurrentCellByVehicleIdfor vehicle_id : "+vehicle_id + "-results :"+results.length);
                 resolve(results);
            })
         });
@@ -299,7 +299,7 @@ var provider = (function () {
 
             var grid_cell = s2common.getParentIdAtLevel(12,driverKey);
                 var grid_key = CELL_KEY + grid_cell;
-                logger.log("vehiclekey = " + driverKey + "--> vehicle_id = " +vehicle_id + "--> cell:" + grid_cell);
+                //logger.log("vehiclekey = " + driverKey + "--> vehicle_id = " +vehicle_id + "--> cell:" + grid_cell);
                 //zadd vehicle_cell:4524 1497887785 2203682917111037952
 
                 if (grid_cell > 0) {

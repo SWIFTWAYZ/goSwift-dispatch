@@ -80,9 +80,4 @@ var arrayClone = function ( arr ) {
 exports.decimalToBinary = decimalToBinary;
 exports.readDriversGPS = readDriversGPS;
 
-var copy = arrayClone(['a','b','c']);
-var copy1 = deepCopy(['a','b','c']);
-
-logger.log('copied array1 = ' + JSON.stringify(copy))
-logger.log("copied array = " + JSON.stringify(copy1));
 
