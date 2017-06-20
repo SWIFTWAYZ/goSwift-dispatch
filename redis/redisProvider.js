@@ -277,7 +277,7 @@ var provider = (function () {
         return new Promise(function(resolve,reject){
             var key = CURR_VEHICLE_CELL+vehicle_id;
            client.zrange(key,0,-1).then(function(results){
-               logger.log("redis:getCurrentCellByVehicleIdfor vehicle_id : "+vehicle_id + "-results :"+results.length);
+               //logger.log("redis:getCurrentCellByVehicleIdfor vehicle_id : "+vehicle_id + "-results :"+results.length);
                 resolve(results);
            })
         });

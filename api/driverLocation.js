@@ -24,42 +24,58 @@ var driverLocation = (function () {
      * @param lat
      * @param lon
      */
-    driverLocation.logDriverGPSLocation = function (vehicle_id, lat, lon) {
-
+    driverLocation.method1 = function(vehicle_id,lat,lon){
         return new Promise(function(resolve,reject){
-            redis.getCurrentCellByVehicleId(vehicle_id)
-                .then(function(current_cell) {
-                    //return new Promise(function(resolve,reject){
-                        var s2_cellid = s2common.s2CellIdKeyFromLatLng(lat, lon);
-                        var new_cellid = s2common.getParentIdAtLevel(12,s2_cellid);
-                        var tstamp = new Date().getTime();
-                        var results_data = function(location_key,new_cell,cur_cell,vehicle_id,tstamp){
-                            this.s2key  = location_key,
-                            this.new_cellid = new_cell,
-                            this.current_cell = cur_cell,
-                            this.id = vehicle_id,
-                            this.timestamp = tstamp
-                        };
-                        var data = new results_data(s2_cellid,new_cellid,current_cell[0],vehicle_id,tstamp);
-                        logger.log(JSON.stringify(s2_cellid));
-                        //resolve(data);
-                        return data;
-                    //});
-                }).then(function (results) {
-                //check new-cell and compare with current-cell, if not the same, changeCellLocation
-                results.new_cellid === results.current_cell? logger.log("No changes to cell: "+results.new_cellid)
-                    :logger.log("Changed cells from = "+results.current_cell + " to > "+results.new_cellid);
+            //function (current_cell) {
+                //return new Promise(function(resolve,reject){
+                /*if (current_cell.length > 1) {
+                    logger.log("more than 1 current cells = " + current_cell.length);
+                }*/
 
-                    if(results.new_cellid !== results.current_cell){
-                        redis.changeCellPosition(results.current_cell,results.new_cellid,vehicle_id,results.tstamp);
-                    }
-               // })
-                redis.addVehiclePosition(results.s2key,results.id,results.timestamp);
-                })
+                var s2_cellid = s2common.s2CellIdKeyFromLatLng(lat, lon);
+                var new_cellid = s2common.getParentIdAtLevel(12, s2_cellid);
+                var tstamp = new Date().getTime();
+                var results_data = function (location_key, new_cell, cur_cell, vehicle_id, tstamp) {
+                    this.s2key = location_key,
+                        this.new_cellid = new_cell,
+                        this.current_cell = cur_cell,
+                        this.id = vehicle_id,
+                        this.timestamp = tstamp
+                };
+                var data = new results_data(s2_cellid, new_cellid, current_cell[0], vehicle_id, tstamp);
+                //logger.log(JSON.stringify(s2_cellid));
+                //resolve(data);
+                logger.log("-----getCurrentCellByVehicleId");
+                resolve(data)
+                //return data;
+        });
+    }
+
+    driverLocation.method2 = function(results) {
+        return new Promise(function (resolve, reject) {
+            //function (results) {
+            //check new-cell and compare with current-cell, if not the same, changeCellLocation
+            if (results.new_cellid !== results.current_cell) {
+                results.new_cellid === results.current_cell ? logger.log("No changes to cell: " + results.new_cellid)
+                    : logger.log("Changed cells from = " + results.current_cell + " to > " + results.new_cellid);
+                logger.log("-----changeCellPosition");
+                redis.changeCellPosition(results.current_cell, results.new_cellid, vehicle_id, results.tstamp);
+            }
+            logger.log("-----addVehiclePosition");
+            redis.addVehiclePosition(results.s2key, results.id, results.timestamp);
+            resolve();
+        })
+    }
+
+    driverLocation.logDriverGPSLocation = function (vehicle_id, lat, lon) {
+       // return new Promise(function(resolve,reject){
+            return redis.getCurrentCellByVehicleId(vehicle_id)
+                .then(driverLocation.method1(vehicle_id,lat,lon))
+                .then(driverLocation.method2)
                 .catch(function(error){
                     logger.log("Error in getCurrentCellByVehicleId : " + error.stack);
-                })
-            });
+                });
+           // });
     }
 
     /**
@@ -188,8 +204,8 @@ commons.readDriversGPS('/Users/tinyiko/WebstormProjects/GoSwift/docs/S2/routes/T
         //logger.log(index + ", reading GPS = " + JSON.stringify(item));
         promiseChain.push(driverLocation.logDriverGPSLocation("4524",item.latitude,item.longitude));
     });
-    Promise.all(promiseChain).then(function(results){
-        logger.log(results);
-    });
+
+    Promise.all(promiseChain).then();
+
 })
 
