@@ -46,7 +46,7 @@ var driverLocation = (function () {
                         return data;
                     //});
                 }).then(function (results) {
-                //check new-cell and compare with current-cell, if same, just log vehicle position
+                //check new-cell and compare with current-cell, if not the same, changeCellLocation
                 results.new_cellid === results.current_cell? logger.log("No changes to cell: "+results.new_cellid)
                     :logger.log("Changed cells from = "+results.current_cell + " to > "+results.new_cellid);
 
