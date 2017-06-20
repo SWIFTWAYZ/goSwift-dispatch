@@ -59,18 +59,6 @@ var driverLocation = (function () {
                 .catch(function(error){
                     logger.log("Error in getCurrentCellByVehicleId : " + error.stack);
                 })
-                /*
-                if(results.length > 0){
-                    //if changed, then call changeCellPosition()
-                    logger.log("get current cell of vehicle_id : "+ vehicle_id + "--removing = "+results[0]);
-                    redis.changeCellPosition(results[0],new_cellid,vehicle_id,tstamp);
-                    redis.addVehiclePosition(s2_cellid,vehicle_id,tstamp);
-                    resolve(s2_cellid,new_cellid);
-                }
-                else{
-                    logger.log("No current vehicle cell for vehicle_id : "+ vehicle_id);
-                    redis.addVehiclePosition(s2_cellid,vehicle_id,tstamp);
-                }*/
             });
     }
 
