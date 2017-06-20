@@ -47,19 +47,14 @@ var driverLocation = (function () {
                     //});
                 }).then(function (results) {
                 //check new-cell and compare with current-cell, if same, just log vehicle position
+                results.new_cellid === results.current_cell? logger.log("No changes to cell: "+results.new_cellid)
+                    :logger.log("Changed cells from = "+results.current_cell + " to > "+results.new_cellid);
 
-                    logger.log("No changes to cells " + results.new_cellid  + "===" +
-                        results.current_cell);
-                    /*if (results.new_cellid === undefined || results.new_cellid === results.current_cell) {
-                        logger.log("No changes to cells " + results.new_cellid  + "===" +
-                            results.current_cell + ", just log vehicle position -- " + results.s2key);
-                        //return redis.addVehiclePosition(results.s2key, vehicle_id, results.timestamp);
-                    }*/
                     if(results.new_cellid !== results.current_cell){
-                        redis.addVehiclePosition(results.s2key,results.id,results.timestamp);
+                        redis.changeCellPosition(results.cell_id,results.new_cellid,vehicle_id,results.tstamp);
                     }
                // })
-                 redis.changeCellPosition(results.cell_id,results.new_cellid,vehicle_id,results.tstamp);
+                redis.addVehiclePosition(results.s2key,results.id,results.timestamp);
                 })
                 .catch(function(error){
                     logger.log("Error in getCurrentCellByVehicleId : " + error.stack);
