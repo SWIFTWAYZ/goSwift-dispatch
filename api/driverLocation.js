@@ -51,7 +51,7 @@ var driverLocation = (function () {
                     :logger.log("Changed cells from = "+results.current_cell + " to > "+results.new_cellid);
 
                     if(results.new_cellid !== results.current_cell){
-                        redis.changeCellPosition(results.cell_id,results.new_cellid,vehicle_id,results.tstamp);
+                        redis.changeCellPosition(results.current_cell,results.new_cellid,vehicle_id,results.tstamp);
                     }
                // })
                 redis.addVehiclePosition(results.s2key,results.id,results.timestamp);
@@ -174,9 +174,13 @@ exports.driverLocation = driverLocation;
 //driverLocation.getParentCellAtlevel("2203794861138640897",12);
 
 //driverLocation.listDriversInRadius("2203795001640038161", 100);
-driverLocation.logDriverGPSLocation("4524",-26.054824,  28.071892);
+//-26.155397,28.071016
+//-26.146402,28.074747
+//-26.15901,28.101125
 
-/*commons.readDriversGPS('/Users/tinyiko/WebstormProjects/GoSwift/docs/S2/routes/Taxi_locations_13June_1.txt').then(function(data){
+//driverLocation.logDriverGPSLocation("4524",-26.15901,28.101125);
+
+commons.readDriversGPS('/Users/tinyiko/WebstormProjects/GoSwift/docs/S2/routes/Taxi_locations_13June_1.txt').then(function(data){
     logger.log(data.length);
     var promiseChain = [];
 
@@ -187,5 +191,5 @@ driverLocation.logDriverGPSLocation("4524",-26.054824,  28.071892);
     Promise.all(promiseChain).then(function(results){
         logger.log(results);
     });
-})*/
+})
 
