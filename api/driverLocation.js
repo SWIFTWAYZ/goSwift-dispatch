@@ -200,27 +200,20 @@ exports.driverLocation = driverLocation;
 
 //driverLocation.logDriverGPSLocation("4524",-26.155397,28.071016);
 
-commons.readDriversGPS('/Users/tinyiko/WebstormProjects/GoSwift/docs/S2/routes/Taxi_locations_21June_1.txt')
+commons.readDriversGPS('/Users/tinyiko/WebstormProjects/GoSwift/docs/S2/routes/Taxi_locations_13June_1.txt')
     .then(function(data){
 
-    var promiserlist = data.map(function(item) {
+    /*var promiserlist = data.map(function(item) {
         //logger.log(JSON.stringify(item));
-        return Promise.promisify(driverLocation.logDriverGPSLocation);
-    });
-
-    logger.log("promiser2 length = "+promiserlist.length);
-
-    /*Promise.reduce(promiserlist,function(total, promiseItem,index) {
-        logger.log("reducer promise = " + index);
-        return promiseItem("4525",data[index].latitude,data[index].longitude);
-    }, 0).then(function(total) {
-        //Total is 30
+        //return Promise.promisify(driverLocation.logDriverGPSLocation);
     });*/
-    one_by_one(data, driverLocation.logDriverGPSLocation);
 
+    runPromisesSeq(data, driverLocation.logDriverGPSLocation);
+}).catch(function(error){
+    logger.log(error.stack)
 })
 
-function one_by_one(objects_array, iterator, callback) {
+function runPromisesSeq(objects_array, iterator, callback) {
     var start_promise = objects_array.reduce(function (prom, object) {
         return prom.then(function () {
             return iterator(object);
