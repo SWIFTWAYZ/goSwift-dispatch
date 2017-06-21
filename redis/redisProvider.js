@@ -295,7 +295,7 @@ var provider = (function () {
             var grid_cell = s2common.getParentIdAtLevel(12,driverKey);
                 var grid_key = CELL_KEY + grid_cell;
                 if (grid_cell > 0) {
-                    return client.multi()
+                    client.multi()
                         .zadd(grid_key, timestamp, vehicle_id)
                         .zadd(vehicle_cell_key, timestamp, grid_cell)
                         //.zadd(vehicle_cell_key, grid_cell, vehicle_id)
@@ -304,7 +304,7 @@ var provider = (function () {
                         .then(function (results) {
                             logger.log("add " + vehicle_key + "/key=" + driverKey + "/cell=" + grid_cell +
                                 ", results =" + results);
-                            //resolve(results);
+                            resolve(results);
                         }).catch(function (error) {
                         logger.log("Error with addVehiclePosition: " + error);
                         reject(error);
@@ -393,20 +393,20 @@ var provider = (function () {
         return new Promise(function (resolve, reject) {
             logger.log("vehicle_id = " + vehicle_id + " exists >"+fromCellkey + "/ and enters grid = " + toCellkey);
             //logger.log("got cell for vehiclekey? = " + fromCellkey + "=vehicle_id :" + vehicle_id + "}");
-                return client.pipeline()
+                 client.pipeline()
                     .zrem(CELL_KEY + fromCellkey, vehicle_id)
                     .zadd(CELL_KEY + toCellkey, timestamp, vehicle_id)
                     .zrem(CURR_VEHICLE_CELL+vehicle_id,fromCellkey)
                     .zadd(CURR_VEHICLE_CELL+vehicle_id,timestamp,toCellkey)
                     .exec()
-                    /*.then(function (results) {
+                    .then(function (results) {
                     //cb(results);
-                    //resolve(results);*/
+                    resolve(results);
                 }).catch(function(error){
                     logger.log("Error changeCellPosition:"+error.stack);
                     reject("Error changeCellPosition:"+error);
                 });
-        //});
+        });
 
     }
 
