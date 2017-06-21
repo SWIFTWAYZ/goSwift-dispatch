@@ -10,9 +10,10 @@ var Promise = require("bluebird");
 
 var line_counter = 0;
 var unreached = [];
-var gpsPoint = function (lat, lon) {
+var gpsPoint = function (lat, lon,id) {
     this.latitude = lat;
     this.longitude = lon;
+    this.vehicle_id = id;
 }
 
 function decimalToBinary(DecimalValue){
@@ -61,7 +62,7 @@ var arrayClone = function ( arr ) {
     var promise = new Promise(function (resolve, reject) {
         readLine(filename, function (line, last) {
             var line_str = line.split(",");
-            unreached[line_counter] = new gpsPoint(line_str[0], line_str[1]);
+            unreached[line_counter] = new gpsPoint(line_str[0], line_str[1],"4524");
             line_counter++;
             if (last) {
                 // or check if it's the last one

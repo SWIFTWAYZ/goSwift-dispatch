@@ -176,9 +176,9 @@ var driverLocation = (function () {
         });
     }
 
-    driverLocation.logDriverGPSLocation = function (vehicle_id, lat, lon) {
+    driverLocation.logDriverGPSLocation = function (data) {
         ////new Promise(function(resolve,reject){
-        return driverLocation.method1(vehicle_id, lat, lon)
+        return driverLocation.method1(data.vehicle_id, data.latitude, data.longitude)
             .then(driverLocation.method2)
             .then (driverLocation.method3)
             .catch(function(error){
@@ -193,9 +193,6 @@ var driverLocation = (function () {
 
 exports.driverLocation = driverLocation;
 
-//driverLocation.addDriversFromFile();
-//driverLocation.getParentCellAtlevel("2203794861138640897",12);
-
 //driverLocation.listDriversInRadius("2203795001640038161", 100);
 //-26.155397,28.071016
 //-26.146402,28.074747
@@ -203,38 +200,35 @@ exports.driverLocation = driverLocation;
 
 //driverLocation.logDriverGPSLocation("4524",-26.155397,28.071016);
 
-commons.readDriversGPS('/Users/tinyiko/WebstormProjects/GoSwift/docs/S2/routes/Taxi_locations_21June_1.txt').then(function(data){
-    logger.log(data.length);
-    var promiseChain = [];
+commons.readDriversGPS('/Users/tinyiko/WebstormProjects/GoSwift/docs/S2/routes/Taxi_locations_21June_1.txt')
+    .then(function(data){
 
-    var promiser2 = data.map(function(item) {
-        //logger.log(index + ", reading GPS = " + JSON.stringify(item));
-        return Promise.promisify(driverLocation.logDriverGPSLocation("4524",item.latitude,item.longitude));
+    var promiserlist = data.map(function(item) {
+        //logger.log(JSON.stringify(item));
+        return Promise.promisify(driverLocation.logDriverGPSLocation);
     });
 
-    logger.log("promiser2 length = "+promiser2.length);
-    //executeSequentially(promiseChain);
+    logger.log("promiser2 length = "+promiserlist.length);
 
-    /*Promise.series = function(promiseArr){
-        return Promise.reduce(promiseArr, function(values, promise){
-                return promise().then(function(result){
-                    values.push(result);
-        return values;
-        });
-        }, []);
-    };*/
-
-    //Promise.series(promiseChain).then();
-    //Promise.all(promises_array).then();
-
+    /*Promise.reduce(promiserlist,function(total, promiseItem,index) {
+        logger.log("reducer promise = " + index);
+        return promiseItem("4525",data[index].latitude,data[index].longitude);
+    }, 0).then(function(total) {
+        //Total is 30
+    });*/
+    one_by_one(data, driverLocation.logDriverGPSLocation);
 
 })
 
-function executeSequentially(promiseFactories) {
-    var result = Promise.resolve();
-    promiseFactories.forEach(function (promiseFactory) {
-        result = result.then(promiseFactory);
-    });
-    return result;
+function one_by_one(objects_array, iterator, callback) {
+    var start_promise = objects_array.reduce(function (prom, object) {
+        return prom.then(function () {
+            return iterator(object);
+        });
+    }, Promise.resolve()); // initial
+    if(callback){
+        start_promise.then(callback);
+    }else{
+        return start_promise;
+    }
 }
-
