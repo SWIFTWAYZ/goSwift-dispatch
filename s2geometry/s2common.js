@@ -310,9 +310,7 @@ var s2common = (function(){
 exports.s2common = s2common;
 
 //s2common.addDriversFromFile();//-26.270155, 28.438425
-var id = s2common.s2CellIDfromLatLng(-26.270155, 28.438425);
-var parent = s2common.getParentIdAtLevel(29,id.pos());
-var s2id = new s2.S2CellId(parent);
+
 //logger.log(s2id.isValid() + "-"+s2id);
 //var parentArray = s2common.getParentIdArray(id.pos(),26,3);
 //logger.log(parentArray);

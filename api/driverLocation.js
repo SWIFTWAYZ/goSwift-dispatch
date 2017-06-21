@@ -16,69 +16,6 @@ var driverLocation = (function () {
     };
 
     /**
-     * function to log driver GPS in redis. The redis service
-     * checks first which cell does this GPS point belong to and it
-     * logs it into city_cells:xxxxx (where xxxx is cell_id of grid)
-     * @param user_id
-     * @param mobile
-     * @param lat
-     * @param lon
-     */
-    driverLocation.method1 = function(vehicle_id,lat,lon){
-        return new Promise(function(resolve,reject){
-            //function (current_cell) {
-                //return new Promise(function(resolve,reject){
-                /*if (current_cell.length > 1) {
-                    logger.log("more than 1 current cells = " + current_cell.length);
-                }*/
-
-                var s2_cellid = s2common.s2CellIdKeyFromLatLng(lat, lon);
-                var new_cellid = s2common.getParentIdAtLevel(12, s2_cellid);
-                var tstamp = new Date().getTime();
-                var results_data = function (location_key, new_cell, cur_cell, vehicle_id, tstamp) {
-                    this.s2key = location_key,
-                        this.new_cellid = new_cell,
-                        this.current_cell = cur_cell,
-                        this.id = vehicle_id,
-                        this.timestamp = tstamp
-                };
-                var data = new results_data(s2_cellid, new_cellid, current_cell[0], vehicle_id, tstamp);
-                //logger.log(JSON.stringify(s2_cellid));
-                //resolve(data);
-                logger.log("-----getCurrentCellByVehicleId");
-                resolve(data)
-                //return data;
-        });
-    }
-
-    driverLocation.method2 = function(results) {
-        return new Promise(function (resolve, reject) {
-            //function (results) {
-            //check new-cell and compare with current-cell, if not the same, changeCellLocation
-            if (results.new_cellid !== results.current_cell) {
-                results.new_cellid === results.current_cell ? logger.log("No changes to cell: " + results.new_cellid)
-                    : logger.log("Changed cells from = " + results.current_cell + " to > " + results.new_cellid);
-                logger.log("-----changeCellPosition");
-                redis.changeCellPosition(results.current_cell, results.new_cellid, vehicle_id, results.tstamp);
-            }
-            logger.log("-----addVehiclePosition");
-            redis.addVehiclePosition(results.s2key, results.id, results.timestamp);
-            resolve();
-        })
-    }
-
-    driverLocation.logDriverGPSLocation = function (vehicle_id, lat, lon) {
-       // return new Promise(function(resolve,reject){
-            return redis.getCurrentCellByVehicleId(vehicle_id)
-                .then(driverLocation.method1(vehicle_id,lat,lon))
-                .then(driverLocation.method2)
-                .catch(function(error){
-                    logger.log("Error in getCurrentCellByVehicleId : " + error.stack);
-                });
-           // });
-    }
-
-    /**
      * given a leaf cell and a level, return its parent at that level
      * @param s2cell
      * @param parent_level
@@ -181,6 +118,70 @@ var driverLocation = (function () {
         });
     }
 
+    /**
+     * function to log driver GPS in redis. The redis service
+     * checks first which cell does this GPS point belong to and it
+     * logs it into city_cells:xxxxx (where xxxx is cell_id of grid)
+     * @param user_id
+     * @param mobile
+     * @param lat
+     * @param lon
+     */
+    driverLocation.method1 = function(vehicle_id,lat,lon){
+        //return new Promise(function(resolve,reject){
+        //logger.log(vehicle_id +"-"+lat+","+lon);
+
+        return redis.getCurrentCellByVehicleId(vehicle_id).then(function(current_cell){
+            var s2_cellid = s2common.s2CellIdKeyFromLatLng(lat, lon);
+            var new_cellid = s2common.getParentIdAtLevel(12, s2_cellid);
+            var tstamp = new Date().getTime();
+            var results_data = function (location_key, new_cell, cur_cell, vehicle_id, tstamp) {
+                this.s2key = location_key,
+                    this.new_cellid = new_cell,
+                    this.current_cell = cur_cell,
+                    this.id = vehicle_id,
+                    this.timestamp = tstamp
+            };
+            var data = new results_data(s2_cellid, new_cellid, current_cell[0], vehicle_id, tstamp);
+            logger.log("-----getCurrentCellByVehicleId");
+            return data;
+        })
+    }
+
+    driverLocation.method2 = function(results) {
+        return new Promise(function (resolve, reject) {
+            //function (results) {
+            //check new-cell and compare with current-cell, if not the same, changeCellLocation
+            if (results.new_cellid !== results.current_cell) {
+                results.new_cellid === results.current_cell ? logger.log("No changes to cell: " + results.new_cellid)
+                    : logger.log("Changed cells from = " + results.current_cell + " to > " + results.new_cellid);
+                redis.changeCellPosition(results.current_cell, results.new_cellid, results.id, results.tstamp).then(function(data){
+                    resolve(results);
+                })
+            }
+           //return results;
+        })
+    }
+
+    driverLocation.method3 = function(results){
+        return new Promise(function(resolve,reject){
+            redis.addVehiclePosition(results.s2key, results.id, results.timestamp).then(function(results1){
+                resolve(results1);
+            });
+        });
+    }
+
+    driverLocation.logDriverGPSLocation = function (vehicle_id, lat, lon) {
+        // return new Promise(function(resolve,reject){
+        return driverLocation.method1(vehicle_id, lat, lon)
+            .then(driverLocation.method2)
+            .then (driverLocation.method3)
+            .catch(function(error){
+                logger.log("Error in getCurrentCellByVehicleId : " + error.stack);
+            });
+        // });
+    }
+
     return driverLocation;
 }).call(this);
 
@@ -194,18 +195,27 @@ exports.driverLocation = driverLocation;
 //-26.146402,28.074747
 //-26.15901,28.101125
 
-//driverLocation.logDriverGPSLocation("4524",-26.15901,28.101125);
+//driverLocation.logDriverGPSLocation("4524",-26.155397,28.071016);
 
-commons.readDriversGPS('/Users/tinyiko/WebstormProjects/GoSwift/docs/S2/routes/Taxi_locations_13June_1.txt').then(function(data){
+commons.readDriversGPS('/Users/tinyiko/WebstormProjects/GoSwift/docs/S2/routes/Taxi_locations_21June_1.txt').then(function(data){
     logger.log(data.length);
     var promiseChain = [];
-
+    /*
     data.forEach(function(item,index) {
         //logger.log(index + ", reading GPS = " + JSON.stringify(item));
         promiseChain.push(driverLocation.logDriverGPSLocation("4524",item.latitude,item.longitude));
     });
 
-    Promise.all(promiseChain).then();
+    /*Promise.all(promiseChain.map(function(item){
+       item.then();
+    }))*/
+
+    var promises_array = data.map(function(gps){
+        return driverLocation.logDriverGPSLocation("4524",gps.latitude,gps.longitude);
+    });
+
+    Promise.all(promises_array).then();
+
 
 })
 

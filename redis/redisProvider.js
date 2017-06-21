@@ -30,7 +30,7 @@ var provider = (function () {
         // Entering monitoring mode.
         monitor.on('monitor', function (time, args, source, database) {
             //logger.debug(time + ": " + args);
-            //console.log(args);
+            console.log(args);
         });
     });
     /**
@@ -209,7 +209,6 @@ var provider = (function () {
             return;
         }
         else {
-            logger.log("-------------------start pipeline-----------------------")
             vehiclesArray.forEach(function (composite) { //item
                 var item = composite.vehicle_id;
                 //logger.log(item + "---" + composite.cell_id);
@@ -217,7 +216,6 @@ var provider = (function () {
             });
             p2.exec().then(function (vehicle_locations) {
                 //--------------------------------------------
-                logger.log("-------------------end pipeline-----------------------")
                 var vehicleObjectArray = [];
                 vehicle_locations.forEach(function (vehicle, index) {
                     if (vehicle !== null && vehicle.length > 0) {
@@ -225,8 +223,8 @@ var provider = (function () {
                         var s2_key = vehicle[1][0];
                         var latlng = s2_key.convertToLatLng();
                         var level = s2_key.getS2CellLevel();
-                        var obj = new vehicleObj(vehiclesArray[index].vehicle_id, vehicle[1][0], vehicle[1][1],
-                            vehiclesArray[index].cell_id,latlng,level);
+                        var obj = new vehicleObj(vehiclesArray[index].vehicle_id, vehicle[1][0],
+                            vehicle[1][1], vehiclesArray[index].cell_id,latlng,level);
                         vehicleObjectArray.push(obj);
                     }
                 });
@@ -236,7 +234,6 @@ var provider = (function () {
                 var end_time = new Date().getTime();
                 var interval = (end_time - start_time)/1000;
                 total_millis+=interval;
-                //logger.log("vehicleObjectArray length = " + vehicleObjectArray.length);
                 logger.log("getRedisVehiclePositions query duration = "+interval);
                 cb(vehicleObjectArray);
                 //----------------------------------------------
@@ -261,7 +258,6 @@ var provider = (function () {
                     logger.log("remove2 = " + cell_vehicle);
                     client.zrem(vehicle_cell_key, cell_vehicle).then(function (results) {
                         client.zadd(vehicle_cell_key, timestamp, cellId)
-                        logger.log("actually removed = " + results);
                         resolve(results);
                     });
                 }
@@ -295,15 +291,11 @@ var provider = (function () {
 
             var vehicle_key = VEHICLE_KEY + vehicle_id;
             var vehicle_cell_key = CURR_VEHICLE_CELL + vehicle_id;
-            //var vehicle_cell_key = CURR_VEHICLE_CELL;
 
             var grid_cell = s2common.getParentIdAtLevel(12,driverKey);
                 var grid_key = CELL_KEY + grid_cell;
-                //logger.log("vehiclekey = " + driverKey + "--> vehicle_id = " +vehicle_id + "--> cell:" + grid_cell);
-                //zadd vehicle_cell:4524 1497887785 2203682917111037952
-
                 if (grid_cell > 0) {
-                    client.multi()
+                    return client.multi()
                         .zadd(grid_key, timestamp, vehicle_id)
                         .zadd(vehicle_cell_key, timestamp, grid_cell)
                         //.zadd(vehicle_cell_key, grid_cell, vehicle_id)
@@ -312,7 +304,7 @@ var provider = (function () {
                         .then(function (results) {
                             logger.log("add " + vehicle_key + "/key=" + driverKey + "/cell=" + grid_cell +
                                 ", results =" + results);
-                            resolve(results);
+                            //resolve(results);
                         }).catch(function (error) {
                         logger.log("Error with addVehiclePosition: " + error);
                         reject(error);
@@ -349,8 +341,6 @@ var provider = (function () {
                         client.sismember(CITY_CELLS, results).then(function (data) {
                             logger.log("promise resolved? = " + data + "-cellid=" + results);
                             if (data) {
-                                logger.log("is-member of city_cells = " + data + " ? - cellid=" + item.pos());
-                                //cb(null,item.pos());
                                 resolved(item.pos())
                             }
                         });
@@ -382,12 +372,6 @@ var provider = (function () {
                 p2 = p.zrange(CELL_KEY+s2cell_id,0,-1,'withscores')
             });
             p2.exec().then(function(results){
-                /*results.forEach(function(item,count){
-                    //if(item[1] !== null && item[1].length > 0){
-                        //item[1].forEach(function(vehicle_id,index2) {
-                            console.log(count + ":---->" + (item[1].length > 0) + "|" + JSON.stringify(item));
-                      //  }
-                })*/
                 resolve(results);
             }).catch(function(error){
                 logger.log("getVehiclesInCellArray:"+ error);
@@ -409,19 +393,20 @@ var provider = (function () {
         return new Promise(function (resolve, reject) {
             logger.log("vehicle_id = " + vehicle_id + " exists >"+fromCellkey + "/ and enters grid = " + toCellkey);
             //logger.log("got cell for vehiclekey? = " + fromCellkey + "=vehicle_id :" + vehicle_id + "}");
-                client.pipeline()
+                return client.pipeline()
                     .zrem(CELL_KEY + fromCellkey, vehicle_id)
                     .zadd(CELL_KEY + toCellkey, timestamp, vehicle_id)
                     .zrem(CURR_VEHICLE_CELL+vehicle_id,fromCellkey)
                     .zadd(CURR_VEHICLE_CELL+vehicle_id,timestamp,toCellkey)
-                    .exec().then(function (results) {
+                    .exec()
+                    /*.then(function (results) {
                     //cb(results);
-                    resolve(results);
+                    //resolve(results);*/
                 }).catch(function(error){
                     logger.log("Error changeCellPosition:"+error.stack);
                     reject("Error changeCellPosition:"+error);
                 });
-        });
+        //});
 
     }
 
