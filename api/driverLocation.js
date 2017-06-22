@@ -135,10 +135,9 @@ var driverLocation = (function () {
         return new Promise(function(resolve,reject) {
             //logger.log(vehicle_id +"-"+lat+","+lon);
             redis.getCurrentCellByVehicleId(vehicle_id).then(function (current_cell) {
-                //logger.log("GET CURRENT CELL BY ID = "+current_cell);
                 var s2_cellid = s2common.s2CellIdKeyFromLatLng(lat, lon);
                 var new_cellid = s2common.getParentIdAtLevel(12, s2_cellid);
-                console.log("CURR-VEHICLE-CELL = " + s2_cellid + "|"+new_cellid);
+                logger.log("------------------CURR-VEHICLE-CELL = " + s2_cellid + "|"+new_cellid);
 
                 var tstamp = new Date().getTime();
                 var results_data = function (location_key, new_cell, cur_cell, vehicle_id, tstamp) {
@@ -198,7 +197,6 @@ var driverLocation = (function () {
 
     driverLocation.logDriverGPSLocation = function (data) {
         ////new Promise(function(resolve,reject){
-        console.log(data.vehicle_id +"------------------------------------------------")
         logger.log(data.latitude +","+data.longitude);
         return driverLocation.currentVehicleCell(data.vehicle_id, data.latitude, data.longitude)
             .then(driverLocation.changeCellPos)
@@ -226,29 +224,28 @@ exports.driverLocation = driverLocation;
 var filename = "Taxi_locations_13June_1.txt";
 var file = path.join(__dirname,"../../GoSwift/docs/S2/routes",filename);
 //'/Users/tinyiko/WebstormProjects/GoSwift/docs/S2/routes/Taxi_locations_13June_1.txt'
-commons.readDriversGPS(file)
+commons.readDriversGPS(file,"4528")
     .then(function(data){
 
     runPromisesSeq(data, driverLocation.logDriverGPSLocation,function(){
-        console.log("finished --- " + data);
+        console.log("finished --- ");
     });
 }).catch(function(error){
     logger.log(error.stack)
 });
 
-var centerPoint = {
+/*var centerPoint = {
     latitude: -26.107793, //,-26.029613
     longitude: 28.057390  //,28.036167
 }
-/*
-randomGeo.createRandomGPSPositionsSync(centerPoint,15000,600,"4524").then(function(data){
+
+randomGeo.createRandomGPSPositionsSync(centerPoint,22000,800,"4526").then(function(data){
     logger.log("data2 = " + data.length);
     runPromisesSeq(data, driverLocation.logDriverGPSLocation);
 });*/
 
 function runPromisesSeq(objects_array, iterator, callback) {
     var start_promise = objects_array.reduce(function (prom, object) {
-        //logger.log("objects_array ="+ JSON.stringify(object));
         return prom.then(function () {
             return iterator(object);
         });

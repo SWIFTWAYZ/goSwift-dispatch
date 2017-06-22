@@ -57,12 +57,12 @@ var arrayClone = function ( arr ) {
     }
 }
 
-    var readDriversGPS = function (filename) {
+    var readDriversGPS = function (filename,vehicle_id) {
     var readLine = Promise.promisify(lineReader.eachLine);
     var promise = new Promise(function (resolve, reject) {
         readLine(filename, function (line, last) {
             var line_str = line.split(",");
-            unreached[line_counter] = new gpsPoint(line_str[0], line_str[1],"4524");
+            unreached[line_counter] = new gpsPoint(line_str[0], line_str[1],vehicle_id);
             line_counter++;
             if (last) {
                 // or check if it's the last one

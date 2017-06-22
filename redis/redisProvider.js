@@ -30,7 +30,7 @@ var provider = (function () {
         // Entering monitoring mode.
         monitor.on('monitor', function (time, args, source, database) {
             //logger.debug(time + ": " + args);
-            console.log(args);
+            //console.log(args);
         });
     });
     /**
