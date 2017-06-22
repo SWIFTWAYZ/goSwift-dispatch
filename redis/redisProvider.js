@@ -307,8 +307,8 @@ var provider = (function () {
                         .zadd(vehicle_key, timestamp, driverKey)
                         .exec()
                         .then(function (results) {
-                            logger.log("add " + vehicle_key + "/key=" + driverKey + "/cell=" + grid_cell +
-                                ", results =" + results);
+                            //logger.log("add " + vehicle_key + "/key=" + driverKey + "/cell=" + grid_cell +
+                            //    ", results =" + results);
                             resolve(results);
                         }).catch(function (error) {
                         logger.log("Error with addVehiclePosition: " + error.stack);
@@ -397,8 +397,8 @@ var provider = (function () {
         //first remove vehicle from cell the driver is exiting
         //then add vehicle to cell its entering. Use redis transactions for this
         return new Promise(function (resolve, reject) {
-            logger.log("vehicle_id = " + vehicle_id + " exists >"+fromCellkey + "/ and enters grid = " + toCellkey);
-            //logger.log("got cell for vehiclekey? = " + fromCellkey + "=vehicle_id :" + vehicle_id + "}");
+            //logger.log("vehicle_id = " + vehicle_id + " exists >"+fromCellkey + "/ and enters grid = " + toCellkey);
+
                  client.multi()
                     .zrem(CELL_KEY + fromCellkey, vehicle_id)
                     .zadd(CELL_KEY + toCellkey, timestamp, vehicle_id)

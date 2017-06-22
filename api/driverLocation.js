@@ -137,7 +137,7 @@ var driverLocation = (function () {
             redis.getCurrentCellByVehicleId(vehicle_id).then(function (current_cell) {
                 var s2_cellid = s2common.s2CellIdKeyFromLatLng(lat, lon);
                 var new_cellid = s2common.getParentIdAtLevel(12, s2_cellid);
-                logger.log("------------------CURR-VEHICLE-CELL = " + s2_cellid + "|"+new_cellid);
+                //logger.log("------------------CURR-VEHICLE-CELL = " + s2_cellid + "|"+new_cellid);
 
                 var tstamp = new Date().getTime();
                 var results_data = function (location_key, new_cell, cur_cell, vehicle_id, tstamp) {
@@ -163,12 +163,12 @@ var driverLocation = (function () {
             //check new-cell and compare with current-cell, if not the same, changeCellLocation
             if (position.new_cellid !== position.current_cell) {
 
-                position.new_cellid === position.current_cell ?
+                /*position.new_cellid === position.current_cell ?
                     logger.log("No changes to cell: " + position.new_cellid)
-                    :logger.log("Changed cells from = " + position.current_cell + " to > " + position.new_cellid);
+                    :logger.log("Changed cells from = " + position.current_cell + " to > " + position.new_cellid);*/
                     redis.changeCellPosition(position.current_cell, position.new_cellid, position.id, position.timestamp)
                     .then(function(data){
-                        logger.log("changeCellPos = " + data);
+                        //logger.log("changeCellPos = " + data);
                         resolve(position);
                     //return results;
                 }).catch(function(err){
@@ -186,7 +186,7 @@ var driverLocation = (function () {
         return new Promise(function(resolve,reject){
             redis.addVehiclePosition(results.s2key, results.id, results.timestamp)
                 .then(function(data){
-                logger.log("addVehiclePos = " + data);
+                //logger.log("addVehiclePos = " + data);
                 resolve(data);
             }).catch(function(err){
                 logger.log("changeVehiclePos ->"+err.stack);
@@ -221,9 +221,8 @@ exports.driverLocation = driverLocation;
 //driverLocation.logDriverGPSLocation("4524",-26.155397,28.071016);
 
 //Paulshof_waypoints
-var filename = "Taxi_locations_13June_1.txt";
+/*var filename = "Taxi_locations_13June_1.txt";
 var file = path.join(__dirname,"../../GoSwift/docs/S2/routes",filename);
-//'/Users/tinyiko/WebstormProjects/GoSwift/docs/S2/routes/Taxi_locations_13June_1.txt'
 commons.readDriversGPS(file,"4528")
     .then(function(data){
 
@@ -232,17 +231,17 @@ commons.readDriversGPS(file,"4528")
     });
 }).catch(function(error){
     logger.log(error.stack)
-});
+});*/
 
-/*var centerPoint = {
+var centerPoint = {
     latitude: -26.107793, //,-26.029613
     longitude: 28.057390  //,28.036167
 }
 
-randomGeo.createRandomGPSPositionsSync(centerPoint,22000,800,"4526").then(function(data){
+randomGeo.createRandomGPSPositionsSync(centerPoint,22000,10000,"4531").then(function(data){
     logger.log("data2 = " + data.length);
     runPromisesSeq(data, driverLocation.logDriverGPSLocation);
-});*/
+});
 
 function runPromisesSeq(objects_array, iterator, callback) {
     var start_promise = objects_array.reduce(function (prom, object) {
