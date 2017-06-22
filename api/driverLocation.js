@@ -135,21 +135,24 @@ var driverLocation = (function () {
         return new Promise(function(resolve,reject) {
             //logger.log(vehicle_id +"-"+lat+","+lon);
             redis.getCurrentCellByVehicleId(vehicle_id).then(function (current_cell) {
+                //logger.log("GET CURRENT CELL BY ID = "+current_cell);
                 var s2_cellid = s2common.s2CellIdKeyFromLatLng(lat, lon);
                 var new_cellid = s2common.getParentIdAtLevel(12, s2_cellid);
+                console.log("CURR-VEHICLE-CELL = " + s2_cellid + "|"+new_cellid);
+
                 var tstamp = new Date().getTime();
                 var results_data = function (location_key, new_cell, cur_cell, vehicle_id, tstamp) {
-                    this.s2key = location_key,
+                        this.s2key = location_key,
                         this.new_cellid = new_cell,
                         this.current_cell = cur_cell,
                         this.id = vehicle_id,
                         this.timestamp = tstamp
                 };
                 var data = new results_data(s2_cellid, new_cellid, current_cell[0], vehicle_id, tstamp);
-                resolve(data)
+                resolve(data);
                 //return data;
             }).catch(function (err) {
-                logger.log(err);
+                logger.log("currentVehicleCell ->"+err.stack);
                 reject(err);
             })
         })
@@ -164,16 +167,19 @@ var driverLocation = (function () {
                 position.new_cellid === position.current_cell ?
                     logger.log("No changes to cell: " + position.new_cellid)
                     :logger.log("Changed cells from = " + position.current_cell + " to > " + position.new_cellid);
-                    redis.changeCellPosition(position.current_cell, position.new_cellid, position.id, position.tstamp)
+                    redis.changeCellPosition(position.current_cell, position.new_cellid, position.id, position.timestamp)
                     .then(function(data){
                         logger.log("changeCellPos = " + data);
                         resolve(position);
                     //return results;
                 }).catch(function(err){
-                    reject(err);
+                    logger.log("changeCellPos ->"+err.stack);
+                    //reject(err);
                 });
             }
-           //return results;
+            else{
+                resolve(position);
+            }
         })
     }
 
@@ -184,13 +190,15 @@ var driverLocation = (function () {
                 logger.log("addVehiclePos = " + data);
                 resolve(data);
             }).catch(function(err){
-                reject(err);
+                logger.log("changeVehiclePos ->"+err.stack);
+                //reject(err);
             })
         });
     }
 
     driverLocation.logDriverGPSLocation = function (data) {
         ////new Promise(function(resolve,reject){
+        console.log(data.vehicle_id +"------------------------------------------------")
         logger.log(data.latitude +","+data.longitude);
         return driverLocation.currentVehicleCell(data.vehicle_id, data.latitude, data.longitude)
             .then(driverLocation.changeCellPos)
@@ -218,8 +226,7 @@ exports.driverLocation = driverLocation;
 var filename = "Taxi_locations_13June_1.txt";
 var file = path.join(__dirname,"../../GoSwift/docs/S2/routes",filename);
 //'/Users/tinyiko/WebstormProjects/GoSwift/docs/S2/routes/Taxi_locations_13June_1.txt'
-
-/*commons.readDriversGPS(file)
+commons.readDriversGPS(file)
     .then(function(data){
 
     runPromisesSeq(data, driverLocation.logDriverGPSLocation,function(){
@@ -227,27 +234,21 @@ var file = path.join(__dirname,"../../GoSwift/docs/S2/routes",filename);
     });
 }).catch(function(error){
     logger.log(error.stack)
-})*/
-var centerPoint = {
-    latitude: -26.029613,
-    longitude: 28.036167
-}
-randomGeo.createRandomGPSPositions(centerPoint,22000,600,function(data){
-    var data2 = data.map(function(item){
-        logger.log(item.latitude + ","+item.longitude);
-        return {
-            vehicle_id: "4524",
-            latitude:item.latitude,
-            longitude:item.longitude
-        }
-    });
-    logger.log("data2 = " + data2.length);
-
-    runPromisesSeq(data2, driverLocation.logDriverGPSLocation);
 });
+
+var centerPoint = {
+    latitude: -26.107793, //,-26.029613
+    longitude: 28.057390  //,28.036167
+}
+/*
+randomGeo.createRandomGPSPositionsSync(centerPoint,15000,600,"4524").then(function(data){
+    logger.log("data2 = " + data.length);
+    runPromisesSeq(data, driverLocation.logDriverGPSLocation);
+});*/
 
 function runPromisesSeq(objects_array, iterator, callback) {
     var start_promise = objects_array.reduce(function (prom, object) {
+        //logger.log("objects_array ="+ JSON.stringify(object));
         return prom.then(function () {
             return iterator(object);
         });

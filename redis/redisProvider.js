@@ -274,8 +274,13 @@ var provider = (function () {
             var key = CURR_VEHICLE_CELL+vehicle_id;
            client.zrange(key,0,-1).then(function(results){
                //logger.log("redis:getCurrentCellByVehicleIdfor vehicle_id : "+vehicle_id + "-results :"+results.length);
+               //logger.log("DID YOU GET CURRENT CELL "+ results + "-length->"+results.length);
                 resolve(results);
-           })
+
+        }).catch(function(err){
+            logger.log("redis ->"+err.stack);
+            //reject(err);
+        });
         });
     }
 
@@ -297,7 +302,7 @@ var provider = (function () {
                 if (grid_cell > 0) {
                     client.multi()
                         .zadd(grid_key, timestamp, vehicle_id)
-                        .zadd(vehicle_cell_key, timestamp, grid_cell)
+                        //.zadd(vehicle_cell_key, timestamp, grid_cell)
                         //.zadd(vehicle_cell_key, grid_cell, vehicle_id)
                         .zadd(vehicle_key, timestamp, driverKey)
                         .exec()
@@ -306,12 +311,12 @@ var provider = (function () {
                                 ", results =" + results);
                             resolve(results);
                         }).catch(function (error) {
-                        logger.log("Error with addVehiclePosition: " + error);
+                        logger.log("Error with addVehiclePosition: " + error.stack);
                         reject(error);
                     });
                 }
             }).catch(function (lastError) {
-                logger.log("lastError:" + lastError);
+                logger.log("lastError:" + lastError.stack);
             });
         //});
     }
@@ -345,6 +350,7 @@ var provider = (function () {
                             }
                         });
                     }).catch(function (error) {
+                        logger.log(error.stack);
                         rejected(error);
                     });
                 });
@@ -375,7 +381,7 @@ var provider = (function () {
                 resolve(results);
             }).catch(function(error){
                 logger.log("getVehiclesInCellArray:"+ error);
-                reject("getVehiclesInCellArray:"+ error);
+                //reject("getVehiclesInCellArray:"+ error);
             })
         })
     }
@@ -393,7 +399,7 @@ var provider = (function () {
         return new Promise(function (resolve, reject) {
             logger.log("vehicle_id = " + vehicle_id + " exists >"+fromCellkey + "/ and enters grid = " + toCellkey);
             //logger.log("got cell for vehiclekey? = " + fromCellkey + "=vehicle_id :" + vehicle_id + "}");
-                 client.pipeline()
+                 client.multi()
                     .zrem(CELL_KEY + fromCellkey, vehicle_id)
                     .zadd(CELL_KEY + toCellkey, timestamp, vehicle_id)
                     .zrem(CURR_VEHICLE_CELL+vehicle_id,fromCellkey)
@@ -404,7 +410,7 @@ var provider = (function () {
                     resolve(results);
                 }).catch(function(error){
                     logger.log("Error changeCellPosition:"+error.stack);
-                    reject("Error changeCellPosition:"+error);
+                    //reject("Error changeCellPosition:"+error);
                 });
         });
 

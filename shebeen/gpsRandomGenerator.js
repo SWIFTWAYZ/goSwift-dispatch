@@ -61,6 +61,27 @@ var randomGeo = (function randomGeo() {
         return mappoints;
     }
 
+    var gps_position = function(id,lat,lon){
+        this.vehicle_id = id;
+        this.latitude = lat;
+        this.longitude = lon;
+    }
+
+    randomGeo.createRandomGPSPositionsSync = function(centerpoint, distance, quantity,vehicle_id) {
+        return new Promise(function(resolve,reject){
+            var mappoints = [];
+            for (var i=0; i<quantity; i++) {
+                var gps = randomGeo.randomize(centerpoint, distance);
+                mappoints.push(new gps_position(vehicle_id,gps.latitude,gps.longitude));
+                //console.log(JSON.stringify(gps));
+            }
+            //cb(mappoints);
+             resolve(mappoints);
+        }).catch(function(err){
+            console.log(err.stack);
+        });
+    }
+
     return randomGeo;
 }).call(this);
 
