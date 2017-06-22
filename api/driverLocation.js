@@ -8,7 +8,9 @@ var express = require("express");
 var redis = require("../redis/redisProvider").provider;
 var s2common = require("../s2geometry/s2common").s2common;
 var commons = require("../commonUtil");
+var path = require("path");
 var logger = require("../config/logutil").logger;
+var randomGeo = require("../shebeen/gpsRandomGenerator").randomGeo;
 
 const Promise = require('bluebird');
 
@@ -130,23 +132,27 @@ var driverLocation = (function () {
      * @param lon
      */
     driverLocation.method1 = function(vehicle_id,lat,lon){
-        //return new Promise(function(resolve,reject){
-        //logger.log(vehicle_id +"-"+lat+","+lon);
-
-        return redis.getCurrentCellByVehicleId(vehicle_id).then(function(current_cell){
-            var s2_cellid = s2common.s2CellIdKeyFromLatLng(lat, lon);
-            var new_cellid = s2common.getParentIdAtLevel(12, s2_cellid);
-            var tstamp = new Date().getTime();
-            var results_data = function (location_key, new_cell, cur_cell, vehicle_id, tstamp) {
-                this.s2key = location_key,
-                    this.new_cellid = new_cell,
-                    this.current_cell = cur_cell,
-                    this.id = vehicle_id,
-                    this.timestamp = tstamp
-            };
-            var data = new results_data(s2_cellid, new_cellid, current_cell[0], vehicle_id, tstamp);
-            logger.log("-----getCurrentCellByVehicleId");
-            return data;
+        return new Promise(function(resolve,reject) {
+            //logger.log(vehicle_id +"-"+lat+","+lon);
+            redis.getCurrentCellByVehicleId(vehicle_id).then(function (current_cell) {
+                var s2_cellid = s2common.s2CellIdKeyFromLatLng(lat, lon);
+                var new_cellid = s2common.getParentIdAtLevel(12, s2_cellid);
+                var tstamp = new Date().getTime();
+                var results_data = function (location_key, new_cell, cur_cell, vehicle_id, tstamp) {
+                    this.s2key = location_key,
+                        this.new_cellid = new_cell,
+                        this.current_cell = cur_cell,
+                        this.id = vehicle_id,
+                        this.timestamp = tstamp
+                };
+                var data = new results_data(s2_cellid, new_cellid, current_cell[0], vehicle_id, tstamp);
+                logger.log("-----getCurrentCellByVehicleId");
+                resolve(data)
+                //return data;
+            }).catch(function (err) {
+                logger.log(err);
+                reject(err);
+            })
         })
     }
 
@@ -161,7 +167,9 @@ var driverLocation = (function () {
                     logger.log("changeCellPos = " + data);
                     resolve(results);
                     //return results;
-                })
+                }).catch(function(err){
+            reject(err);
+            })
             }
            //return results;
         })
@@ -172,12 +180,15 @@ var driverLocation = (function () {
             redis.addVehiclePosition(results.s2key, results.id, results.timestamp).then(function(data){
                 logger.log("addVehiclePos = " + data);
                 resolve(data);
-            });
+            }).catch(function(err){
+                reject(err);
+            })
         });
     }
 
     driverLocation.logDriverGPSLocation = function (data) {
         ////new Promise(function(resolve,reject){
+        logger.log(data.latitude +","+data.longitude);
         return driverLocation.method1(data.vehicle_id, data.latitude, data.longitude)
             .then(driverLocation.method2)
             .then (driverLocation.method3)
@@ -200,18 +211,37 @@ exports.driverLocation = driverLocation;
 
 //driverLocation.logDriverGPSLocation("4524",-26.155397,28.071016);
 
-commons.readDriversGPS('/Users/tinyiko/WebstormProjects/GoSwift/docs/S2/routes/Taxi_locations_13June_1.txt')
+//Paulshof_waypoints
+var filename = "Taxi_locations_13June_1.txt";
+var file = path.join(__dirname,"../../GoSwift/docs/S2/routes",filename);
+//'/Users/tinyiko/WebstormProjects/GoSwift/docs/S2/routes/Taxi_locations_13June_1.txt'
+
+/*commons.readDriversGPS(file)
     .then(function(data){
 
-    /*var promiserlist = data.map(function(item) {
-        //logger.log(JSON.stringify(item));
-        //return Promise.promisify(driverLocation.logDriverGPSLocation);
-    });*/
-
-    runPromisesSeq(data, driverLocation.logDriverGPSLocation);
+    runPromisesSeq(data, driverLocation.logDriverGPSLocation,function(){
+        console.log("finished --- " + data);
+    });
 }).catch(function(error){
     logger.log(error.stack)
-})
+})*/
+var centerPoint = {
+    latitude: -26.029613,
+    longitude: 28.036167
+}
+randomGeo.createRandomGPSPositions(centerPoint,22000,600,function(data){
+    var data2 = data.map(function(item){
+        logger.log(item.latitude + ","+item.longitude);
+        return {
+            vehicle_id: "4524",
+            latitude:item.latitude,
+            longitude:item.longitude
+        }
+    });
+    logger.log("data2 = " + data2.length);
+
+    runPromisesSeq(data2, driverLocation.logDriverGPSLocation);
+});
 
 function runPromisesSeq(objects_array, iterator, callback) {
     var start_promise = objects_array.reduce(function (prom, object) {
