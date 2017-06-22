@@ -1,12 +1,13 @@
 /**
  * Created by tinyiko on 2017/06/04.
  */
-var redis = require("../redis/redisProvider").provider;
+var redis    = require("../redis/redisProvider").provider;
 var s2common = require("../s2geometry/s2common").s2common;
-var logger = require("../config/logutil").logger;
-var builder = require("xmlbuilder");
-var fs = require("fs");
-var path = require("path");
+var logger   = require("../config/logutil").logger;
+var builder  = require("xmlbuilder");
+var fs       = require("fs");
+var path     = require("path");
+
 var xmlBuilderFactory = (function(){
 
     /**
@@ -17,7 +18,7 @@ var xmlBuilderFactory = (function(){
 
     xmlBuilderFactory.createFile = function(filename,kml_buffer){
         var file = path.join(__dirname,"../../output",filename);
-        logger.log("writing to file.....->"+file);
+        //logger.log("writing to file.....->"+file);
         fs.writeFile(file,kml_buffer,function(err){
             if(err){
                 throw Error("error writing to file");
@@ -115,8 +116,6 @@ var xmlBuilderFactory = (function(){
             .ele("styleUrl","#s_ylw-pushpin").up()
             .up().up()
 
-            //var item = xml.ele("name");
-
             //cellArray.forEach(function(item,index){
              s2cell_Array.forEach(function(item,index){
                 //if(s2cell_Array[index] !== undefined) {
@@ -130,7 +129,8 @@ var xmlBuilderFactory = (function(){
                         .ele("SchemaData").att("schemaUrl", "#GO_SWIFT_Phase_1")
                         .ele("SimpleData", item.latlng).att("name", "GPS").up()
                         //.ele("SimpleData", s2cell_Array[index].s2key).att("name", "s2CellId").up()
-                        //.ele("SimpleData",s2cell_Array[index].s2_level).att("cell","s2cell")//comment, how to retrieve vehicle pos s2_cell (12-16)
+                        //comment, how to retrieve vehicle pos s2_cell (12-16)
+                        //.ele("SimpleData",s2cell_Array[index].s2_level).att("cell","s2cell")
                         .ele("SimpleData", item.s2key).att("name", "s2CellId").up()
                         .ele("SimpleData",item.s2_level).att("cell","s2cell")
                         .up().up().up()

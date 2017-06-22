@@ -5,7 +5,7 @@
  * Dispatch module for taxi request dispatching and queuing.
  * Some of the functions of this module are listed below:-
  *
- * -Search closest drivers using memcache like redis
+ * -Search closest drivers using redis (i.e. memcache)
  * -Do all distance calculations
  * -Push distance/trip logs to billing engine using RabbitMQ
  * -Log all gps data

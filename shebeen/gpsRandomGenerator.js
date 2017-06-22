@@ -7,11 +7,20 @@ var centerPoint = {
     //-26.029246, 28.033959 - wroxham street, paulshof
 };
 
+var gps_position = function(id,lat,lon){
+    this.vehicle_id = id;
+    this.latitude = lat;
+    this.longitude = lon;
+};
+
 var randomGeo = (function randomGeo() {
 
-//generateMapPoints(centerPoint,21000,30);
-//randomGeo(centerPoint,4000);
-//Create random lat/long coordinates in a specified radius around a center point
+    /**
+     * Create random lat/long coordinates in a specified radius around a center point
+     * @param center
+     * @param radius
+     * @returns {{latitude, longitude, longitude2: string, distance: string, distance2: string}}
+     */
     randomGeo.randomize = function(center, radius) {
         var y0 = center.latitude;
         var x0 = center.longitude;
@@ -47,7 +56,8 @@ var randomGeo = (function randomGeo() {
 //Calc the distance between 2 coordinates as the crow flies
     randomGeo.distance = function(lat1, lon1, lat2, lon2) {
         var R = 6371000;
-        var a = 0.5 - Math.cos((lat2 - lat1) * Math.PI / 180) / 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * (1 - Math.cos((lon2 - lon1) * Math.PI / 180)) / 2;
+        var a = 0.5 - Math.cos((lat2 - lat1) * Math.PI / 180) / 2 + Math.cos(lat1 * Math.PI / 180)
+            * Math.cos(lat2 * Math.PI / 180) * (1 - Math.cos((lon2 - lon1) * Math.PI / 180)) / 2;
         return R * 2 * Math.asin(Math.sqrt(a));
     }
 
@@ -59,12 +69,6 @@ var randomGeo = (function randomGeo() {
         }
         cb(mappoints);
         return mappoints;
-    }
-
-    var gps_position = function(id,lat,lon){
-        this.vehicle_id = id;
-        this.latitude = lat;
-        this.longitude = lon;
     }
 
     randomGeo.createRandomGPSPositionsSync = function(centerpoint, distance, quantity,vehicle_id) {

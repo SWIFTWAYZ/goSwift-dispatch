@@ -3,11 +3,11 @@
  */
 "use strict";
 
-var _ = require("lodash");
-var redis = require("ioredis");
-var s2 = require("nodes2ts");
+var _        = require("lodash");
+var redis    = require("ioredis");
+var s2       = require("nodes2ts");
 var s2common = require("../s2geometry/s2common").s2common;
-var logger = require("../config/logutil").logger;
+var logger   = require("../config/logutil").logger;
 
 var total_millis = 0;
 
@@ -38,19 +38,16 @@ var provider = (function () {
      * change to connect to correct environment
      */
     function provider() {
-        logger.log("CREATING REDIS PROVIDER()");
+        logger.log("Creating Redis Provider");
         client.on('error', function (err, data) {
-            if (err.message.startsWith("connect ECONNREFUSED")) {
+            if (err.message.startsWith("connect EconnRefused")) {
                 console.log("server connection failed...");
-            }
-            ;
+            };
         });
-
         client.on("connect", function () {
             console.log("redis server connection succeeded...");
         });
     }
-
 
     /**
      *  method to add drivers to grid cells by grid_id
@@ -77,10 +74,9 @@ var provider = (function () {
                 } else if (results === 0) {
                     //else we return 0
                     resolve(0)
-                    //reject(item);
                 }
             }).catch(function (error) {
-                logger.log('error = ' + error);
+                logger.log('error = ' + error.stack);
                 reject(error);
             });
         });
@@ -499,53 +495,12 @@ var provider = (function () {
         });
     }
 
-    /**
-     * retrieve keys from driver hashset
-     * @type {Array}
-     */
-    provider.keys = function (cb) {
-        client.keys(driver_hashset, function (err, data) {
-            console.log("logging keys ->" + data);
-            cb(data);
-        });
-    }
-
     return provider;
 
 }).call(this);
 exports.provider = provider;
 
 //provider.changeCellPosition("2203794242663350272","2203682917111037952","4524",new Date().getTime());
-
-/*provider.getCurrentCellByVehicleId("4524").then(function(data){
-    logger.log("results ----> "+ data);
-});
-*/
-/*
-var cellArray = ["2203792181079048192",
-        "2203795067297071104",
-        "2203794654980210688",
-        "2203794517541257216",
-        "2203794380102303744",
-        "2203794242663350272"];
-
-provider.getVehiclesInCellArray(cellArray).then(function(data){
-    logger.log("pipeline request results = "+ data.length);
-    data.forEach(function(item,index){
-        logger.log(item);
-    })
-})*/
-
-/*s2common.getDriversFromFile2(function(data){
- logger.log("size of data = " + data.length);
- var time = new Date().getTime();
- data.forEach(function(item){
- //logger.log("item = "+ item);
- provider.addVehiclePosition(item,"004467",time).then(function(results){
- logger.log(results);
- })
- })
- });*/
 
 //add new method to geocode each cell and store in a new data structure
 //that holds both the cell_id, the centroid gps and the name of suburb
@@ -554,87 +509,11 @@ provider.getVehiclesInCellArray(cellArray).then(function(data){
 //add method which given a rider location, can retrieve all vehicles in ascending
 //order that are closest to the rider using a s2circlecoverer.
 
-//2203795067297071104
-//2203793418029629440
-
-/*
- var vehicle_id59 = "004468";
-
- provider.getDriverPositions(vehicle_id59).then(function(celldata){
- logger.log("driver = " + vehicle_id59 + ", positions = " + celldata);//JSON.stringify(celldata));
- })
-
- provider.getDriversInCell("2203688414669176832").then(function(data){
- logger.log("drivers in cell = "+data);
- });
- */
-
-/*var ts = new Date().getTime();
- provider.changeCellPosition("2203840188725229341",vehicle_id59,ts).then(function(results){
- logger.log(results);
- });
-
- provider.getVehicleCell(vehicle_id59).then(function(results){
- logger.log("current pos = " + results);
- });*/
-
-/*
- provider.getVehicleGridCell("2203795001640038161","004469").then(function(cell){
- logger.log("-get cell id for vehicle  = " + cell);
- });
- */
-/*var vehicle_id59 = "004460";
- provider.leaveCityCell("2203795001640038161",vehicle_id59,function(response){
- logger.log("removing vehicle id = " + vehicle_id59 + "-"+response);
- })*/
-
-//provider.addDriverPosition("2203795003930470261");
-
-/*--
- var ts = new Date().getTime();
- try{
- var vehiclekey = "2203840532358176487";
- var vehicle2   = "2203803946975095603";
- var vehicle3   = "2203792415811550533";
- var vehicle4   = "2203806913340145105";
-
- var vehicleId = "004458";
-
- provider.addVehiclePosition(vehiclekey,"004473",ts);
- provider.addVehiclePosition(vehicle2,"004474",ts+80);
- provider.addVehiclePosition(vehicle3,"004475",ts+120);
- provider.addVehiclePosition(vehicle4,"004476",ts+150);
-
- provider.getVehicleCell("004473").then(function(results){
- logger.log("getVehicleCell" +"/"+ results);
- });
- /*provider.getVehiclePosition(vehicle2,function(results){
- logger.log(">>> positions for vehicle_id = " + vehicle2 + " [total pos = "+results.length);
- results.forEach(function(item){
- logger.log("vehicle_id:" + vehicle2 + " - [" + item +"]");
- });
- });
- logger.log("adding to cell id = -------" + vehicle2 +
- "=["+s2common.getParentIdAtLevel(12,vehicle2)+"]------");*/
-/*--
- }catch(error){
- logger.log(error);
- }
 
 
- /*
- //14900 - 9800 (at 9:02 pm)
- provider.getVehiclePosByTime(vehicleId,14900,function(results){
- logger.log(results);
- });
 
- var driver_id2 = "004471";
- provider.getDriverPositions(driver_id2,function(results){
- logger.log("position of "+ driver_id2 + ", positions = " + results);
- })
 
- var grid_key = "2203795067297071104";
- var grid_key2 = "2203794861138657280";
- provider.getDriversInCell(grid_key,function(data){
- logger.log("drivers within grid cell = " +grid_key+"-"+ JSON.stringify(data));
- })*/
+
+
+
+
