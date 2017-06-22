@@ -238,9 +238,12 @@ var centerPoint = {
     longitude: 28.057390  //,28.036167
 }
 
-randomGeo.createRandomGPSPositionsSync(centerPoint,22000,10000,"4531").then(function(data){
-    logger.log("data2 = " + data.length);
-    runPromisesSeq(data, driverLocation.logDriverGPSLocation);
+randomGeo.createRandomGPSPositionsSync(centerPoint,22000,100000,"4531").then(function(data){
+    var startTime = new Date().getTime()
+    logger.log("data2 = " + data.length + "-start time - "+startTime);
+    runPromisesSeq(data, driverLocation.logDriverGPSLocation).then(function(){
+        logger.log((new Date().getTime() - startTime)/1000 + "seconds")
+    })
 });
 
 function runPromisesSeq(objects_array, iterator, callback) {

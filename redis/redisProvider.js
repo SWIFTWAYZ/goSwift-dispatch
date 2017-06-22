@@ -399,7 +399,7 @@ var provider = (function () {
         return new Promise(function (resolve, reject) {
             //logger.log("vehicle_id = " + vehicle_id + " exists >"+fromCellkey + "/ and enters grid = " + toCellkey);
 
-                 client.multi()
+                 client.pipeline()
                     .zrem(CELL_KEY + fromCellkey, vehicle_id)
                     .zadd(CELL_KEY + toCellkey, timestamp, vehicle_id)
                     .zrem(CURR_VEHICLE_CELL+vehicle_id,fromCellkey)
