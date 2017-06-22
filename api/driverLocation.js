@@ -131,7 +131,7 @@ var driverLocation = (function () {
      * @param lat
      * @param lon
      */
-    driverLocation.method1 = function(vehicle_id,lat,lon){
+    driverLocation.currentVehicleCell = function(vehicle_id, lat, lon){
         return new Promise(function(resolve,reject) {
             //logger.log(vehicle_id +"-"+lat+","+lon);
             redis.getCurrentCellByVehicleId(vehicle_id).then(function (current_cell) {
@@ -146,7 +146,6 @@ var driverLocation = (function () {
                         this.timestamp = tstamp
                 };
                 var data = new results_data(s2_cellid, new_cellid, current_cell[0], vehicle_id, tstamp);
-                logger.log("-----getCurrentCellByVehicleId");
                 resolve(data)
                 //return data;
             }).catch(function (err) {
@@ -156,28 +155,32 @@ var driverLocation = (function () {
         })
     }
 
-    driverLocation.method2 = function(results) {
+    driverLocation.changeCellPos = function(position) {
         return new Promise(function (resolve, reject) {
             //function (results) {
             //check new-cell and compare with current-cell, if not the same, changeCellLocation
-            if (results.new_cellid !== results.current_cell) {
-                results.new_cellid === results.current_cell ? logger.log("No changes to cell: " + results.new_cellid)
-                    : logger.log("Changed cells from = " + results.current_cell + " to > " + results.new_cellid);
-                redis.changeCellPosition(results.current_cell, results.new_cellid, results.id, results.tstamp).then(function(data){
-                    logger.log("changeCellPos = " + data);
-                    resolve(results);
+            if (position.new_cellid !== position.current_cell) {
+
+                position.new_cellid === position.current_cell ?
+                    logger.log("No changes to cell: " + position.new_cellid)
+                    :logger.log("Changed cells from = " + position.current_cell + " to > " + position.new_cellid);
+                    redis.changeCellPosition(position.current_cell, position.new_cellid, position.id, position.tstamp)
+                    .then(function(data){
+                        logger.log("changeCellPos = " + data);
+                        resolve(position);
                     //return results;
                 }).catch(function(err){
-            reject(err);
-            })
+                    reject(err);
+                });
             }
            //return results;
         })
     }
 
-    driverLocation.method3 = function(results){
+    driverLocation.changeVehiclePos = function(results){
         return new Promise(function(resolve,reject){
-            redis.addVehiclePosition(results.s2key, results.id, results.timestamp).then(function(data){
+            redis.addVehiclePosition(results.s2key, results.id, results.timestamp)
+                .then(function(data){
                 logger.log("addVehiclePos = " + data);
                 resolve(data);
             }).catch(function(err){
@@ -189,9 +192,9 @@ var driverLocation = (function () {
     driverLocation.logDriverGPSLocation = function (data) {
         ////new Promise(function(resolve,reject){
         logger.log(data.latitude +","+data.longitude);
-        return driverLocation.method1(data.vehicle_id, data.latitude, data.longitude)
-            .then(driverLocation.method2)
-            .then (driverLocation.method3)
+        return driverLocation.currentVehicleCell(data.vehicle_id, data.latitude, data.longitude)
+            .then(driverLocation.changeCellPos)
+            .then (driverLocation.changeVehiclePos)
             .catch(function(error){
                 logger.log("Error in getCurrentCellByVehicleId : " + error.stack);
             });
