@@ -9,6 +9,7 @@ var redis = require("../redis/redisProvider").provider;
 var s2common = require("../s2geometry/s2common").s2common;
 var commons = require("../commonUtil");
 var path = require("path");
+var fs = require("fs");
 var logger = require("../config/logutil").logger;
 var randomGeo = require("../shebeen/gpsRandomGenerator").randomGeo;
 
@@ -237,19 +238,20 @@ var centerPoint = {
     longitude: 28.057390  //,28.036167
 }
 //vcell:4531 , 1498209282 4531 2203794242663350272 2203844407881367552 2203794271770902971
-randomGeo.createRandomGPSPositionsSync(centerPoint,22000,3,"4531").then(function(data) {
-    data.forEach(function(gps){
-        var s2_cellid = s2common.s2CellIdKeyFromLatLng(gps.latitude, gps.longitude);
+randomGeo.createRandomGPSPositionsSync(centerPoint,16345,1000,"4530").then(function(random_gps) {
+    var tstamp1 = new Date().getTime();
+    var script = fs.readFileSync(path.resolve(__dirname, '../../lua/get_cell.lua'), {encoding: 'utf8'});
+
+    random_gps.forEach(function(item,index){
+        var s2_cellid = s2common.s2CellIdKeyFromLatLng(item.latitude,item.longitude);
         var new_cellid = s2common.getParentIdAtLevel(12, s2_cellid);
-        var curr_cell;
-        //logger.log(JSON.stringify(gps));
-        redis.getCurrentCellByVehicleId(gps.vehicle_id).then(function (current_cell) {
-            curr_cell = current_cell;
-            logger.log("vehicle ="+gps.vehicle_id + "> curr_cell = "+current_cell + ">"+new_cellid+"-"+s2_cellid);
-            var startTime = new Date().getTime()
-            redis.redisDriverPosition(gps.vehicle_id,startTime,gps.vehicle_id, current_cell,new_cellid,s2_cellid);
-        });
+        if(index % 100 === 0){
+            logger.log("vehicle ="+item.vehicle_id + ">"+new_cellid+"-"+s2_cellid);
+        }
+        var startTime = new Date().getTime()
+        redis.redisDriverPosition(script,item.vehicle_id,startTime,new_cellid,s2_cellid);
     });
+    logger.log("finished with lua script, duration = " + (new Date().getTime() - tstamp1)/1000 +"seconds");
 });
 
 /*
