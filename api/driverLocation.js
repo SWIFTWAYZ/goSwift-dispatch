@@ -232,12 +232,27 @@ commons.readDriversGPS(file,"4528")
 }).catch(function(error){
     logger.log(error.stack)
 });*/
-
 var centerPoint = {
     latitude: -26.107793, //,-26.029613
     longitude: 28.057390  //,28.036167
 }
+//vcell:4531 , 1498209282 4531 2203794242663350272 2203844407881367552 2203794271770902971
+randomGeo.createRandomGPSPositionsSync(centerPoint,22000,3,"4531").then(function(data) {
+    data.forEach(function(gps){
+        var s2_cellid = s2common.s2CellIdKeyFromLatLng(gps.latitude, gps.longitude);
+        var new_cellid = s2common.getParentIdAtLevel(12, s2_cellid);
+        var curr_cell;
+        //logger.log(JSON.stringify(gps));
+        redis.getCurrentCellByVehicleId(gps.vehicle_id).then(function (current_cell) {
+            curr_cell = current_cell;
+            logger.log("vehicle ="+gps.vehicle_id + "> curr_cell = "+current_cell + ">"+new_cellid+"-"+s2_cellid);
+            var startTime = new Date().getTime()
+            redis.redisDriverPosition(gps.vehicle_id,startTime,gps.vehicle_id, current_cell,new_cellid,s2_cellid);
+        });
+    });
+});
 
+/*
 randomGeo.createRandomGPSPositionsSync(centerPoint,22000,100000,"4531").then(function(data){
     var startTime = new Date().getTime()
     logger.log("data2 = " + data.length + "-start time - "+startTime);
@@ -245,6 +260,7 @@ randomGeo.createRandomGPSPositionsSync(centerPoint,22000,100000,"4531").then(fun
         logger.log((new Date().getTime() - startTime)/1000 + "seconds")
     })
 });
+ */
 
 function runPromisesSeq(objects_array, iterator, callback) {
     var start_promise = objects_array.reduce(function (prom, object) {
@@ -258,3 +274,4 @@ function runPromisesSeq(objects_array, iterator, callback) {
         return start_promise;
     }
 }
+

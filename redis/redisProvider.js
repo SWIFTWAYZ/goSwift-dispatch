@@ -3,6 +3,8 @@
  */
 "use strict";
 
+var path = require("path");
+var fs = require("fs");
 var _        = require("lodash");
 var redis    = require("ioredis");
 var s2       = require("nodes2ts");
@@ -268,7 +270,7 @@ var provider = (function () {
     provider.getCurrentCellByVehicleId = function(vehicle_id){
         return new Promise(function(resolve,reject){
             var key = CURR_VEHICLE_CELL+vehicle_id;
-           client.zrange(key,0,-1).then(function(results){
+           client.zrange(key,0,0).then(function(results){
                //logger.log("redis:getCurrentCellByVehicleIdfor vehicle_id : "+vehicle_id + "-results :"+results.length);
                //logger.log("DID YOU GET CURRENT CELL "+ results + "-length->"+results.length);
                 resolve(results);
@@ -495,6 +497,55 @@ var provider = (function () {
         });
     }
 
+    provider.redisDriverPosition = function(vehicle_id,startTime,current_cell,new_cellid,s2_cellid){
+        logger.log(path.resolve(__dirname, '../../lua/get_cell.lua'));
+        client.defineCommand("logDriverPosition2",
+            {
+                numberOfKeys: 1,
+                lua: fs.readFileSync(path.resolve(__dirname, '../../lua/get_cell.lua'), {
+                    encoding: 'utf8'
+                })
+        });
+        client.defineCommand("logDriverPosition",
+            {
+                numberOfKeys: 1,
+                lua: "local vcell_key = KEYS[1] "+
+                "local tstamp = ARGV[1] "+
+                "local vehicle_id = ARGV[2] "+
+                "local curr_cell = ARGV[3] "+
+                "local new_cell = ARGV[4] "+
+                "local vehicle_pos = ARGV[5] "+
+
+                "local vehicle_key = 'vehicle:' .. vehicle_id "+
+                "local from_cell_key = 'cell:' .. curr_cell "+
+                "local to_cell_key = 'cell:' .. new_cell "+
+
+                "local cell_val = redis.call('ZRANGE',vcell_key,0,0) "+
+
+                "if cell_val  then "+
+                "local vcell_rem_retval = redis.call('ZREM',vcell_key, curr_cell) "+
+                "local vcell_add_retval = redis.call('ZADD',vcell_key,tstamp,new_cell) "+
+
+                "local vehicle_add_retval = redis.call('ZADD',vehicle_key,tstamp,vehicle_pos) "+
+
+                "local cell_rem_retval = redis.call('ZREM',from_cell_key,tstamp,vehicle_id) "+
+                "local cell_add_retval = redis.call('ZADD',to_cell_key,tstamp,vehicle_id) "+
+
+                "redis.log(redis.LOG_WARNING,'hello') "+
+                "return vcell_add_retval "+
+
+                "else "+
+                "return 'cell_val' "+
+                "end "
+            });
+
+        //vcell:4531 , 1498209282 4531 2203794242663350272 2203844407881367552 2203794271770902971
+        var vcell_key = "vcell:"+vehicle_id;
+        client.logDriverPosition2(vcell_key,startTime,vehicle_id, current_cell,new_cellid,s2_cellid,
+            function (err, results) {
+                console.log(results);
+            });
+    }
     return provider;
 
 }).call(this);
