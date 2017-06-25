@@ -72,7 +72,9 @@ var tripRequest = (function(){
     }
 
     /**
-     * get intersection of cells and vehicle positions
+     * get intersection of cells and vehicle positions by filtering vehicles that are
+     * within the geo-radius of the rider cells (estimated by the region coverer). These
+     * cells are of level 12 - level 16 and should be valid cells (city grid)
      * @param vehiclePositions
      * @param cellsB
      * @param cb
@@ -170,10 +172,16 @@ var tripRequest = (function(){
     };
 
     /**
-     * code used to display rider cells information
-     * @param lat
-     * @param lon
-     * @param grid
+     * code used to display rider cells information. Vehicle s2 positions are
+     * stored under each vehicle_id (vehicle:id key) and their id is also stored
+     * under level-12 cell. To retrieve vehicles near rider we calculate an intersection
+     * of cells using a region-coverer that estimates a radius (constant.RIDER_GEO_RADIUS).We start
+     * by retrieving all vehicles in level-12 cells that are touched by the geo-radius region. Then we
+     * filter the returned vehicles and narrow down to vehicles contained inside the geo-radius region
+     * which is made up (estimated) by cells of level 12 - level 16
+     * @param lat, rider latitude
+     * @param lon, rider longitude
+     * @param grid, city grid (valid cells)
      * @param cb
      */
 
@@ -195,7 +203,7 @@ var tripRequest = (function(){
                     });
 
                         //retrieve from redis vehicles in rider cells within radius, start by retrieving
-                        //all vehicles at level-12 and then filter late to cells within geo-radius (level 12 -16)
+                        //all vehicles at level-12 and then filter cells within geo-radius (level 12 -16)
                         redis.getVehiclesInCellArray(cellArray).then(function(data){
                             var cellsWithVehicles = [];
                             data.forEach(function(item,index){
@@ -205,7 +213,7 @@ var tripRequest = (function(){
                                     item[1].forEach(function(vehicle_id,index2){
                                         if(index2%2 === 0){
                                             //currently only retrieve 1 s2key under vehicle:xxxx, should we get the latest
-                                            // 10-20 s2keys by timestamp age and filter to ensure is within rider cells
+                                            // 10-20 s2_position by timestamp age and filter to ensure is within rider cells
                                             var p = new posData(vehicle_id,cellArray[index])
                                             //logger.log("posData add to cellsWithVehicles = " + JSON.stringify(p));
                                             cellsWithVehicles.push(p);
@@ -289,11 +297,12 @@ var distance = 22000;//in meters
     })
 });*/
 redis.getCityGrid().then(function(grid) {
-    tripRequest.callGetVehiclesNear(-26.172133,28.079613, grid);
+    tripRequest.callGetVehiclesNear(-26.023825,28.036000, grid);
 });
 
 //-26.029433325,28.033954797
 //-26.217146, 28.356669
+//-26.172133,28.079613 - No cells intersecting near latlon
 
 //-26.023825,  28.036000 (3 vehicles)
 //-26.023825,  28.036000 (2 vehicles)

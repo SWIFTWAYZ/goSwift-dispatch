@@ -11,8 +11,12 @@ var path     = require("path");
 var xmlBuilderFactory = (function(){
 
     /**
-     * factory function to build an XMl DOM model with cellArray and
-     * GPS track points
+     * function to build an XMl DOM model with cellArray and GPS track
+     * points and create a KML file suitable to view in Google earth.
+     * TODO:
+     *  - add placemark to represent the rider in the centre of the geo-circle
+     *  - add customization of labels and placemarks (font and size)
+     *  -
      */
     function xmlBuilderFactory(){};
 
@@ -29,7 +33,7 @@ var xmlBuilderFactory = (function(){
     }
 
     /**
-     * builds XML DOM for cell polygons representing s2cells
+     * builds XML DOM for cell polygons representing s2cells (level 12 - 16)
      * @param document_name
      * @param cellArray
      */
@@ -87,7 +91,8 @@ var xmlBuilderFactory = (function(){
     }
 
     /**
-     * builds XML DOM for location GPS points of vehicles
+     * builds XML DOM for representing GPS positions of vehicles (placemarks)
+     * The placemarks shows GPS, s2-cell-id and vehicle-id
      * @param document_name
      * @param cellArray
      */

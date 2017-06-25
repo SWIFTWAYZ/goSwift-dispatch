@@ -22,6 +22,7 @@ var provider = (function () {
         CURR_VEHICLE_CELL = "vcell:";
 
     var client = new redis({
+        connectTimeout: 10000,
         retryStrategy: function (times) {
             var delay = Math.min(times * 50, 2000);
             return delay;
@@ -32,7 +33,7 @@ var provider = (function () {
         // Entering monitoring mode.
         monitor.on('monitor', function (time, args, source, database) {
             //logger.debug(time + ": " + args);
-            //console.log(args);
+            console.log(args);
         });
     });
     /**

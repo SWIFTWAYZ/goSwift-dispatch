@@ -238,7 +238,7 @@ var centerPoint = {
     longitude: 28.057390  //,28.036167
 }
 //vcell:4531 , 1498209282 4531 2203794242663350272 2203844407881367552 2203794271770902971
-randomGeo.createRandomGPSPositionsSync(centerPoint,16345,1000,"4530").then(function(random_gps) {
+randomGeo.createRandomGPSPositionsSync(centerPoint,16345,15000,"4528").then(function(random_gps) {
     var tstamp1 = new Date().getTime();
     var script = fs.readFileSync(path.resolve(__dirname, '../../lua/get_cell.lua'), {encoding: 'utf8'});
 
