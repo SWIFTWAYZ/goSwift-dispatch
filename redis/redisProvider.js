@@ -498,7 +498,16 @@ var provider = (function () {
         });
     }
 
-    provider.redisDriverPosition = function(script,vehicle_id,startTime,new_cellid,s2_cellid){
+    /**
+     * log driver position using Lua script command
+     * @param script
+     * @param vehicle_id
+     * @param startTime
+     * @param new_cellid
+     * @param s2_cellid
+     * @param cb
+     */
+    provider.redisAddDriverPosition = function(script, vehicle_id, startTime, new_cellid, s2_cellid, cb){
         client.defineCommand("logDriverPosition2", {
                 numberOfKeys: 1,
                 lua: script}
@@ -506,11 +515,20 @@ var provider = (function () {
         var vcell_key = "vcell:"+vehicle_id;
         //logger.log(vcell_key+"|"+startTime +"|"+ vehicle_id +"|"+ new_cellid +"|"+ s2_cellid);
         client.logDriverPosition2(vcell_key,startTime,vehicle_id, new_cellid,s2_cellid,
-            function (err, results) {
-                //logger.log("return from lua script > error :" + err + "- results : "+results);
+            function (error, results) {
+                if(error)
+                    cb(error,null)
+                else
+                    cb(null,results);
             });
     }
 
+    /**
+     * calls lua script command to retrieve geo-radius vehicles and their s2-positions
+     * @param cell_array
+     * @param code_string
+     * @param cb
+     */
     provider.redisVehiclesInCellArray = function(cell_array,code_string,cb){
         //logger.log(code_string);
         client.defineCommand("getVehiclesInArray2",{
@@ -518,15 +536,9 @@ var provider = (function () {
             lua: code_string
         });
 
-        /*cell_array[0]+"",
-         cell_array[1]+"",
-         cell_array[2]+"",
-         cell_array[3]+"",
-         cell_array[4]+
-         */
         client.getVehiclesInArray2(12, cell_array[0], cell_array[1],cell_array[2],
-            cell_array[3],cell_array[4],cell_array[5],cell_array[6],cell_array[7],cell_array[8],
-            cell_array[9],cell_array[10],cell_array[11],
+            cell_array[3],cell_array[4],cell_array[5],cell_array[6],cell_array[7],
+            cell_array[8],cell_array[9],cell_array[10],cell_array[11],
             function(error,results){
             logger.log("lua results = " +error + "-"+ results)
                 if(error)

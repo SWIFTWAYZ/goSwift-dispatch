@@ -251,7 +251,7 @@ randomGeo.createRandomGPSPositionsSync(centerPoint,16345,15000,"4528").then(func
             logger.log("vehicle ="+item.vehicle_id + ">"+new_cellid+"-"+s2_cellid);
         }
         var startTime = new Date().getTime()
-        redis.redisDriverPosition(script,item.vehicle_id,startTime,new_cellid,s2_cellid);
+        redis.redisAddDriverPosition(script,item.vehicle_id,startTime,new_cellid,s2_cellid);
     });
     logger.log("finished with lua script, duration = " + (new Date().getTime() - tstamp1)/1000 +"seconds");
 });
