@@ -240,7 +240,9 @@ var centerPoint = {
 //vcell:4531 , 1498209282 4531 2203794242663350272 2203844407881367552 2203794271770902971
 randomGeo.createRandomGPSPositionsSync(centerPoint,16345,15000,"4528").then(function(random_gps) {
     var tstamp1 = new Date().getTime();
-    var script = fs.readFileSync(path.resolve(__dirname, '../../lua/get_cell.lua'), {encoding: 'utf8'});
+    var filename = path.resolve(__dirname, '../../lua/get_cell.lua');
+    var script = fs.readFileSync(filename, {encoding: 'utf8'});
+    logger.log("loading script.....from "+filename);
 
     random_gps.forEach(function(item,index){
         var s2_cellid = s2common.s2CellIdKeyFromLatLng(item.latitude,item.longitude);

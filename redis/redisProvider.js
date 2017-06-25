@@ -499,13 +499,10 @@ var provider = (function () {
     }
 
     provider.redisDriverPosition = function(script,vehicle_id,startTime,new_cellid,s2_cellid){
-
-        client.defineCommand("logDriverPosition2",
-            {
+        client.defineCommand("logDriverPosition2", {
                 numberOfKeys: 1,
-                lua: script
-        });
-        //vcell:4531 , 1498209282 4531 2203794242663350272 2203844407881367552 2203794271770902971
+                lua: script}
+                );
         var vcell_key = "vcell:"+vehicle_id;
         //logger.log(vcell_key+"|"+startTime +"|"+ vehicle_id +"|"+ new_cellid +"|"+ s2_cellid);
         client.logDriverPosition2(vcell_key,startTime,vehicle_id, new_cellid,s2_cellid,
@@ -513,6 +510,32 @@ var provider = (function () {
                 //logger.log("return from lua script > error :" + err + "- results : "+results);
             });
     }
+
+    provider.redisVehiclesInCellArray = function(cell_array,code_string,cb){
+        //logger.log(code_string);
+        client.defineCommand("getVehiclesInArray2",{
+            numberOfKeys: 1,
+            lua: code_string
+        });
+
+        /*cell_array[0]+"",
+         cell_array[1]+"",
+         cell_array[2]+"",
+         cell_array[3]+"",
+         cell_array[4]+
+         */
+        client.getVehiclesInArray2(12, cell_array[0], cell_array[1],cell_array[2],
+            cell_array[3],cell_array[4],cell_array[5],cell_array[6],cell_array[7],cell_array[8],
+            cell_array[9],cell_array[10],cell_array[11],
+            function(error,results){
+            logger.log("lua results = " +error + "-"+ results)
+                if(error)
+                    cb(error,null)
+                else
+                    cb(null,_.toArray(results));
+        });
+    }
+
     return provider;
 
 }).call(this);

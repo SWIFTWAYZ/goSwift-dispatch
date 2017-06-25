@@ -7,6 +7,8 @@ var s2 = require("nodes2ts");
 var _ = require('underscore');
 var _lo = require("lodash");
 var redis = require("../redis/redisProvider").provider;
+var path = require("path");
+var fs = require("fs");
 var init = require("../config/init");
 var constant = require('../constants');
 var s2circle = require("../s2geometry/s2circlecoverer");
@@ -33,10 +35,12 @@ Array.prototype.stringify = function(){
         }
     })
 }
+//var script;
 
 var tripRequest = (function(){
 
     function tripRequest(){
+       // script = fs.readFileSync(path.resolve(__dirname, '../../lua/geo_radius.lua'), {encoding: 'utf8'});
     };
 
     tripRequest.logRiderLocation = function(lat,lon,rider_UUID,mobile_number){
@@ -204,7 +208,15 @@ var tripRequest = (function(){
 
                         //retrieve from redis vehicles in rider cells within radius, start by retrieving
                         //all vehicles at level-12 and then filter cells within geo-radius (level 12 -16)
-                        redis.getVehiclesInCellArray(cellArray).then(function(data){
+                        //redis.getVehiclesInCellArray(cellArray).then(function(data){
+                        var filename = path.resolve(__dirname, '../../goSwift-dispatch/redis/lua/geo-radius.lua');
+                        var script = fs.readFileSync(filename, {encoding: 'utf8'});
+                        logger.log("loading script.....from "+filename);
+
+                         redis.redisVehiclesInCellArray(cellArray,script,function(err,results){
+
+                            logger.log("Response from LUA = " +">"+ results.length);
+                            var data = results;
                             var cellsWithVehicles = [];
                             data.forEach(function(item,index){
                                 logger.log("No. of vehicles found = "+ item[1].length/2 +", in cell = "+ cellArray[index]);
@@ -225,10 +237,11 @@ var tripRequest = (function(){
                                 //send both vehicles and all intersecting cells (with or without cars)
                                 cb(results,cellArray,cells_12);
                             });
-                        }).catch(function(error){
+                        })
+                              /*.catch(function(error){
                             logger.log("getVehiclesNearRider, "+error.stack);
                             reject(error);
-                        });
+                        });*/
                 });
             });
     }
