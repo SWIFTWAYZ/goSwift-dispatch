@@ -297,7 +297,7 @@ var distance = 22000;//in meters
     })
 });*/
 redis.getCityGrid().then(function(grid) {
-    tripRequest.callGetVehiclesNear(-26.023825,28.036000, grid);
+    tripRequest.callGetVehiclesNear(-26.059825,  28.021906, grid);
 });
 
 //-26.029433325,28.033954797
