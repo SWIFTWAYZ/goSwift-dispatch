@@ -35,12 +35,16 @@ Array.prototype.stringify = function(){
         }
     })
 }
-//var script;
+
+var filename = path.resolve(__dirname, '../../goSwift-dispatch/redis/lua/geo-radius.lua');
+var script = fs.readFileSync(filename, {encoding: 'utf8'});
+logger.log("loading script.....from "+filename);
 
 var tripRequest = (function(){
 
     function tripRequest(){
        // script = fs.readFileSync(path.resolve(__dirname, '../../lua/geo_radius.lua'), {encoding: 'utf8'});
+
     };
 
     tripRequest.logRiderLocation = function(lat,lon,rider_UUID,mobile_number){
@@ -209,13 +213,10 @@ var tripRequest = (function(){
                         //retrieve from redis vehicles in rider cells within radius, start by retrieving
                         //all vehicles at level-12 and then filter cells within geo-radius (level 12 -16)
                         //redis.getVehiclesInCellArray(cellArray).then(function(data){
-                        var filename = path.resolve(__dirname, '../../goSwift-dispatch/redis/lua/geo-radius.lua');
-                        var script = fs.readFileSync(filename, {encoding: 'utf8'});
-                        logger.log("loading script.....from "+filename);
 
                          redis.redisVehiclesInCellArray(cellArray,script,function(err,results){
 
-                            logger.log("Response from LUA = " +">"+ results.length);
+                            logger.log("Response from LUA = " + results.length);
                             var data = results;
                             var cellsWithVehicles = [];
                             data.forEach(function(item,index){
