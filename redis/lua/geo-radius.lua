@@ -53,6 +53,6 @@ for index=1, tonumber(cell_count) do
 end 
 redis.log(redis.LOG_WARNING,"items = " .. total)
 
-print("------------" .. cell_vehicles[1])
+print("------------" .. cell_vehicles[1][1])
 
-return cell_vehicles
+return cell_vehicles[1][1]
