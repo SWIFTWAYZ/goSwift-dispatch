@@ -23,6 +23,7 @@ String.prototype.padLeft = function(char, length) {
 
 String.prototype.convertToLatLng = function(){
     var latlng =  new s2.S2CellId(this).toLatLng();
+    logger.log(latlng.latDegrees.toFixed(6)+","+latlng.lngDegrees.toFixed(6));
     return latlng.lngDegrees.toFixed(6)+","+latlng.latDegrees.toFixed(6);
 }
 
@@ -102,12 +103,8 @@ var tripRequest = (function(){
 
         var counter = 1;
         var vehiclesInRadius = vehicles.filter(function(item){
-            var cell_item = new s2.S2CellId(item.s2key);
+                var cell_item = new s2.S2CellId(item.cell_id+"");
             return cellsRegion.contains(cell_item);
-
-                /*counter++;
-                logger.log( "filtered: vehicle id=/" + item.s2key +"/"+item.vehicle_id);
-                return item;*/
             });
 
         logger.log("filterVehiclesInRadius old size = "+ vehicles.length + ", new size = "+vehiclesInRadius.length);
@@ -207,35 +204,14 @@ var tripRequest = (function(){
                 });
 
                 tripRequest.getIntersectRadiusCells(12,16,100,lat,lon,grid,rider_radius, function(cells12){
-
                     var cells_12 = cells12.getCellIds().map(function(item){
                         return item.pos().toString();
                     });
 
-                        //retrieve from redis vehicles in rider cells within radius, start by retrieving
-                        //all vehicles at level-12 and then filter cells within geo-radius (level 12 -16)
-                        //redis.getVehiclesInCellArray(cellArray).then(function(data){
-
-                         redis.redisVehiclesInCellArray(cellArray,script,function(err,data){
-                             //var json_obj = JSON.parse(data);
-
-                            logger.log("Response from LUA = " + data.length);
-
-                            var cellsWithVehicles = [];
-
-                            data.forEach(function(item){
-                                logger.log(item);
-                            })
-
-                            redis.getRedisVehiclePositions(data,function(results){
-                                //send both vehicles and all intersecting cells (with or without cars)
-                                cb(results,cellArray,cells_12);
-                            });
-                        })
-                              /*.catch(function(error){
-                            logger.log("getVehiclesNearRider, "+error.stack);
-                            reject(error);
-                        });*/
+                    redis.redisVehiclesInCellArray(cellArray,script,function(err,data){
+                        logger.log("Response from LUA = " + data.length);
+                        cb(data,cellArray,cells_12);
+                    });
                 });
             });
     }
@@ -246,18 +222,18 @@ var tripRequest = (function(){
             var rectcell = s2common.createCellRectArray(cells);
             var rectcell_12 = s2common.createCellRectArray(cells_12);
 
-            tripRequest.filterVehiclesInRadius(vehicles, cells_12, function (geoRadiusVehicles) {
+            tripRequest.filterVehiclesInRadius(vehicles, cells_12, function (filteredVehicles) {
                 var tstamp = new Date().getTime();
 
                 if (vehicles !== null) {
-                    var vehicleArray = geoRadiusVehicles.map(function (item) {
-                        //logger.log("vehicles = " + JSON.stringify(item));
-                        return item.s2key.convertToLatLng();
+                    var vehicleLatLng = filteredVehicles.map(function (item) {
+                        logger.log("get vehicles near = " + JSON.stringify(item));
+                        return item.cell_id[0].convertToLatLng();
                     });
-                    logger.log("No. of vehicles = " + vehicles.length + "- new size = " + vehicleArray.length);
+                    logger.log("No. of vehicles = " + vehicles.length + "- new size = " + vehicleLatLng.length);
                     //geoRadiusVehicles.stringify();
                     var filename = "S2_vehicles_" + tstamp + ".kml";
-                    xmlBuilderFactory.buildVehicleLocations(filename,vehicleArray, geoRadiusVehicles);
+                    xmlBuilderFactory.buildVehicleLocations(filename,filteredVehicles,vehicleLatLng);
                 }
                 var file = "S2_cells_" + tstamp + ".kml";
                 xmlBuilderFactory.buildCells(file,rectcell_12,null,"ffff6c91","2.1");
@@ -271,8 +247,8 @@ var tripRequest = (function(){
 exports.tripRequest = tripRequest;
 
 var centerPoint = {
-    latitude: -26.029613,
-    longitude: 28.036167
+    latitude: -26.115622,
+    longitude: 28.079382
     //-26.029246, 28.033959 - wroxham street, paulshof
 };
 /***
@@ -304,7 +280,7 @@ var distance = 22000;//in meters
     })
 });*/
 redis.getCityGrid().then(function(grid) {
-    tripRequest.callGetVehiclesNear(-26.059825,  28.021906, grid);
+    tripRequest.callGetVehiclesNear(-26.115622,  28.079382, grid);
 });
 
 //-26.029433325,28.033954797

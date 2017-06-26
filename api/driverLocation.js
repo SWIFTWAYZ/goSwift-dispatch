@@ -234,11 +234,11 @@ commons.readDriversGPS(file,"4528")
     logger.log(error.stack)
 });*/
 var centerPoint = {
-    latitude: -26.107793, //,-26.029613
-    longitude: 28.057390  //,28.036167
+    latitude: -26.074234, //,-26.029613
+    longitude: 28.050480  //,28.036167
 }
 
-randomGeo.createRandomGPSPositionsSync(centerPoint,16345,15000,"4511").then(function(random_gps) {
+randomGeo.createRandomGPSPositionsSync(centerPoint,16345,1000,"4592").then(function(random_gps) {
     var tstamp1 = new Date().getTime();
     var filename = path.resolve(__dirname, '../../lua/get_cell.lua');
     var script = fs.readFileSync(filename, {encoding: 'utf8'});
@@ -251,7 +251,9 @@ randomGeo.createRandomGPSPositionsSync(centerPoint,16345,15000,"4511").then(func
             logger.log("vehicle ="+item.vehicle_id + ">"+new_cellid+"-"+s2_cellid);
         }
         var startTime = new Date().getTime()
-        redis.redisAddDriverPosition(script,item.vehicle_id,startTime,new_cellid,s2_cellid);
+        redis.redisAddDriverPosition(script,item.vehicle_id,startTime,new_cellid,s2_cellid,function(error,results){
+            //logger.log("finished with lua, duration = " + (new Date().getTime() - tstamp1)/1000 +"seconds");
+        });
     });
     logger.log("finished with lua script, duration = " + (new Date().getTime() - tstamp1)/1000 +"seconds");
 });

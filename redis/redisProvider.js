@@ -517,10 +517,14 @@ var provider = (function () {
         //logger.log(vcell_key+"|"+startTime +"|"+ vehicle_id +"|"+ new_cellid +"|"+ s2_cellid);
         client.logDriverPosition2(vcell_key,startTime,vehicle_id, new_cellid,s2_cellid,
             function (error, results) {
-                if(error)
+                if(error){
                     cb(error,null)
+                }
                 else
+                {
                     cb(null,results);
+                }
+
             });
     }
 
@@ -553,7 +557,6 @@ var provider = (function () {
                     for( var i in obj ) {
                         if( obj.hasOwnProperty( i ) ){
                             //logger.log("hasOwnProperty : " +i +"-"+ obj[i]);
-                            //if(i % 2 == 1) continue;
                             var item = {"vehicle_id":i,"cell_id":obj[i]};
                             //logger.log("item = "+JSON.stringify(item));
                             arr.push(item );

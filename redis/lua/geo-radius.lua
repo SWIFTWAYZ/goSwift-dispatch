@@ -40,7 +40,8 @@ for index=1, tonumber(cell_count) do
 				--[[get vehicle position key and assign to vehicle_pos]]
 				
 				redis.log(redis.LOG_WARNING,"ZREVRANGE, vehicle:".. vehicle_id_str) 
-				local vehicle_pos = redis.call("ZREVRANGE","vehicle:" .. vehicle_id_str,0,10)
+				local vehicle_pos = redis.call("ZREVRANGE","vehicle:" .. vehicle_id_str,0,0) --[[ bombs out if we retrieve 
+				more than 1 element i.e. vehicle_id_str,0,10]]
 
 				--[[take the 1st element in list of vehicle positions]]
 				local vehicle_s2 = vehicle_pos[1]
@@ -76,4 +77,5 @@ redis.log(redis.LOG_WARNING,"items = " .. total)
 
 print("------------" .. #cell_vehicles)
 
+cjson.encode_sparse_array(true, 2, 3)
 return cjson.encode(cell_vehicles)
