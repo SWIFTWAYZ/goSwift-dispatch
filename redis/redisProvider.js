@@ -10,6 +10,7 @@ var redis    = require("ioredis");
 var s2       = require("nodes2ts");
 var s2common = require("../s2geometry/s2common").s2common;
 var logger   = require("../config/logutil").logger;
+var serialize = require("node-serialize");
 
 var total_millis = 0;
 
@@ -540,11 +541,28 @@ var provider = (function () {
             cell_array[3],cell_array[4],cell_array[5],cell_array[6],cell_array[7],
             cell_array[8],cell_array[9],cell_array[10],cell_array[11],
             function(error,results){
-            logger.log("lua results = " +error + "-"+ results)
-                if(error)
-                    cb(error,null)
-                else
-                    cb(null,_.toArray(results));
+
+                if(error) {
+                    logger.log("lua results = " + error)
+                    cb(error, null)
+                }
+                else {
+
+                    var obj = serialize.unserialize(results);//JSON.parse(results);
+                    var arr = [];
+                    for( var i in obj ) {
+                        if( obj.hasOwnProperty( i ) ){
+                            //logger.log("hasOwnProperty : " +i +"-"+ obj[i]);
+                            //if(i % 2 == 1) continue;
+                            var item = {"vehicle_id":i,"cell_id":obj[i]};
+                            //logger.log("item = "+JSON.stringify(item));
+                            arr.push(item );
+                        }
+                    }
+
+                    cb(null,arr);
+
+                }
         });
     }
 

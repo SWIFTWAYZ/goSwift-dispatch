@@ -146,8 +146,10 @@ var tripRequest = (function(){
             {
                 cb(null);
             }
-            logger.log ("city cells = " + cityRegion.size() + ", rider cells = " + riderRegion.size() +
-                " - [intersecting cells = " + intersect_union.size() + "]");
+
+            logger.log("city = " + cityRegion.size() + ", rider cells = " + riderRegion.size() +
+                    " - [intersect = " + intersect_union.size() + "]" + "-" + " size [" + min + " - " + max + "]");
+
     }
 
     /**
@@ -214,27 +216,18 @@ var tripRequest = (function(){
                         //all vehicles at level-12 and then filter cells within geo-radius (level 12 -16)
                         //redis.getVehiclesInCellArray(cellArray).then(function(data){
 
-                         redis.redisVehiclesInCellArray(cellArray,script,function(err,results){
+                         redis.redisVehiclesInCellArray(cellArray,script,function(err,data){
+                             //var json_obj = JSON.parse(data);
 
-                            logger.log("Response from LUA = " + results.length);
-                            var data = results;
+                            logger.log("Response from LUA = " + data.length);
+
                             var cellsWithVehicles = [];
-                            data.forEach(function(item,index){
-                                logger.log("No. of vehicles found = "+ item[1].length/2 +", in cell = "+ cellArray[index]);
-                                if(item[1] !== null && item[1].length > 0){
-                                    //logger.log(item);
-                                    item[1].forEach(function(vehicle_id,index2){
-                                        if(index2%2 === 0){
-                                            //currently only retrieve 1 s2key under vehicle:xxxx, should we get the latest
-                                            // 10-20 s2_position by timestamp age and filter to ensure is within rider cells
-                                            var p = new posData(vehicle_id,cellArray[index])
-                                            //logger.log("posData add to cellsWithVehicles = " + JSON.stringify(p));
-                                            cellsWithVehicles.push(p);
-                                        }
-                                    })
-                                }
-                            });
-                            redis.getRedisVehiclePositions(cellsWithVehicles,function(results){
+
+                            data.forEach(function(item){
+                                logger.log(item);
+                            })
+
+                            redis.getRedisVehiclePositions(data,function(results){
                                 //send both vehicles and all intersecting cells (with or without cars)
                                 cb(results,cellArray,cells_12);
                             });
