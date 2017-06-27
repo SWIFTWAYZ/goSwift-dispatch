@@ -9,7 +9,7 @@ local cell_vehicles = {}
 
 local unpacked_var = unpack(ARGV)
 
-print ("unpacked ..." .. #unpacked_var)
+--[[print ("unpacked ..." .. #unpacked_var)]]
 
 print (cell_count .. ARGV[1])
 if (cell_count == nil) or (ARGV[1] == nil) then
@@ -75,7 +75,7 @@ for index=1, tonumber(cell_count) do
 		redis.log(redis.LOG_WARNING, "nil")
 	end 
 	break_count = break_count + 1
-	if break_count == 310 then
+	if break_count == 1000 then
 		break
 	end 
 end 

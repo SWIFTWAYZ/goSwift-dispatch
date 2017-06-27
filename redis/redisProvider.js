@@ -545,7 +545,8 @@ var provider = (function () {
             cell_array[3],cell_array[4],cell_array[5],cell_array[6],cell_array[7],
             cell_array[8],cell_array[9],cell_array[10],cell_array[11],
             function(error,results){*/
-        client.getVehiclesInArray2(306,cell_array,function(error,results){
+        var length = cell_array.length;
+        client.getVehiclesInArray2(length,cell_array,function(error,results){
                 if(error) {
                     logger.log("lua results = " + error)
                     cb(error, null)

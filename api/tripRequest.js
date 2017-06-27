@@ -123,7 +123,7 @@ var tripRequest = (function(){
      * @param cb
      */
     tripRequest.getIntersectRadiusCells = function(min,max,no_of_cells,lat,lon,grid,radius,cb){
-
+            logger.log("centrePoint = "+lat+","+lon);
             var riderSphere = s2circle.S2CircleCoverer.getCovering(lat,lon,radius,min,max,no_of_cells);
 
             var cityRegion = new s2.S2CellUnion(init.city.lat,init.city.lon);
@@ -137,16 +137,16 @@ var tripRequest = (function(){
             var intersect_union = new s2.S2CellUnion();
             var union = intersect_union.getIntersectionUU(cityRegion,riderRegion); //Google S2 bug fixed
 
+            logger.log("city = " + cityRegion.size() + ", rider cells = " + riderRegion.size() +
+            " - [intersect = " + intersect_union.size() + "]" + "-" + " size [" + min + " - " + max + "]");
+
             if(intersect_union.size() > 0){
                 cb(intersect_union);
             }else
             {
+                logger.log("No intersection cells?");
                 cb(null);
             }
-
-            logger.log("city = " + cityRegion.size() + ", rider cells = " + riderRegion.size() +
-                    " - [intersect = " + intersect_union.size() + "]" + "-" + " size [" + min + " - " + max + "]");
-
     }
 
     /**
@@ -194,8 +194,8 @@ var tripRequest = (function(){
 
     tripRequest.getVehiclesNearRider = function(lat,lon,grid,rider_radius,cb){
         //12,12,12
-        tripRequest.getIntersectRadiusCells(12,12,1000,lat,lon,grid,rider_radius,function(cells){
-                if(cells === null || cells.length === 0) {
+        tripRequest.getIntersectRadiusCells(12,12,12,lat,lon,grid,rider_radius,function(cells){
+                if(cells === null || cells.size() === 0) {
                     logger.error("No cells intersecting near latlon, "+lat+","+lon);
                     return;
                 };
@@ -203,7 +203,7 @@ var tripRequest = (function(){
                     return item.pos().toString();
                 });
                 //12,16,100
-                tripRequest.getIntersectRadiusCells(12,16,1000,lat,lon,grid,rider_radius, function(cells12){
+                tripRequest.getIntersectRadiusCells(12,16,100,lat,lon,grid,rider_radius, function(cells12){
                     var cells_12 = cells12.getCellIds().map(function(item){
                         return item.pos().toString();
                     });
@@ -217,20 +217,53 @@ var tripRequest = (function(){
     }
 
     /**
+     * get all vehicles in city grid
+     * @param lat
+     * @param lon
+     * @param grid
+     * @param rider_radius
+     * @param cb
+     */
+    tripRequest.getAllVehiclesInGrid = function(lat,lon,grid,rider_radius,cb){
+        //12,12,12
+
+        tripRequest.getIntersectRadiusCells(12,12,1000,lat,lon,grid,rider_radius,function(cells){
+            logger.log("getIntersectRadiusCells = "+cells.size())
+            if(cells === null || cells.size() === 0) {
+                logger.error("No cells intersecting near latlon, "+lat+","+lon);
+                return;
+            };
+            var cellArray = cells.getCellIds().map(function(item){
+                return item.pos().toString();
+            });
+            //12,16,100
+            tripRequest.getIntersectRadiusCells(12,16,1000,lat,lon,grid,rider_radius, function(cells12){
+                var cells_12 = cells12.getCellIds().map(function(item){
+                    return item.pos().toString();
+                });
+
+                redis.redisVehiclesInCellArray(cellArray,lua_script,function(err, data){
+                    logger.log("Response from LUA = " + data.length);
+                    cb(data,cellArray,cells_12);
+                });
+            });
+        });
+    }
+
+    /**
      * get vehicles near rider latlong within city grid
      * @param lat
      * @param lon
      * @param grid, pass valid cells (i.e. city grid cells level 12-14)
      */
-    tripRequest.callGetVehiclesNear = function(lat,lon,grid)
+    tripRequest.callGetVehiclesNear = function(lat,lon,rider_radius,grid)
     {
-        //var rider_radius = constant.RIDER_GEO_RADIUS;
-        var rider_radius = 22000;
 
-        tripRequest.getVehiclesNearRider(lat, lon,grid,rider_radius, function (vehicles, cells, cells_12) {
+        //tripRequest.getVehiclesNearRider(lat, lon,grid,rider_radius, function (vehicles, cells, cells_12) {
+        tripRequest.getAllVehiclesInGrid(lat, lon,grid,rider_radius, function (vehicles, cells, cells_12) {
             var rectcell = s2common.createCellRectArray(cells);
             var rectcell_12 = s2common.createCellRectArray(cells_12);
-
+            logger.log("before filter size = "+vehicles.length);
             tripRequest.filterVehiclesInRadius(vehicles, cells_12, function (filteredVehicles) {
                 var tstamp = new Date().getTime();
 
@@ -257,7 +290,6 @@ exports.tripRequest = tripRequest;
 var centerPoint = {
     latitude: -26.115622,
     longitude: 28.079382
-    //-26.029246, 28.033959 - wroxham street, paulshof
 };
 /***
  * testing ......
@@ -274,14 +306,16 @@ var distance = 22000;//in meters
     })
 });*/
 redis.getCityGrid().then(function(grid) {
-    tripRequest.callGetVehiclesNear(-26.059825,  28.021906, grid);
+    //var rider_radius = constant.RIDER_GEO_RADIUS;
+    var rider_radius = 40000;
+    tripRequest.callGetVehiclesNear(-26.104628,  28.053901,rider_radius ,grid);
 });
 
-//-26.115622,  28.079382 - (Alex)
+//-26.115622, 28.07938 - (Alex)
 //-26.140789, 27.990400  - (Cresta)
-//-26.029433325,28.033955
+//-26.029433, 28.03390
 //-26.217146, 28.356669
-//-26.172133,28.079613 - No cells intersecting near latlon
+//-26.172133, 28.079613 - No cells intersecting near latlon
 
 //-26.023825,  28.036000 (3 vehicles)
 //-26.023825,  28.036000 (2 vehicles)
@@ -305,6 +339,7 @@ redis.getCityGrid().then(function(grid) {
 //-26.115579, 28.372062 (Benoni-2)
 //-26.122485, 28.407961 (completely outside)
 //-26.136211, 28.389541 (edge-case)
+//-26.029246, 28.033959 - wroxham street, paulshof
 
 //-26.050388, 28.024187
 //-26.088443,  28.074722
