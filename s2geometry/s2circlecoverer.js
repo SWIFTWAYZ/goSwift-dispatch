@@ -30,8 +30,7 @@ var S2CircleCoverer = (function () {
     var S2CircleCoverer = {};
 
     S2CircleCoverer.setS2CapRadius = function (latLng, radius_in_meters) {
-        //this.s2cap = s2cap;
-        //this.radius - radius_in_meters;
+
         if (latLng !== null && typeof(latLng) === 'object') {
             var radius_radians = EarthMetersToRadians(radius_in_meters);
             axis_height = (radius_radians * radius_radians) / 2;
@@ -68,9 +67,6 @@ var S2CircleCoverer = (function () {
 
         var results = covering.getCoveringCells(cap2);
 
-        //console.log("{"+'"type":"FeatureCollection","features":[');
-        //dont really need this loop except for being verbose. turn it off in production
-
         results.forEach(function (record) {
             var cell = new s2.S2Cell(record);
             //console.log(JSON.stringify(cell.toGEOJSON())+"," );
@@ -78,8 +74,7 @@ var S2CircleCoverer = (function () {
             var cell_area = cell.approxArea() * constants.KEARTH_CIRCUMFERENCE_METERS;
             covering_area += cell_area;
         });
-        //console.log("]}");
-        //logger.log("no. of cells in region = " + counter + "-> area = " + covering_area);
+
         return results;
     }
 
@@ -132,18 +127,15 @@ var S2CircleCoverer = (function () {
     }
 
     S2CircleCoverer.initialise = function (lat, lon, radius) {
-        //min_level,max_level,max_cells
+
         var min = constants.S2_CELL_MIN_LEVEL;
         var max = constants.S2_CELL_MAX_LEVEL;
         var max_cells = constants.DEFAULT_CITY_MAX_CELLS;
-        var city_grid = this.getCovering(lat, lon, radius, min, max, max_cells);//s2circle.S2CircleCoverer
+        var city_grid = this.getCovering(lat, lon, radius, min, max, max_cells);
         //add code to check if redis is connected and ready?
         city_grid.forEach(function (city_cell) {
             var city_s2cell = new s2.S2Cell(city_cell)
             var area = (city_s2cell.approxArea() * 1000000 * 1000 * 40075.017).toFixed(0);
-            //logger.log("adding id="+city_cell.id + ":/to city grid at level = "+
-            //    city_s2cell.level +"->>["+(area)+"]");
-            //console.log(JSON.stringify(city_s2cell.toGEOJSON())+",");
             redis.createCellPosition(city_cell.id);
         });
     }

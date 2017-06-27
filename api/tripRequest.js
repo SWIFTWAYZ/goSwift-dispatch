@@ -216,6 +216,12 @@ var tripRequest = (function(){
             });
     }
 
+    /**
+     * get vehicles near rider latlong within city grid
+     * @param lat
+     * @param lon
+     * @param grid, pass valid cells (i.e. city grid cells level 12-14)
+     */
     tripRequest.callGetVehiclesNear = function(lat,lon,grid)
     {
         tripRequest.getVehiclesNearRider(lat, lon,grid, function (vehicles, cells, cells_12) {
