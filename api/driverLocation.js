@@ -242,7 +242,7 @@ randomGeo.createRandomGPSPositionsSync(centerPoint,16345,1000,"4592").then(funct
     var tstamp1 = new Date().getTime();
     var filename = path.resolve(__dirname, '../../lua/get_cell.lua');
     var script = fs.readFileSync(filename, {encoding: 'utf8'});
-    logger.log("loading script.....from "+filename);
+    logger.log("loading lua_script.....from "+filename);
 
     random_gps.forEach(function(item,index){
         var s2_cellid = s2common.s2CellIdKeyFromLatLng(item.latitude,item.longitude);
@@ -255,7 +255,7 @@ randomGeo.createRandomGPSPositionsSync(centerPoint,16345,1000,"4592").then(funct
             //logger.log("finished with lua, duration = " + (new Date().getTime() - tstamp1)/1000 +"seconds");
         });
     });
-    logger.log("finished with lua script, duration = " + (new Date().getTime() - tstamp1)/1000 +"seconds");
+    logger.log("finished with lua lua_script, duration = " + (new Date().getTime() - tstamp1)/1000 +"seconds");
 });
 
 /*

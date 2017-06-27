@@ -38,13 +38,13 @@ Array.prototype.stringify = function(){
 }
 
 var filename = path.resolve(__dirname, '../../goSwift-dispatch/redis/lua/geo-radius.lua');
-var script = fs.readFileSync(filename, {encoding: 'utf8'});
-logger.log("loading script.....from "+filename);
+var lua_script = fs.readFileSync(filename, {encoding: 'utf8'});
+logger.log("loading lua_script.....from "+filename);
 
 var tripRequest = (function(){
 
     function tripRequest(){
-       // script = fs.readFileSync(path.resolve(__dirname, '../../lua/geo_radius.lua'), {encoding: 'utf8'});
+       // lua_script = fs.readFileSync(path.resolve(__dirname, '../../lua/geo_radius.lua'), {encoding: 'utf8'});
 
     };
 
@@ -192,9 +192,9 @@ var tripRequest = (function(){
      * @param cb
      */
 
-    tripRequest.getVehiclesNearRider = function(lat,lon,grid,cb){
-        var rider_radius = constant.RIDER_GEO_RADIUS;
-        tripRequest.getIntersectRadiusCells(12,12,12,lat,lon,grid,rider_radius,function(cells){
+    tripRequest.getVehiclesNearRider = function(lat,lon,grid,rider_radius,cb){
+        //12,12,12
+        tripRequest.getIntersectRadiusCells(12,12,1000,lat,lon,grid,rider_radius,function(cells){
                 if(cells === null || cells.length === 0) {
                     logger.error("No cells intersecting near latlon, "+lat+","+lon);
                     return;
@@ -202,13 +202,13 @@ var tripRequest = (function(){
                 var cellArray = cells.getCellIds().map(function(item){
                     return item.pos().toString();
                 });
-
-                tripRequest.getIntersectRadiusCells(12,16,100,lat,lon,grid,rider_radius, function(cells12){
+                //12,16,100
+                tripRequest.getIntersectRadiusCells(12,16,1000,lat,lon,grid,rider_radius, function(cells12){
                     var cells_12 = cells12.getCellIds().map(function(item){
                         return item.pos().toString();
                     });
 
-                    redis.redisVehiclesInCellArray(cellArray,script,function(err,data){
+                    redis.redisVehiclesInCellArray(cellArray,lua_script,function(err, data){
                         logger.log("Response from LUA = " + data.length);
                         cb(data,cellArray,cells_12);
                     });
@@ -224,7 +224,10 @@ var tripRequest = (function(){
      */
     tripRequest.callGetVehiclesNear = function(lat,lon,grid)
     {
-        tripRequest.getVehiclesNearRider(lat, lon,grid, function (vehicles, cells, cells_12) {
+        //var rider_radius = constant.RIDER_GEO_RADIUS;
+        var rider_radius = 22000;
+
+        tripRequest.getVehiclesNearRider(lat, lon,grid,rider_radius, function (vehicles, cells, cells_12) {
             var rectcell = s2common.createCellRectArray(cells);
             var rectcell_12 = s2common.createCellRectArray(cells_12);
 
@@ -237,7 +240,6 @@ var tripRequest = (function(){
                         return item.cell_id[0].convertToLatLng();
                     });
                     logger.log("No. of vehicles = " + vehicles.length + "- new size = " + vehicleLatLng.length);
-                    //geoRadiusVehicles.stringify();
                     var filename = "S2_vehicles_" + tstamp + ".kml";
                     xmlBuilderFactory.buildVehicleLocations(filename,filteredVehicles,vehicleLatLng);
                 }
@@ -261,20 +263,6 @@ var centerPoint = {
  * testing ......
  */
 
-//-26.050388, 28.024187
-//-26.088443,  28.074722
-
-//-26.103217,  28.018408
-//-26.184800,  28.036211
-//-26.084080,  28.077604
-//-26.084080,  28.077604 (0 vehicles)
-//-26.198977,  28.042292 (Joburg)
-//-26.142345,  28.037675 (Rosebank)
-//-26.102310,  28.089150 (Alex)
-//-26.011190,  28.200219 (Thembisa)
-//-26.062455,  28.047267
-//-26.137895,  28.237409 (OR Tambo)
-
 var distance = 22000;//in meters
 /*randomGeo.createRandomGPSPositions(centerPoint,distance,1,function(data){
     redis.getCityGrid().then(function(grid){
@@ -286,10 +274,12 @@ var distance = 22000;//in meters
     })
 });*/
 redis.getCityGrid().then(function(grid) {
-    tripRequest.callGetVehiclesNear(-26.115622,  28.079382, grid);
+    tripRequest.callGetVehiclesNear(-26.059825,  28.021906, grid);
 });
 
-//-26.029433325,28.033954797
+//-26.115622,  28.079382 - (Alex)
+//-26.140789, 27.990400  - (Cresta)
+//-26.029433325,28.033955
 //-26.217146, 28.356669
 //-26.172133,28.079613 - No cells intersecting near latlon
 
@@ -315,3 +305,17 @@ redis.getCityGrid().then(function(grid) {
 //-26.115579, 28.372062 (Benoni-2)
 //-26.122485, 28.407961 (completely outside)
 //-26.136211, 28.389541 (edge-case)
+
+//-26.050388, 28.024187
+//-26.088443,  28.074722
+
+//-26.103217,  28.018408
+//-26.184800,  28.036211
+//-26.084080,  28.077604
+//-26.084080,  28.077604 (0 vehicles)
+//-26.198977,  28.042292 (Joburg)
+//-26.142345,  28.037675 (Rosebank)
+//-26.102310,  28.089150 (Alex)
+//-26.011190,  28.200219 (Thembisa)
+//-26.062455,  28.047267
+//-26.137895,  28.237409 (OR Tambo)

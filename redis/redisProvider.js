@@ -500,7 +500,7 @@ var provider = (function () {
     }
 
     /**
-     * log driver position using Lua script command
+     * log driver position using Lua lua_script command
      * @param script
      * @param vehicle_id
      * @param startTime
@@ -529,23 +529,23 @@ var provider = (function () {
     }
 
     /**
-     * calls lua script command to retrieve geo-radius vehicles and their s2-positions
+     * calls lua lua_script command to retrieve geo-radius vehicles and their s2-positions
      * @param cell_array
      * @param code_string
      * @param cb
      */
     provider.redisVehiclesInCellArray = function(cell_array,code_string,cb){
-        //logger.log(code_string);
+        logger.log("LUA Script cell Array = "+cell_array.length);
         client.defineCommand("getVehiclesInArray2",{
             numberOfKeys: 1,
             lua: code_string
         });
 
-        client.getVehiclesInArray2(12, cell_array[0], cell_array[1],cell_array[2],
+        /*client.getVehiclesInArray2(12, cell_array[0], cell_array[1],cell_array[2],
             cell_array[3],cell_array[4],cell_array[5],cell_array[6],cell_array[7],
             cell_array[8],cell_array[9],cell_array[10],cell_array[11],
-            function(error,results){
-
+            function(error,results){*/
+        client.getVehiclesInArray2(306,cell_array,function(error,results){
                 if(error) {
                     logger.log("lua results = " + error)
                     cb(error, null)

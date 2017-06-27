@@ -7,6 +7,10 @@ local cell_vehicles = {}
 >> redis-cli --eval geo-radius.lua 8 , 2203795067297071104
 ]]
 
+local unpacked_var = unpack(ARGV)
+
+print ("unpacked ..." .. #unpacked_var)
+
 print (cell_count .. ARGV[1])
 if (cell_count == nil) or (ARGV[1] == nil) then
 	return nil
@@ -18,6 +22,8 @@ local total = 0
 
 for index=1, tonumber(cell_count) do 
 	local convert = tonumber(ARGV[index])
+	print ('index = ' .. ARGV[index])
+
 	if convert ~= nil  then
 		local cell_id = ARGV[index]
 		redis.log(redis.LOG_WARNING,"cell -> " .. ARGV[index] .. "-" .. index)
@@ -69,7 +75,7 @@ for index=1, tonumber(cell_count) do
 		redis.log(redis.LOG_WARNING, "nil")
 	end 
 	break_count = break_count + 1
-	if break_count == 25 then
+	if break_count == 310 then
 		break
 	end 
 end 
@@ -77,5 +83,5 @@ redis.log(redis.LOG_WARNING,"items = " .. total)
 
 print("------------" .. #cell_vehicles)
 
-cjson.encode_sparse_array(true, 2, 3)
+--[[cjson.encode_sparse_array(true, 2, 3)--]]
 return cjson.encode(cell_vehicles)

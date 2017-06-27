@@ -22,7 +22,6 @@ var xmlBuilderFactory = (function(){
 
     xmlBuilderFactory.createFile = function(filename,kml_buffer){
         var file = path.join(__dirname,"../../output",filename);
-        //logger.log("writing to file.....->"+file);
         fs.writeFile(file,kml_buffer,function(err){
             if(err){
                 throw Error("error writing to file");
