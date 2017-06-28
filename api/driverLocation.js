@@ -226,7 +226,6 @@ exports.driverLocation = driverLocation;
 var file = path.join(__dirname,"../../GoSwift/docs/S2/routes",filename);
 commons.readDriversGPS(file,"4528")
     .then(function(data){
-
     runPromisesSeq(data, driverLocation.logDriverGPSLocation,function(){
         console.log("finished --- ");
     });

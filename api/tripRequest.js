@@ -99,7 +99,7 @@ var tripRequest = (function(){
             cb(null);
             return;
         }
-        logger.log("cellsRegion size = "+cellsRegion + "- vehicles = "+vehicles.length);
+        logger.log("cellsRegion size = "+cellsRegion.size() + "- vehicles = "+vehicles.length);
 
         var counter = 1;
         var vehiclesInRadius = vehicles.filter(function(item){
@@ -107,7 +107,8 @@ var tripRequest = (function(){
             return cellsRegion.contains(cell_item);
             });
 
-        logger.log("filterVehiclesInRadius old size = "+ vehicles.length + ", new size = "+vehiclesInRadius.length);
+        logger.log("filterVehiclesInRadius old size = "+ vehicles.length
+            + ", new size = "+vehiclesInRadius.length);
         cb(vehiclesInRadius);
     }
 
@@ -196,7 +197,6 @@ var tripRequest = (function(){
         //12,12,12
         tripRequest.getIntersectRadiusCells(12,12,12,lat,lon,grid,rider_radius,function(cells){
                 if(cells === null || cells.size() === 0) {
-                    logger.error("No cells intersecting near latlon, "+lat+","+lon);
                     return;
                 };
                 var cellArray = cells.getCellIds().map(function(item){
@@ -225,18 +225,14 @@ var tripRequest = (function(){
      * @param cb
      */
     tripRequest.getAllVehiclesInGrid = function(lat,lon,grid,rider_radius,cb){
-        //12,12,12
 
         tripRequest.getIntersectRadiusCells(12,12,1000,lat,lon,grid,rider_radius,function(cells){
-            logger.log("getIntersectRadiusCells = "+cells.size())
             if(cells === null || cells.size() === 0) {
-                logger.error("No cells intersecting near latlon, "+lat+","+lon);
                 return;
             };
             var cellArray = cells.getCellIds().map(function(item){
                 return item.pos().toString();
             });
-            //12,16,100
             tripRequest.getIntersectRadiusCells(12,16,1000,lat,lon,grid,rider_radius, function(cells12){
                 var cells_12 = cells12.getCellIds().map(function(item){
                     return item.pos().toString();
@@ -259,22 +255,23 @@ var tripRequest = (function(){
     tripRequest.callGetVehiclesNear = function(lat,lon,rider_radius,grid)
     {
 
-        //tripRequest.getVehiclesNearRider(lat, lon,grid,rider_radius, function (vehicles, cells, cells_12) {
-        tripRequest.getAllVehiclesInGrid(lat, lon,grid,rider_radius, function (vehicles, cells, cells_12) {
+        tripRequest.getVehiclesNearRider(lat, lon,grid,rider_radius, function (vehicles, cells, cells_12) {
+        //tripRequest.getAllVehiclesInGrid(lat, lon,grid,rider_radius, function (vehicles, cells, cells_12) {
             var rectcell = s2common.createCellRectArray(cells);
             var rectcell_12 = s2common.createCellRectArray(cells_12);
-            logger.log("before filter size = "+vehicles.length);
+
             tripRequest.filterVehiclesInRadius(vehicles, cells_12, function (filteredVehicles) {
                 var tstamp = new Date().getTime();
 
                 if (vehicles !== null) {
                     var vehicleLatLng = filteredVehicles.map(function (item) {
-                        logger.log("get vehicles near = " + JSON.stringify(item));
+                        //logger.log("get vehicles near = " + JSON.stringify(item));
                         return item.cell_id[0].convertToLatLng();
                     });
                     logger.log("No. of vehicles = " + vehicles.length + "- new size = " + vehicleLatLng.length);
                     var filename = "S2_vehicles_" + tstamp + ".kml";
-                    xmlBuilderFactory.buildVehicleLocations(filename,filteredVehicles,vehicleLatLng);
+                    var rider_latlng = lon +","+lat;
+                    xmlBuilderFactory.buildVehicleLocations(filename,rider_latlng,filteredVehicles,vehicleLatLng);
                 }
                 var file = "S2_cells_" + tstamp + ".kml";
                 xmlBuilderFactory.buildCells(file,rectcell_12,null,"ffff6c91","2.1");
@@ -307,8 +304,8 @@ var distance = 22000;//in meters
 });*/
 redis.getCityGrid().then(function(grid) {
     //var rider_radius = constant.RIDER_GEO_RADIUS;
-    var rider_radius = 40000;
-    tripRequest.callGetVehiclesNear(-26.104628,  28.053901,rider_radius ,grid);
+    var rider_radius = 2600;
+    tripRequest.callGetVehiclesNear( -26.02918,27.951468,rider_radius ,grid);
 });
 
 //-26.115622, 28.07938 - (Alex)
@@ -347,7 +344,7 @@ redis.getCityGrid().then(function(grid) {
 //-26.103217,  28.018408
 //-26.184800,  28.036211
 //-26.084080,  28.077604
-//-26.084080,  28.077604 (0 vehicles)
+//-26.084080,  28.077604
 //-26.198977,  28.042292 (Joburg)
 //-26.142345,  28.037675 (Rosebank)
 //-26.102310,  28.089150 (Alex)

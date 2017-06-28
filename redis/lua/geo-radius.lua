@@ -5,6 +5,7 @@ local cell_vehicles = {}
 --[[or (ARGV[1] == nil) or(isnumber(ARGV[1] == true)]]
 --[[hello
 >> redis-cli --eval geo-radius.lua 8 , 2203795067297071104
+>> redis-cli SCRIPT LOAD "$(cat geo-radius.lua)"
 ]]
 
 local unpacked_var = unpack(ARGV)
@@ -22,11 +23,9 @@ local total = 0
 
 for index=1, tonumber(cell_count) do 
 	local convert = tonumber(ARGV[index])
-	print ('index = ' .. ARGV[index])
 
 	if convert ~= nil  then
 		local cell_id = ARGV[index]
-		redis.log(redis.LOG_WARNING,"cell -> " .. ARGV[index] .. "-" .. index)
 		local vehicle_id = redis.call("ZRANGE","cell:" .. cell_id,0,-1)
 		--[[cell_vehicles[index] = {}]]
 
@@ -44,9 +43,8 @@ for index=1, tonumber(cell_count) do
 			if(vehicle_id_str ~= nil) then
 				
 				--[[get vehicle position key and assign to vehicle_pos]]
-				
-				redis.log(redis.LOG_WARNING,"ZREVRANGE, vehicle:".. vehicle_id_str) 
-				local vehicle_pos = redis.call("ZREVRANGE","vehicle:" .. vehicle_id_str,0,0) --[[ bombs out if we retrieve 
+
+				local vehicle_pos = redis.call("ZREVRANGE","vehicle:" .. vehicle_id_str,0,2) --[[ bombs out if we retrieve
 				more than 1 element i.e. vehicle_id_str,0,10]]
 
 				--[[take the 1st element in list of vehicle positions]]

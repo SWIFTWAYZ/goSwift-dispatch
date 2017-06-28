@@ -31,6 +31,22 @@ var xmlBuilderFactory = (function(){
         })
     }
 
+    xmlBuilderFactory.createPlaceMark = function(buildersList,vehicle_id,latlng,cell_id){
+        buildersList
+            .ele("Placemark")
+            .ele("styleUrl", "#m_ylw-pushpin").up()
+        //.ele("name", s2cell_Array[index].vehicle_id).up()
+            .ele("name", vehicle_id).up()
+            .ele("ExtendedData")
+            .ele("SchemaData").att("schemaUrl", "#GO_SWIFT_Phase_1")
+            .ele("SimpleData", latlng).att("name", "GPS").up()
+            .ele("SimpleData", cell_id).att("name", "s2CellId").up()
+            .ele("SimpleData",cell_id).att("cell","s2cell")
+            .up().up().up()
+            .ele("Point")
+            .ele("coordinates", latlng)
+    }
+
     /**
      * builds XML DOM for cell polygons representing s2cells (level 12 - 16)
      * @param document_name
@@ -95,7 +111,7 @@ var xmlBuilderFactory = (function(){
      * @param document_name
      * @param cellArray
      */
-     xmlBuilderFactory.buildVehicleLocations = function(document_name, filteredVehicles, vehicleLatLng){
+     xmlBuilderFactory.buildVehicleLocations = function(document_name,rider, filteredVehicles, vehicleLatLng){
         var buildersList = builder.create("kml")
             .att({"xmlns":"http://www.opengis.net/kml/2.2",
                 "xmlns:gx":"http://www.google.com/kml/ext/2.2",
@@ -104,7 +120,51 @@ var xmlBuilderFactory = (function(){
             .ele("Document")
             .ele("name",document_name).up()
 
-            //style xml for waypoints
+             //------------------------------------------
+            //style xml for waypoints - red
+            .ele("StyleMap").att("id","m_red-pushpin")
+            .ele("Pair")
+            .ele("key","normal").up()
+            .ele("styleUrl","#s_red-pushpin").up()
+            .up()
+            .ele("Pair")
+            .ele("key","highlight").up()
+            .ele("styleUrl","#s_red-pushpin_hl").up()
+            .up()
+            .up()
+
+
+            .ele("Style").att("id","s_red-pushpin")
+            .ele("IconStyle")
+            .ele("scale","0.590909").up()
+            .ele("Icon")
+            .ele("hotSpot").att("x","32").att("y","1").att("xunits","pixels").att("yunits","xunits").up()
+            .ele("href","http://maps.google.com/mapfiles/kml/paddle/red-diamond.png").up()
+            .up().up()
+            .ele("ListStyle")
+            .ele("ItemIcon")
+            .ele("href","http://maps.google.com/mapfiles/kml/paddle/red-diamond-lv.png").up()
+            .up()
+            .up()
+            .up()
+
+            .ele("Style").att("id","s_red-pushpin_hl")
+            .ele("IconStyle")
+            .ele("scale","0.590909").up()
+            .ele("Icon")
+            .ele("hotSpot").att("x","32").att("y","1").att("xunits","pixels").att("yunits","xunits").up()
+            .ele("href","http://maps.google.com/mapfiles/kml/paddle/red-diamond.png").up()
+            .up().up()
+            .ele("ListStyle")
+            .ele("ItemIcon")
+            .ele("href","http://maps.google.com/mapfiles/kml/paddle/red-diamond-lv.png").up()
+            .up()
+            .up()
+            .up()
+
+            //---------------------------------------------
+
+            //style xml for waypoints - yellow
             .ele("Style").att("id","s_ylw-pushpin_hl")
              .ele("IconStyle")
              .ele("color",'ff4038fc').up()
@@ -124,11 +184,12 @@ var xmlBuilderFactory = (function(){
          filteredVehicles.forEach(function(item,index){
                 //if(s2cell_Array[index] !== undefined) {
                     //logger.log("results index = " + index + "-" + JSON.stringify(item));
-             logger.log("filteredVehicles = " + item.cell_id + "-" + JSON.stringify(item));
+             logger.log("filteredVehicles = " + JSON.stringify(item));
 
                     buildersList
                         .ele("Placemark")
-                        .ele("styleUrl", "#m_ylw-pushpin").up()
+                        //.ele("styleUrl", "#m_ylw-pushpin").up()
+                        .ele("styleUrl", "#m_red-pushpin").up()
                         //.ele("name", s2cell_Array[index].vehicle_id).up()
                         .ele("name", item.vehicle_id).up()
                         .ele("ExtendedData")
@@ -141,9 +202,9 @@ var xmlBuilderFactory = (function(){
                         .ele("coordinates", vehicleLatLng[index])
                 //}
             });
-
+        xmlBuilderFactory.createPlaceMark(buildersList,"rider:002",rider,"0000");
         var xml = buildersList.end({pretty: true});
-        //console.log(xml);
+        console.log(xml);
         xmlBuilderFactory.createFile(document_name,xml);
     }
 
