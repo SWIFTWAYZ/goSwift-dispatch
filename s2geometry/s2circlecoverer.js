@@ -126,7 +126,7 @@ var S2CircleCoverer = (function () {
         return children;
     }
 
-    S2CircleCoverer.initialise = function (lat, lon, radius) {
+    S2CircleCoverer.initialise = function (lat, lon, radius,cb) {
 
         var min = constants.S2_CELL_MIN_LEVEL;
         var max = constants.S2_CELL_MAX_LEVEL;
@@ -138,6 +138,7 @@ var S2CircleCoverer = (function () {
             var area = (city_s2cell.approxArea() * 1000000 * 1000 * 40075.017).toFixed(0);
             redis.createCellPosition(city_cell.id);
         });
+        cb(city_grid);
     }
 
     return S2CircleCoverer;

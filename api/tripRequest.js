@@ -255,8 +255,8 @@ var tripRequest = (function(){
     tripRequest.callGetVehiclesNear = function(lat,lon,rider_radius,grid)
     {
 
-        tripRequest.getVehiclesNearRider(lat, lon,grid,rider_radius, function (vehicles, cells, cells_12) {
-        //tripRequest.getAllVehiclesInGrid(lat, lon,grid,rider_radius, function (vehicles, cells, cells_12) {
+        //tripRequest.getVehiclesNearRider(lat, lon,grid,rider_radius, function (vehicles, cells, cells_12) {
+        tripRequest.getAllVehiclesInGrid(lat, lon,grid,rider_radius, function (vehicles, cells, cells_12) {
             var rectcell = s2common.createCellRectArray(cells);
             var rectcell_12 = s2common.createCellRectArray(cells_12);
 
@@ -302,52 +302,9 @@ var distance = 22000;//in meters
         });
     })
 });*/
+/* ---------current test------------
 redis.getCityGrid().then(function(grid) {
     //var rider_radius = constant.RIDER_GEO_RADIUS;
-    var rider_radius = 2600;
-    tripRequest.callGetVehiclesNear( -26.02918,27.951468,rider_radius ,grid);
-});
-
-//-26.115622, 28.07938 - (Alex)
-//-26.140789, 27.990400  - (Cresta)
-//-26.029433, 28.03390
-//-26.217146, 28.356669
-//-26.172133, 28.079613 - No cells intersecting near latlon
-
-//-26.023825,  28.036000 (3 vehicles)
-//-26.023825,  28.036000 (2 vehicles)
-//-26.114097,  28.156122 (0 vehicles)
-//-26.059825,  28.021906 (8 vehicles - DD campus)
-//-26.104628,  28.053901 (has 11 vehicles - sandton)
-//-26.073009,  28.026688 (15 vehicles)
-//-26.264848,  28.623590 (no vehicles)
-//-26.057642,  28.022582 (cross main/william nicol - 9 vehicles)
-//-26.054824,  28.071892 (woodmead)
-
-//-26.038869,  28.030274 (near DD)
-
-//-26.270155, 28.438425 (Spring - outside)
-//-26.152353, 28.255995 (Boksburg - outside)
-//27.8778444,-25.864647 (outside edge cells)
-//-26.240749, 28.376074 ()
-//-26.217146, 28.356669 (near the edge)
-//-26.264848, 28.623590 (Delmas)
-//-26.083709, 28.355121 (Benoni)
-//-26.115579, 28.372062 (Benoni-2)
-//-26.122485, 28.407961 (completely outside)
-//-26.136211, 28.389541 (edge-case)
-//-26.029246, 28.033959 - wroxham street, paulshof
-
-//-26.050388, 28.024187
-//-26.088443,  28.074722
-
-//-26.103217,  28.018408
-//-26.184800,  28.036211
-//-26.084080,  28.077604
-//-26.084080,  28.077604
-//-26.198977,  28.042292 (Joburg)
-//-26.142345,  28.037675 (Rosebank)
-//-26.102310,  28.089150 (Alex)
-//-26.011190,  28.200219 (Thembisa)
-//-26.062455,  28.047267
-//-26.137895,  28.237409 (OR Tambo)
+    var rider_radius = 26000;
+    tripRequest.callGetVehiclesNear(-26.113952,28.047556,rider_radius ,grid);
+});*/

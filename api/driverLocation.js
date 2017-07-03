@@ -59,7 +59,6 @@ var driverLocation = (function () {
                 logger.log("-------------------------------------");
             });
         });
-
     }
 
     /**
@@ -214,14 +213,8 @@ var driverLocation = (function () {
 
 exports.driverLocation = driverLocation;
 
-//driverLocation.listDriversInRadius("2203795001640038161", 100);
-//-26.155397,28.071016
-//-26.146402,28.074747
-//-26.15901,28.101125
-
 //driverLocation.logDriverGPSLocation("4524",-26.155397,28.071016);
 
-//Paulshof_waypoints
 /*var filename = "Taxi_locations_13June_1.txt";
 var file = path.join(__dirname,"../../GoSwift/docs/S2/routes",filename);
 commons.readDriversGPS(file,"4528")
@@ -280,3 +273,7 @@ function runPromisesSeq(objects_array, iterator, callback) {
     }
 }
 
+//driverLocation.listDriversInRadius("2203795001640038161", 100);
+//-26.155397,28.071016
+//-26.146402,28.074747
+//-26.15901,28.101125
