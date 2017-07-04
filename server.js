@@ -51,11 +51,14 @@ server_channel.register('function1',function onRequest(request,response,arg1,arg
        var rider_radius = 2000;
        logger.log("arg1="+arg1 +"/arg2="+arg2 );
        redis.getCityGrid().then(function(grid) {
-           tripRequest.callGetVehiclesNear(arg1.toString(), arg2.toString(), rider_radius, grid);
+           tripRequest.callGetVehiclesNear(arg1.toString(), arg2.toString(), rider_radius, grid,function(results){
+               response.headers.as = "raw";
+               console.log("TChannel:-> filtered vehicles size = "+results.length);
+               response.sendOk("result",results);
+           });
        });
    }
-    response.headers.as = "raw";
-    response.sendOk("result","response is OK");
+
 });
 
 server_channel.register('function2',function onRequest2(request,response){
