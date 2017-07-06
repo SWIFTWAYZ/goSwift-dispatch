@@ -271,11 +271,11 @@ var tripRequest = (function(){
                     logger.log("No. of vehicles = " + vehicles.length + "- new size = " + vehicleLatLng.length);
                     var filename = "S2_vehicles_" + tstamp + ".kml";
                     var rider_latlng = lon +","+lat;
-                    //xmlBuilderFactory.buildVehicleLocations(filename,rider_latlng,filteredVehicles,vehicleLatLng);
+                    xmlBuilderFactory.buildVehicleLocations(filename,rider_latlng,filteredVehicles,vehicleLatLng);
                     cb(filteredVehicles);
                 }
                 var file = "S2_cells_" + tstamp + ".kml";
-                //xmlBuilderFactory.buildCells(file,rectcell_12,null,"ffff6c91","2.1");
+                xmlBuilderFactory.buildCells(file,rectcell_12,null,"ffff6c91","2.1");
             })
         });
     }

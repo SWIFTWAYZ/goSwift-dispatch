@@ -102,7 +102,7 @@ var xmlBuilderFactory = (function(){
         var xml = buildersList.end({pretty: true});
 
         //console.log(xml);
-        xmlBuilderFactory.createFile(document_name,xml);
+        //xmlBuilderFactory.createFile(document_name,xml);
     }
 
     /**
@@ -203,8 +203,8 @@ var xmlBuilderFactory = (function(){
             });
         xmlBuilderFactory.createPlaceMark(buildersList,"rider:002",rider,"0000");
         var xml = buildersList.end({pretty: true});
-        console.log(xml);
-        xmlBuilderFactory.createFile(document_name,xml);
+        //console.log(xml);
+        //xmlBuilderFactory.createFile(document_name,xml);
     }
 
     return xmlBuilderFactory;
