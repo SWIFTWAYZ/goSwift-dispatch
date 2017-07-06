@@ -48,6 +48,13 @@ var tripRequest = (function(){
 
     };
 
+    var vehiclePosition = function (id, key, lat, lon) {
+        this.vehicle_id = id;
+        this.s2_position = key;
+        this.latitude = lat;
+        this.longitude = lon;
+    };
+
     tripRequest.logRiderLocation = function(lat,lon,rider_UUID,mobile_number){
         var s2Latlong = new s2.S2LatLng(lat,lon);
         var s2riderCellId = new s2.S2CellId(s2Latlong);
@@ -266,13 +273,22 @@ var tripRequest = (function(){
                 if (vehicles !== null) {
                     var vehicleLatLng = filteredVehicles.map(function (item) {
                         //logger.log("get vehicles near = " + JSON.stringify(item));
-                        return item.cell_id[0].convertToLatLng();
+                        var cell_id_ = item.cell_id[0];
+                        var latlon = new s2.S2CellId(cell_id_).toLatLng();
+                        var lat = parseFloat(latlon.latDegrees.toFixed(6));
+                        var lon = parseFloat(latlon.lngDegrees.toFixed(6));
+
+                        var vehicle = new vehiclePosition(item.vehicle_id,cell_id_,lat,lon);
+                        logger.log("vehicle_obj = "+JSON.stringify(vehicle));
+                        return vehicle;
+                        //return item.cell_id[0].convertToLatLng();
                     });
                     logger.log("No. of vehicles = " + vehicles.length + "- new size = " + vehicleLatLng.length);
                     var filename = "S2_vehicles_" + tstamp + ".kml";
                     var rider_latlng = lon +","+lat;
-                    xmlBuilderFactory.buildVehicleLocations(filename,rider_latlng,filteredVehicles,vehicleLatLng);
-                    cb(filteredVehicles);
+                    xmlBuilderFactory.buildVehicleLocations(filename,rider_latlng,vehicleLatLng);
+                    //cb(filteredVehicles);
+                    cb(vehicleLatLng);
                 }
                 var file = "S2_cells_" + tstamp + ".kml";
                 xmlBuilderFactory.buildCells(file,rectcell_12,null,"ffff6c91","2.1");
@@ -303,9 +319,14 @@ var distance = 22000;//in meters
         });
     })
 });*/
-/* ---------current test------------
+//---------current test------------
+/*
 redis.getCityGrid().then(function(grid) {
     //var rider_radius = constant.RIDER_GEO_RADIUS;
-    var rider_radius = 26000;
-    tripRequest.callGetVehiclesNear(-26.113952,28.047556,rider_radius ,grid);
-});*/
+    var rider_radius = 2600;
+    tripRequest.callGetVehiclesNear( -26.057134,28.103682,rider_radius ,grid,function(results){
+        console.log("Vehicles near = " + results.length);
+    });
+});
+*/
+

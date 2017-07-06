@@ -20,6 +20,11 @@ var xmlBuilderFactory = (function(){
      */
     function xmlBuilderFactory(){};
 
+    /**
+     * write KML DOM to file system
+     * @param filename
+     * @param kml_buffer
+     */
     xmlBuilderFactory.createFile = function(filename,kml_buffer){
         var file = path.join(__dirname,"../../output",filename);
         fs.writeFile(file,kml_buffer,function(err){
@@ -31,6 +36,13 @@ var xmlBuilderFactory = (function(){
         })
     }
 
+    /**
+     *
+     * @param buildersList
+     * @param vehicle_id
+     * @param latlng
+     * @param cell_id
+     */
     xmlBuilderFactory.createPlaceMark = function(buildersList,vehicle_id,latlng,cell_id){
         buildersList
             .ele("Placemark")
@@ -100,7 +112,6 @@ var xmlBuilderFactory = (function(){
             });
         }
         var xml = buildersList.end({pretty: true});
-
         //console.log(xml);
         //xmlBuilderFactory.createFile(document_name,xml);
     }
@@ -111,7 +122,7 @@ var xmlBuilderFactory = (function(){
      * @param document_name
      * @param cellArray
      */
-     xmlBuilderFactory.buildVehicleLocations = function(document_name,rider, filteredVehicles, vehicleLatLng){
+     xmlBuilderFactory.buildVehicleLocations = function(document_name,rider, filteredVehicles){
         var buildersList = builder.create("kml")
             .att({"xmlns":"http://www.opengis.net/kml/2.2",
                 "xmlns:gx":"http://www.google.com/kml/ext/2.2",
@@ -119,7 +130,6 @@ var xmlBuilderFactory = (function(){
                 "xmlns:atom":"http://www.w3.org/2005/Atom"})
             .ele("Document")
             .ele("name",document_name).up()
-
              //------------------------------------------
             //style xml for waypoints - red
             .ele("StyleMap").att("id","m_red-pushpin")
@@ -144,9 +154,7 @@ var xmlBuilderFactory = (function(){
             .ele("ListStyle")
             .ele("ItemIcon")
             .ele("href","http://maps.google.com/mapfiles/kml/paddle/red-diamond-lv.png").up()
-            .up()
-            .up()
-            .up()
+            .up().up().up()
 
             .ele("Style").att("id","s_red-pushpin_hl")
             .ele("IconStyle")
@@ -158,12 +166,9 @@ var xmlBuilderFactory = (function(){
             .ele("ListStyle")
             .ele("ItemIcon")
             .ele("href","http://maps.google.com/mapfiles/kml/paddle/red-diamond-lv.png").up()
-            .up()
-            .up()
-            .up()
+            .up().up().up()
 
             //---------------------------------------------
-
             //style xml for waypoints - yellow
             .ele("Style").att("id","s_ylw-pushpin_hl")
              .ele("IconStyle")
@@ -173,8 +178,7 @@ var xmlBuilderFactory = (function(){
             .ele("hotSpot").att("x","32").att("y","1").att("xunits","pixels").att("yunits","xunits").up()
              .ele("href","http://maps.google.com/mapfiles/kml/paddle/wht-stars.png").up()
              .up().up().up().up()
-
-            .ele("StyleMap").att("id","m_ylw-pushpin")
+             .ele("StyleMap").att("id","m_ylw-pushpin")
              .ele("Pair")
             .ele("key","normal").up()
             .ele("styleUrl","#s_ylw-pushpin").up()
@@ -182,23 +186,19 @@ var xmlBuilderFactory = (function(){
 
             //cellArray.forEach(function(item,index){
          filteredVehicles.forEach(function(item,index){
-                //if(s2cell_Array[index] !== undefined) {
-                    //logger.log("results index = " + index + "-" + JSON.stringify(item));
-             logger.log("filteredVehicles = " + JSON.stringify(item));
-
+             //logger.log("filteredVehicles = " + JSON.stringify(item));
                     buildersList
                         .ele("Placemark")
-                        //.ele("styleUrl", "#m_ylw-pushpin").up()
                         .ele("styleUrl", "#m_red-pushpin").up()
                         //.ele("name", item.vehicle_id).up()
                         .ele("ExtendedData")
                         .ele("SchemaData").att("schemaUrl", "#GO_SWIFT_Phase_1")
                         .ele("SimpleData",item.vehicle_id).att("name","vehicle_id").up()
-                        .ele("SimpleData", vehicleLatLng[index]).att("name", "GPS").up()
-                        .ele("SimpleData", item.cell_id+"").att("name", "s2CellId")
+                        .ele("SimpleData", item.latitude+","+item.longitude).att("name", "GPS").up()
+                        .ele("SimpleData", item.s2_position).att("name", "s2CellId")
                         .up().up().up()
                         .ele("Point")
-                        .ele("coordinates", vehicleLatLng[index])
+                        .ele("coordinates",item.longitude+","+item.latitude)
                 //}
             });
         xmlBuilderFactory.createPlaceMark(buildersList,"rider:002",rider,"0000");

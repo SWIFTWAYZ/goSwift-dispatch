@@ -499,8 +499,13 @@ var provider = (function () {
         });
     }
 
+    provider.redisAddDriverPosition2 = function(vehicle_id,startTime,newcellid,s2cellid,cb){
+        console.log("redisAddDriverPosition2...."+script);
+        provider.redisAddDriverPosition(screen,vehicle_id,startTime,newcellid,s2cellid,cb)
+    }
+
     /**
-     * log driver position using Lua lua_script command
+     * log driver position using Lua script command
      * @param script
      * @param vehicle_id
      * @param startTime
@@ -535,16 +540,12 @@ var provider = (function () {
      * @param cb
      */
     provider.redisVehiclesInCellArray = function(cell_array,code_string,cb){
-        logger.log("LUA Script cell Array = "+cell_array.length);
+        //logger.log("LUA Script cell Array = "+cell_array.length);
         client.defineCommand("getVehiclesInArray2",{
             numberOfKeys: 1,
             lua: code_string
         });
 
-        /*client.getVehiclesInArray2(12, cell_array[0], cell_array[1],cell_array[2],
-            cell_array[3],cell_array[4],cell_array[5],cell_array[6],cell_array[7],
-            cell_array[8],cell_array[9],cell_array[10],cell_array[11],
-            function(error,results){*/
         var length = cell_array.length;
         client.getVehiclesInArray2(length,cell_array,function(error,results){
                 if(error) {

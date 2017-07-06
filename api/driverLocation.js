@@ -12,12 +12,16 @@ var path = require("path");
 var fs = require("fs");
 var logger = require("../config/logutil").logger;
 var randomGeo = require("../shebeen/gpsRandomGenerator").randomGeo;
+var script = null;
 
 const Promise = require('bluebird');
 
 var driverLocation = (function () {
 
     function driverLocation() {
+        var filename = path.resolve(__dirname, '../../lua/get_cell.lua');
+        script = fs.readFileSync(filename, {encoding: 'utf8'});
+        console.log("loading lua script for driverLocation....");
     };
 
     /**
