@@ -86,19 +86,12 @@ function getVehiclesNearRider(context, req, head, body, callback) {
     console.log("body" + JSON.stringify(body));
 
     tripRequest.callGetVehiclesNear(body.lat, body.lon, rider_radius, global.grid, function (vehicles) {
-        //response.headers.as = "raw";
-        //console.log("TChannel:-> filtered vehicles size = " + JSON.stringify(vehicles));
         callback(null, {
             ok: true,
             head: head,
             body: vehicles
         });
-        //response.sendOk("result", results);
     });
-    /*
-    var vehicles = [];
-    vehicles.push(new vehiclePosition("5400", "2203792235893195177", -26.016688, 28.038357));
-    vehicles.push(new vehiclePosition("5586", "2203792224202121885", -26.021435, 28.030479));*/
 }
 
 /**
@@ -114,7 +107,12 @@ function updateDriverLocation(context, req, head, body, callback) {
     var lng = body.lon;
     var vehicle_id = body.vehicle_id;
 
-    console.log("body" + JSON.stringify(body));
+    console.log("thrift function call, body" + JSON.stringify(body));
+    callback(null, {
+        ok: true,
+        head: head,
+        body: []
+    });
     //redis.redisAddDriverPosition2(body.vehicle_id,)
 }
 
