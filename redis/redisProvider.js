@@ -519,7 +519,7 @@ var provider = (function () {
                 lua: script}
                 );
         var vcell_key = "vcell:"+vehicle_id;
-        //logger.log(vcell_key+"|"+startTime +"|"+ vehicle_id +"|"+ new_cellid +"|"+ s2_cellid);
+        logger.log(vcell_key+"|"+startTime +"|"+ vehicle_id +"|"+ new_cellid +"|"+ s2_cellid);
         client.logDriverPosition2(vcell_key,startTime,vehicle_id, new_cellid,s2_cellid,
             function (error, results) {
                 if(error){

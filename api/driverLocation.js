@@ -16,12 +16,13 @@ var script = null;
 
 const Promise = require('bluebird');
 
+var filename = path.resolve(__dirname, '../redis/lua/log-driver.lua');
+script = fs.readFileSync(filename, {encoding: 'utf8'});
+console.log("loading lua script for driverLocation...."+script.length);
+
 var driverLocation = (function () {
 
     function driverLocation() {
-        var filename = path.resolve(__dirname, '../../lua/get_cell.lua');
-        script = fs.readFileSync(filename, {encoding: 'utf8'});
-        console.log("loading lua script for driverLocation....");
     };
 
     /**
@@ -199,6 +200,7 @@ var driverLocation = (function () {
         });
     }
 
+    /*
     driverLocation.logDriverGPSLocation = function (data) {
         ////new Promise(function(resolve,reject){
         logger.log(data.latitude +","+data.longitude);
@@ -210,6 +212,22 @@ var driverLocation = (function () {
             });
             //resolve();
          //});
+    }*/
+
+    driverLocation.logDriverLocation = function(vehicle_id,lat,lon){
+        var s2_cellid = s2common.s2CellIdKeyFromLatLng(lat,lon);
+        var new_cellid = s2common.getParentIdAtLevel(12, s2_cellid);
+        var startTime = new Date().getTime();
+        console.log("script = "+script.length);
+        redis.redisAddDriverPosition(script,vehicle_id,startTime,new_cellid,s2_cellid,function(error,results){
+            if(error){
+                console.log(error);
+            }
+            else{
+                console.log("Driver position added latlng = "+lat+","+lon+"->"+results);
+            }
+
+        })
     }
 
     return driverLocation;
@@ -233,7 +251,7 @@ var centerPoint = {
     latitude: -26.074234, //,-26.029613
     longitude: 28.050480  //,28.036167
 }
-
+/*
 randomGeo.createRandomGPSPositionsSync(centerPoint,16345,1000,"4592").then(function(random_gps) {
     var tstamp1 = new Date().getTime();
     var filename = path.resolve(__dirname, '../../lua/get_cell.lua');

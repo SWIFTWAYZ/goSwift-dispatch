@@ -33,6 +33,8 @@ var init = require("./config/init");
 var path = require('path');
 var logger = require("./config/logutil").logger;
 var tripRequest = require("./api/tripRequest").tripRequest;
+var driverRequest = require("./api/driverLocation").driverLocation;
+
 //var grid = null;
 var tchannel_port = 4040;
 var rider_radius = 2000;
@@ -103,16 +105,18 @@ function getVehiclesNearRider(context, req, head, body, callback) {
  * @param callback
  */
 function updateDriverLocation(context, req, head, body, callback) {
-    var latlng = body.lat;
+    var lat = body.lat;
     var lng = body.lon;
     var vehicle_id = body.vehicle_id;
 
-    console.log("thrift function call, body" + JSON.stringify(body));
+    //console.log("thrift function call, body" + JSON.stringify(body));
+    driverRequest.logDriverLocation(vehicle_id,lat,lng);
     callback(null, {
         ok: true,
         head: head,
-        body: []
+        body: 0x01
     });
+
     //redis.redisAddDriverPosition2(body.vehicle_id,)
 }
 
