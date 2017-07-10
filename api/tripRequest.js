@@ -8,7 +8,7 @@ var _ = require('underscore');
 var _lo = require("lodash");
 var redis = require("../redis/redisProvider").provider;
 var path = require("path");
-var fs = require("fs");
+var fs   = require("fs");
 var init = require("../config/init");
 var constant = require('../constants');
 var s2circle = require("../s2geometry/s2circlecoverer");
@@ -45,7 +45,6 @@ var tripRequest = (function(){
 
     function tripRequest(){
        // lua_script = fs.readFileSync(path.resolve(__dirname, '../../lua/geo_radius.lua'), {encoding: 'utf8'});
-
     };
 
     var vehiclePosition = function (id, key, lat, lon) {
@@ -98,7 +97,7 @@ var tripRequest = (function(){
     tripRequest.filterVehiclesInRadius = function(vehicles, cellsB, cb){
         var s2_cellsB = cellsB.map(function(item){
             return new s2.S2CellId(item);
-        })
+        });
         var cellsRegion = new s2.S2CellUnion();
         cellsRegion.initRawCellIds(s2_cellsB);
         cellsRegion.normalize();

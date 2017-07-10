@@ -184,7 +184,7 @@ var driverLocation = (function () {
             else{
                 resolve(position);
             }
-        })
+        });
     }
 
     driverLocation.changeVehiclePos = function(results){
@@ -226,7 +226,6 @@ var driverLocation = (function () {
             else{
                 console.log("Driver position added latlng = "+lat+","+lon+"->"+results);
             }
-
         })
     }
 
@@ -295,7 +294,3 @@ function runPromisesSeq(objects_array, iterator, callback) {
     }
 }
 
-//driverLocation.listDriversInRadius("2203795001640038161", 100);
-//-26.155397,28.071016
-//-26.146402,28.074747
-//-26.15901,28.101125

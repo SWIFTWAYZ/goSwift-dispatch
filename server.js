@@ -114,7 +114,7 @@ function updateDriverLocation(context, req, head, body, callback) {
     callback(null, {
         ok: true,
         head: head,
-        body: 0x01
+        body: "ok"
     });
 
     //redis.redisAddDriverPosition2(body.vehicle_id,)
