@@ -31,7 +31,7 @@ end
 	local vcell_add_retval = redis.call("ZADD",vcell_key,tstamp,new_cell)
 	
 	local vehicle_add_retval = redis.call("ZADD",vehicle_key,tstamp,vehicle_pos)
-
+	redis.log(redis.LOG_WARNING,"add vehicle = " .. vehicle_key)
 	local cell_rem_retval = redis.call("ZREM","cell:" .. from_cell_key,tstamp,vehicle_id)
 	local cell_add_retval = redis.call("ZADD",to_cell_key,tstamp,vehicle_id)
 	

@@ -250,10 +250,11 @@ var centerPoint = {
     latitude: -26.074234, //,-26.029613
     longitude: 28.050480  //,28.036167
 }
+
 /*
-randomGeo.createRandomGPSPositionsSync(centerPoint,16345,1000,"4592").then(function(random_gps) {
+randomGeo.createRandomGPSPositionsSync(centerPoint,16345,100000,"4592").then(function(random_gps) {
     var tstamp1 = new Date().getTime();
-    var filename = path.resolve(__dirname, '../../lua/get_cell.lua');
+    var filename = path.resolve(__dirname, '../redis/lua/log-driver.lua');
     var script = fs.readFileSync(filename, {encoding: 'utf8'});
     logger.log("loading lua_script.....from "+filename);
 

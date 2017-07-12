@@ -47,7 +47,6 @@ var xmlBuilderFactory = (function(){
         buildersList
             .ele("Placemark")
             .ele("styleUrl", "#m_ylw-pushpin").up()
-        //.ele("name", s2cell_Array[index].vehicle_id).up()
             .ele("name", vehicle_id).up()
             .ele("ExtendedData")
             .ele("SchemaData").att("schemaUrl", "#GO_SWIFT_Phase_1")
@@ -98,7 +97,6 @@ var xmlBuilderFactory = (function(){
                             .ele("coordinates", stringBuild)
                     }
                 }
-                //logger.log(stringBuild);
             });
         }
 
@@ -113,7 +111,7 @@ var xmlBuilderFactory = (function(){
         }
         var xml = buildersList.end({pretty: true});
         //console.log(xml);
-        xmlBuilderFactory.createFile(document_name,xml);
+        //xmlBuilderFactory.createFile(document_name,xml);
     }
 
     /**
@@ -182,11 +180,9 @@ var xmlBuilderFactory = (function(){
              .ele("Pair")
             .ele("key","normal").up()
             .ele("styleUrl","#s_ylw-pushpin").up()
-            .up().up()
+            .up().up();
 
-            //cellArray.forEach(function(item,index){
          filteredVehicles.forEach(function(item,index){
-             //logger.log("filteredVehicles = " + JSON.stringify(item));
                     buildersList
                         .ele("Placemark")
                         .ele("styleUrl", "#m_red-pushpin").up()
@@ -199,12 +195,11 @@ var xmlBuilderFactory = (function(){
                         .up().up().up()
                         .ele("Point")
                         .ele("coordinates",item.longitude+","+item.latitude)
-                //}
             });
         xmlBuilderFactory.createPlaceMark(buildersList,"rider:002",rider,"0000");
         var xml = buildersList.end({pretty: true});
         //console.log(xml);
-        xmlBuilderFactory.createFile(document_name,xml);
+        //xmlBuilderFactory.createFile(document_name,xml);
     }
 
     return xmlBuilderFactory;
@@ -212,12 +207,9 @@ var xmlBuilderFactory = (function(){
 
 exports.xmlBuilderFactory = xmlBuilderFactory;
 
-//xmlBuilderFactory.buildVehicleLocations("waypoints.kml",waypoints,cells);
-
 //--- get all cells and build the joburg city grid kml file
 var cells = redis.getCityGrid(function(cells){
     var s2cells = s2common.createCellRectArray(cells);
     //xmlBuilderFactory.buildCells("S2_JHB_grid_cells.kml",s2cells,null,"#ff4038fc","2.1");
-
 });
 
