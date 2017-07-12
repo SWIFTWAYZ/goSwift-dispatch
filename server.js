@@ -33,25 +33,11 @@ var s2circle = require("./s2geometry/s2circlecoverer");
 var init = require("./config/init");
 var path = require('path');
 var logger = require("./config/logutil").logger;
-var constant = require('constants');
+var constant = require('./constants');
 var tripRequest = require("./api/tripRequest").tripRequest;
 var driverRequest = require("./api/driverLocation").driverLocation;
 
-//var grid = null;
 var tchannel_port = 4040;
-var rider_radius = constant.RIDER_GEO_RADIUS;
-
-var app = express();
-//logger.log(JSON.stringify(init.server));
-
-/*var t_server = new TChannel();
-var t_client = new TChannel();*/
-
-/*
-redis.getCityGrid().then(function(grid_cells){
-   global.grid = grid_cells;
-});
-*/
 
 var vehiclePosition = function (id, key, lat, lon) {
     this.vehicle_id = id;
@@ -90,8 +76,16 @@ function getVehiclesNearRider(context, req, head, body, callback) {
     console.log("req:" + req);
     console.log("head" + JSON.stringify(head));
     console.log("body" + JSON.stringify(body));
-
-    tripRequest.callGetVehiclesNear(body.lat, body.lon, rider_radius, global.grid, function (vehicles) {
+    //console.log(constant.RIDER_GEO_RADIUS + "/"+body.lat+"/"+body.lon+"/"+global.grid.length);
+    tripRequest.callGetVehiclesNear(body.lat, body.lon, constant.RIDER_GEO_RADIUS, global.grid, function (vehicles) {
+        if(vehicles.length === 0){
+            logger.log("no vehicles near :" + body.lat+","+body.lon);
+            callback("no vehicles",{
+                ok: false,
+                head: head,
+                body:[]
+            })
+        }
         callback(null, {
             ok: true,
             head: head,
@@ -131,7 +125,10 @@ server.listen(tchannel_port, "127.0.0.1", function onListen() {
 
     logger.log(JSON.stringify(init));
     s2circle.S2CircleCoverer.initialise(lat, lon, radius, function (grid_data) {
-        global.grid = grid_data;
+        var grid = grid_data.map(function(item){
+            return item.id+"";
+        })
+        global.grid = grid;
     });
     logger.log("TChannel server running on port:" + tchannel_port);
 });

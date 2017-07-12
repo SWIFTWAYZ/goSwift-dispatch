@@ -64,7 +64,7 @@ var S2CircleCoverer = (function () {
 
         var centre_gps = new s2.S2LatLng.fromDegrees(lat, lon);
         var cap2 = getS2CapRadius(centre_gps, radius);
-
+        console.log("getCovering="+lat +","+lon +","+radius);
         var results = covering.getCoveringCells(cap2);
 
         results.forEach(function (record) {
