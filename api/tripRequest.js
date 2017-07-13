@@ -39,12 +39,11 @@ Array.prototype.stringify = function(){
 
 var filename = path.resolve(__dirname, '../../goSwift-dispatch/redis/lua/geo-radius.lua');
 var lua_script = fs.readFileSync(filename, {encoding: 'utf8'});
-logger.log("loading lua_script.....from "+filename);
+//logger.log("loading lua_script.....from "+filename);
 
 var tripRequest = (function(){
 
     function tripRequest(){
-       // lua_script = fs.readFileSync(path.resolve(__dirname, '../../lua/geo_radius.lua'), {encoding: 'utf8'});
     };
 
     var vehiclePosition = function (id, key, lat, lon) {
@@ -105,16 +104,16 @@ var tripRequest = (function(){
             cb(null);
             return;
         }
-        logger.log("cellsRegion size = "+cellsRegion.size() + "- vehicles = "+vehicles.length);
+        //logger.log("cellsRegion size = "+cellsRegion.size() + "- vehicles = "+vehicles.length);
 
         var counter = 1;
         var vehiclesInRadius = vehicles.filter(function(item){
                 var cell_item = new s2.S2CellId(item.cell_id+"");
             return cellsRegion.contains(cell_item);
-            });
+        });
 
-        logger.log("filterVehiclesInRadius old size = "+ vehicles.length
-            + ", new size = "+vehiclesInRadius.length);
+        logger.log("Vehicles within radius (cell-12) = "+ vehicles.length
+            + ", filtered radius = "+vehiclesInRadius.length);
         cb(vehiclesInRadius);
     }
 
@@ -129,13 +128,11 @@ var tripRequest = (function(){
      * @param radius
      * @param cb
      */
-    tripRequest.getIntersectRadiusCells = function(min,max,no_of_cells,lat,lon,grid,radius,cb){
-            logger.log("centrePoint = "+lat+","+lon);
+    tripRequest.getIntersectRadiusCells = function(min,max,no_of_cells,lat,lon,cityRegion,radius,cb){
+            //logger.log("centrePoint = "+lat+","+lon);
             var riderSphere = s2circle.S2CircleCoverer.getCovering(lat,lon,radius,min,max,no_of_cells);
 
-            var cityRegion = new s2.S2CellUnion(init.city.lat,init.city.lon);
-            cityRegion.initFromIds(grid);
-            cityRegion.normalize();
+            //can we keep this in memory to avoid initializing s2 region for each geo-radius query?
 
             var riderRegion = new s2.S2CellUnion();
             riderRegion.initRawCellIds(riderSphere);
@@ -143,9 +140,6 @@ var tripRequest = (function(){
 
             var intersect_union = new s2.S2CellUnion();
             var union = intersect_union.getIntersectionUU(cityRegion,riderRegion); //Google S2 bug fixed
-
-            logger.log("city = " + cityRegion.size() + ", rider cells = " + riderRegion.size() +
-            " - [intersect = " + intersect_union.size() + "]" + "-" + " size [" + min + " - " + max + "]");
 
             if(intersect_union.size() > 0){
                 cb(intersect_union);
@@ -200,22 +194,22 @@ var tripRequest = (function(){
      */
 
     tripRequest.getVehiclesNearRider = function(lat,lon,grid,rider_radius,cb){
-        //12,12,12
-        tripRequest.getIntersectRadiusCells(12,12,12,lat,lon,grid,rider_radius,function(cells){
-                if(cells === null || cells.size() === 0) {
+        //12,12,12 - quadcells
+        tripRequest.getIntersectRadiusCells(12,12,12,lat,lon,grid,rider_radius,function(quad_cells){
+                if(quad_cells === null || quad_cells.size() === 0) {
                     return;
                 };
-                var cellArray = cells.getCellIds().map(function(item){
+                var cellArray = quad_cells.getCellIds().map(function(item){
                     return item.pos().toString();
                 });
-                //12,16,100
-                tripRequest.getIntersectRadiusCells(12,16,100,lat,lon,grid,rider_radius, function(cells12){
-                    var cells_12 = cells12.getCellIds().map(function(item){
+                //12,16,100 - radius-cells
+                tripRequest.getIntersectRadiusCells(12,16,100,lat,lon,grid,rider_radius, function(circle_cells){
+                    var cells_12 = circle_cells.getCellIds().map(function(item){
                         return item.pos().toString();
                     });
 
                     redis.redisVehiclesInCellArray(cellArray,lua_script,function(err, data){
-                        logger.log("Response from LUA = " + data.length);
+                        //logger.log("Response from LUA = " + data.length);
                         cb(data,cellArray,cells_12);
                     });
                 });
@@ -232,21 +226,21 @@ var tripRequest = (function(){
      */
     tripRequest.getAllVehiclesInGrid = function(lat,lon,grid,rider_radius,cb){
 
-        tripRequest.getIntersectRadiusCells(12,12,1000,lat,lon,grid,rider_radius,function(cells){
+        tripRequest.getIntersectRadiusCells(12,12,12,lat,lon,grid,rider_radius,function(cells){
             if(cells === null || cells.size() === 0) {
                 return;
             };
-            var cellArray = cells.getCellIds().map(function(item){
+            var quad_cells = cells.getCellIds().map(function(item){
                 return item.pos().toString();
             });
-            tripRequest.getIntersectRadiusCells(12,16,1000,lat,lon,grid,rider_radius, function(cells12){
-                var cells_12 = cells12.getCellIds().map(function(item){
+            tripRequest.getIntersectRadiusCells(12,16,100,lat,lon,grid,rider_radius, function(cells12){
+                var rider_cells = cells12.getCellIds().map(function(item){
                     return item.pos().toString();
                 });
 
-                redis.redisVehiclesInCellArray(cellArray,lua_script,function(err, data){
-                    logger.log("Response from LUA = " + data.length);
-                    cb(data,cellArray,cells_12);
+                redis.redisVehiclesInCellArray(quad_cells,lua_script,function(err, data){
+                    //logger.log("Response from LUA = " + data.length);
+                    cb(data,quad_cells,rider_cells);
                 });
             });
         });
@@ -260,15 +254,15 @@ var tripRequest = (function(){
      */
     tripRequest.callGetVehiclesNear = function(lat,lon,rider_radius,grid,cb)
     {
-
+        var start_time = new Date().getTime();
         //tripRequest.getVehiclesNearRider(lat, lon,grid,rider_radius, function (vehicles, cells, cells_12) {
-        tripRequest.getAllVehiclesInGrid(lat, lon,grid,rider_radius, function (vehicles, cells, cells_12) {
-            var rectcell = s2common.createCellRectArray(cells);
-            var rectcell_12 = s2common.createCellRectArray(cells_12);
+        tripRequest.getAllVehiclesInGrid(lat, lon,grid,rider_radius, function (vehicles, cells, radius_cells) {
 
-            tripRequest.filterVehiclesInRadius(vehicles, cells_12, function (filteredVehicles) {
+            //var rider_geofence = s2common.createCellRectArray(radius_cells);
+
+            tripRequest.filterVehiclesInRadius(vehicles, radius_cells, function (filteredVehicles) {
                 var tstamp = new Date().getTime();
-
+                logger.log("time elapsed = "+ (new Date().getTime() - start_time));
                 if (vehicles !== null) {
                     var vehicleLatLng = filteredVehicles.map(function (item) {
                         //logger.log("get vehicles near = " + JSON.stringify(item));
@@ -278,20 +272,20 @@ var tripRequest = (function(){
                         var lon = parseFloat(latlon.lngDegrees.toFixed(6));
 
                         var vehicle = new vehiclePosition(item.vehicle_id,cell_id_,lat,lon);
-                        logger.log("vehicle_obj = "+JSON.stringify(vehicle));
+                        //logger.log("vehicle_obj = "+item.vehicle_id + "/"+cell_id_+"/"+lat+","+lon);
                         return vehicle;
                         //return item.cell_id[0].convertToLatLng();
                     });
+
                     logger.log("No. of vehicles = " + vehicles.length + "- new size = " + vehicleLatLng.length);
                     var filename = "S2_vehicles_" + tstamp + ".kml";
                     var rider_latlng = lon +","+lat;
-                    xmlBuilderFactory.buildVehicleLocations(filename,rider_latlng,vehicleLatLng);
-                    //cb(filteredVehicles);
+                    //xmlBuilderFactory.buildVehicleLocations(filename,rider_latlng,vehicleLatLng);
                     cb(vehicleLatLng);
                 }
                 var file = "S2_cells_" + tstamp + ".kml";
-                xmlBuilderFactory.buildCells(file,rectcell_12,null,"ffff6c91","2.1");
-            })
+                //xmlBuilderFactory.buildCells(file,rider_geofence,null,"ffff6c91","2.1");
+            });
         });
     }
 

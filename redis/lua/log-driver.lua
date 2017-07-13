@@ -17,10 +17,7 @@ for index, value in pairs(from_cell_table) do
 	count = count + 1
 	from_cell_key = value
 end
---[[
-redis.log(redis.LOG_WARNING,'current cells for vehicle ' .. vehicle_id .. '=' .. count)
-redis.log(redis.LOG_WARNING,'current cell' .. from_cell_key)
-]]
+
 if count > 0 then
 	local vcell_rem_retval = redis.call("ZREM",vcell_key, from_cell_key)
 	--[[redis.log(redis.LOG_WARNING,'response of ZREM = ' .. vcell_rem_retval)]]
@@ -31,7 +28,7 @@ end
 	local vcell_add_retval = redis.call("ZADD",vcell_key,tstamp,new_cell)
 	
 	local vehicle_add_retval = redis.call("ZADD",vehicle_key,tstamp,vehicle_pos)
-	redis.log(redis.LOG_WARNING,"add vehicle = " .. vehicle_key)
+	redis.log(redis.LOG_WARNING,"add vehicle = " .. vehicle_key .. "=" .. vehicle_pos)
 	local cell_rem_retval = redis.call("ZREM","cell:" .. from_cell_key,tstamp,vehicle_id)
 	local cell_add_retval = redis.call("ZADD",to_cell_key,tstamp,vehicle_id)
 	

@@ -196,7 +196,11 @@ var xmlBuilderFactory = (function(){
                         .ele("Point")
                         .ele("coordinates",item.longitude+","+item.latitude)
             });
-        xmlBuilderFactory.createPlaceMark(buildersList,"rider:002",rider,"0000");
+
+         /**
+          * create placemark for rider
+          */
+         xmlBuilderFactory.createPlaceMark(buildersList,"swifter",rider,"0000");
         var xml = buildersList.end({pretty: true});
         //console.log(xml);
         //xmlBuilderFactory.createFile(document_name,xml);

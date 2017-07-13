@@ -27,6 +27,7 @@ var http = require("http");
 var express = require("express");
 var TChannel = require("tchannel");
 var TChannelThrift = require("tchannel/as/thrift");
+var s2 = require("nodes2ts");
 var fs = require("fs");
 var redis = require("./redis/redisProvider").provider;
 var s2circle = require("./s2geometry/s2circlecoverer");
@@ -60,6 +61,8 @@ var thriftChannel = new TChannelThrift({
 var context = {
     logger: logger
 };
+var cityRegion;
+
 thriftChannel.register(server, "tripService::getVehiclesNearRider", context, getVehiclesNearRider);
 thriftChannel.register(server, "tripService::updateDriverLocation", context, updateDriverLocation)
 
@@ -77,7 +80,7 @@ function getVehiclesNearRider(context, req, head, body, callback) {
     console.log("head" + JSON.stringify(head));
     console.log("body" + JSON.stringify(body));
     //console.log(constant.RIDER_GEO_RADIUS + "/"+body.lat+"/"+body.lon+"/"+global.grid.length);
-    tripRequest.callGetVehiclesNear(body.lat, body.lon, constant.RIDER_GEO_RADIUS, global.grid, function (vehicles) {
+    tripRequest.callGetVehiclesNear(body.lat, body.lon, constant.RIDER_GEO_RADIUS, cityRegion, function (vehicles) {
         if(vehicles.length === 0){
             logger.log("no vehicles near :" + body.lat+","+body.lon);
             callback("no vehicles",{
@@ -126,9 +129,12 @@ server.listen(tchannel_port, "127.0.0.1", function onListen() {
     logger.log(JSON.stringify(init));
     s2circle.S2CircleCoverer.initialise(lat, lon, radius, function (grid_data) {
         var grid = grid_data.map(function(item){
-            return item.id+"";
+            return item.id;
         })
         global.grid = grid;
+        cityRegion = new s2.S2CellUnion(init.city.lat,init.city.lon);
+        cityRegion.initFromIds(grid);
+        cityRegion.normalize();
     });
     logger.log("TChannel server running on port:" + tchannel_port);
 });

@@ -223,6 +223,12 @@ var s2common = (function(){
         }
     }
 
+    /**
+     * Method creates an Array of cell vertexs in counter clockwise (CCW) sequence
+     * for use with KML to display in google earth
+     * @param cells
+     * @returns {Array}
+     */
     s2common.createCellRectArray = function(cells){
         var totalVertexArray = [];
         cells.forEach(function(one_cell,index){
