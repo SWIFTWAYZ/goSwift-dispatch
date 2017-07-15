@@ -28,3 +28,5 @@ npm install packages
 - npm install nodemailer
 - npm install thriftrw
 - npm install tchannel
+- npm install xmlbuilder
+- npm install lodash
