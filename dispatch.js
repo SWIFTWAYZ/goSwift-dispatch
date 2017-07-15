@@ -38,6 +38,8 @@ var constant = require('./constants');
 var tripRequest = require("./api/tripRequest").tripRequest;
 var driverRequest = require("./api/driverLocation").driverLocation;
 
+const util = require('util');
+
 var tchannel_port = 4040;
 
 var vehiclePosition = function (id, key, lat, lon) {
@@ -123,10 +125,11 @@ server.listen(tchannel_port, "127.0.0.1", function onListen() {
     var lat = init.city.lat;
     var lon = init.city.lon;
     var radius = init.city.radius;
-    var cityhub = init.city.name;
-    var hub_centre = init.city.centre;
+    //var cityhub = init.city.name;
+    //var hub_centre = init.city.centre;
 
-    logger.log(JSON.stringify(init));
+    //logger.log(JSON.stringify(init,null,4));
+    logger.log(util.inspect(init, {depth: null, colors: true}))
     s2circle.S2CircleCoverer.initialise(lat, lon, radius, function (grid_data) {
         var grid = grid_data.map(function(item){
             return item.id;

@@ -258,8 +258,6 @@ var tripRequest = (function(){
         //tripRequest.getVehiclesNearRider(lat, lon,grid,rider_radius, function (vehicles, cells, cells_12) {
         tripRequest.getAllVehiclesInGrid(lat, lon,grid,rider_radius, function (vehicles, cells, radius_cells) {
 
-            //var rider_geofence = s2common.createCellRectArray(radius_cells);
-
             tripRequest.filterVehiclesInRadius(vehicles, radius_cells, function (filteredVehicles) {
                 var tstamp = new Date().getTime();
                 logger.log("time elapsed = "+ (new Date().getTime() - start_time));
@@ -280,11 +278,12 @@ var tripRequest = (function(){
                     logger.log("No. of vehicles = " + vehicles.length + "- new size = " + vehicleLatLng.length);
                     var filename = "S2_vehicles_" + tstamp + ".kml";
                     var rider_latlng = lon +","+lat;
-                    //xmlBuilderFactory.buildVehicleLocations(filename,rider_latlng,vehicleLatLng);
+                    var rider_geofence = s2common.createCellRectArray(radius_cells);
+                    xmlBuilderFactory.buildVehicleLocations(filename,rider_latlng,vehicleLatLng);
                     cb(vehicleLatLng);
                 }
                 var file = "S2_cells_" + tstamp + ".kml";
-                //xmlBuilderFactory.buildCells(file,rider_geofence,null,"ffff6c91","2.1");
+                xmlBuilderFactory.buildCells(file,rider_geofence,null,"ffff6c91","2.1");
             });
         });
     }
