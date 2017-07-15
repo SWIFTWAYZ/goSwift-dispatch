@@ -10,3 +10,23 @@ Dispatch is meant to handle all the real-time requests such as:-
 - Real-time trip data logging 
 - matching drivers and passengers (demand/supply matching)
 - car-pooling passengers based on time-window, departure, destination, price
+
+npm install packages
+
+- npm install nodes2ts
+- npm install line-reader
+- npm install underscore
+- npm install path
+- npm install tracer
+- npm install bluebird
+- npm install node-serialize
+- npm install ioredis
+
+- npm install mongoose
+- npm install smpp
+- npm install log4js
+- npm install nodemailer
+- npm install thriftrw
+- npm install tchannel
+- npm install xmlbuilder
+- npm install lodash
