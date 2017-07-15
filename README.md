@@ -13,11 +13,11 @@ Dispatch is meant to handle all the real-time requests such as:-
 
 npm install packages
 
-npm install nodes2ts
-npm install line-reader
-npm install underscore
-npm install path
-npm install tracer
-npm install bluebird
-npm install node-serialize
-npm install ioredis
+- npm install nodes2ts
+- npm install line-reader
+- npm install underscore
+- npm install path
+- npm install tracer
+- npm install bluebird
+- npm install node-serialize
+- npm install ioredis
