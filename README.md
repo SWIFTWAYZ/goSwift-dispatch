@@ -21,3 +21,10 @@ npm install packages
 - npm install bluebird
 - npm install node-serialize
 - npm install ioredis
+
+- npm install mongoose
+- npm install smpp
+- npm install log4js
+- npm install nodemailer
+- npm install thriftrw
+- npm install tchannel
