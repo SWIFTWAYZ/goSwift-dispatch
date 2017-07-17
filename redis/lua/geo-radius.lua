@@ -50,7 +50,7 @@ for index=1, tonumber(cell_count) do
 				--[[redis.log(redis.LOG_WARNING,"vehicle table size = " .. #vehicle_pos)]]
 				
 				--[[if(vehicle_s2 ~= nil) then]]
-				for s2_pos_index=1, tonumber(#vehicle_pos) do
+				for s2_pos_index=1, 1 do--[[tonumber(#vehicle_pos) do]]
 					--[[cell_vehicles[index][vehicle_index] = vehicle_s2]]
 					if(vehicle_id_str ~= nil and vehicle_index ~= nil) then
 						 --[[cell_vehicles[vehicle_id_str] = {} ... added]]

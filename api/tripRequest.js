@@ -16,6 +16,7 @@ var s2common = require("../s2geometry/s2common").s2common;
 var logger = require("../config/logutil").logger;
 var randomGeo = require("../shebeen/gpsRandomGenerator").randomGeo;
 var xmlBuilderFactory = require("../shebeen/xmlBuilderFactory").xmlBuilderFactory;
+const util = require('util');
 
 String.prototype.padLeft = function(char, length) {
     return char.repeat(Math.max(0, length - this.length)) + this;
@@ -95,7 +96,7 @@ var tripRequest = (function(){
      */
     tripRequest.filterVehiclesInRadius = function(vehicles, cellsB, cb){
         var s2_cellsB = cellsB.map(function(item){
-            logger.log("filter map = "+item)
+            //logger.log("filter map = "+item)
             return new s2.S2CellId(item);
         });
         var cellsRegion = new s2.S2CellUnion();
@@ -105,14 +106,11 @@ var tripRequest = (function(){
             cb(null);
             return;
         }
-        //logger.log("cellsRegion size = "+cellsRegion.size() + "- vehicles = "+vehicles.length);
 
         var counter = 1;
         var vehiclesInRadius = vehicles.filter(function(item){
             logger.log(JSON.stringify(item));
-                logger.log(item.cell_id[0]);
                 var cell_item = new s2.S2CellId(item.cell_id[0]);
-                logger.log("filter test = "+cell_item.id +"-"+ item.cell_id[0]);
             return cellsRegion.contains(cell_item);
         });
 
@@ -243,7 +241,8 @@ var tripRequest = (function(){
                 });
 
                 redis.redisVehiclesInCellArray(quad_cells,lua_script,function(err, data){
-                    //logger.log("Response from LUA = " + data.length);
+                    logger.log("Response from LUA = " + JSON.stringify(data));
+                    //logger.log(util.inspect(data, {depth: null, colors: true}))
                     cb(data,quad_cells,rider_cells);
                 });
             });
@@ -262,13 +261,18 @@ var tripRequest = (function(){
         var vehicle_no = 0;
         //tripRequest.getVehiclesNearRider(lat, lon,grid,rider_radius, function (vehicles, cells, cells_12) {
         tripRequest.getAllVehiclesInGrid(lat, lon,grid,rider_radius, function (allvehicles, cells, radius_cells) {
-            var vehicles = allvehicles.filter(function(e){return e}); //remove empty elements
+            var vehicles = allvehicles.filter(function(e){
+                return e
+            }); //remove empty elements
+
+            //logger.log("removed null values = " + JSON.stringify(vehicles));
+            logger.log(util.inspect(vehicles, {depth: null, colors: true}))
             tripRequest.filterVehiclesInRadius(vehicles, radius_cells, function (filteredVehicles) {
                 var tstamp = new Date().getTime();
                 logger.log("time elapsed = "+ (new Date().getTime() - start_time));
                 if (vehicles !== null) {
                     var vehicleLatLng = filteredVehicles.map(function (item) {
-                        logger.log("get vehicles near = " +item.cell_id[0] );
+                        //logger.log("get vehicles near = " +item.cell_id[0] );
                         var cell_id_ = item.cell_id[0];
                         var latlon = new s2.S2CellId(cell_id_).toLatLng();
                         var lat = parseFloat(latlon.latDegrees.toFixed(6));
