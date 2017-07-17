@@ -66,7 +66,7 @@ var context = {
 var cityRegion;
 
 thriftChannel.register(server, "tripService::getVehiclesNearRider", context, getVehiclesNearRider);
-thriftChannel.register(server, "tripService::updateDriverLocation", context, updateDriverLocation)
+thriftChannel.register(server, "tripService::updateDriverLocation", context, addDriverLocation)
 
 /**
  * TChannel RPC implementation of getVehiclesNearRider over Thrift IDL
@@ -83,14 +83,14 @@ function getVehiclesNearRider(context, req, head, body, callback) {
     console.log("body" + JSON.stringify(body));
     //console.log(constant.RIDER_GEO_RADIUS + "/"+body.lat+"/"+body.lon+"/"+global.grid.length);
     tripRequest.callGetVehiclesNear(body.lat, body.lon, constant.RIDER_GEO_RADIUS, cityRegion, function (vehicles) {
-        if(vehicles.length === 0){
+        /*if(vehicles.length === 0){
             logger.log("no vehicles near :" + body.lat+","+body.lon);
-            callback("no vehicles",{
-                ok: false,
+            callback(null,{
+                ok: true,
                 head: head,
-                body:[]
+                body:vehicles
             })
-        }
+        }*/
         callback(null, {
             ok: true,
             head: head,
@@ -107,7 +107,7 @@ function getVehiclesNearRider(context, req, head, body, callback) {
  * @param body
  * @param callback
  */
-function updateDriverLocation(context, req, head, body, callback) {
+function addDriverLocation(context, req, head, body, callback) {
     var lat = body.lat;
     var lng = body.lon;
     var vehicle_id = body.vehicle_id;

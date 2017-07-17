@@ -82,7 +82,7 @@ var xmlBuilderFactory = (function(){
             .ele("styleUrl","#default")
             .up().up().up();
 
-        if(cellGPSArray !== null) {
+        if(cellGPSArray !== null && typeof cellGPSArray !== 'undefined') {
             cellGPSArray.forEach(function (item) {
 
                 var stringBuild = "";

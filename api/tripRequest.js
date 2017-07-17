@@ -95,6 +95,7 @@ var tripRequest = (function(){
      */
     tripRequest.filterVehiclesInRadius = function(vehicles, cellsB, cb){
         var s2_cellsB = cellsB.map(function(item){
+            logger.log("filter map = "+item)
             return new s2.S2CellId(item);
         });
         var cellsRegion = new s2.S2CellUnion();
@@ -108,7 +109,10 @@ var tripRequest = (function(){
 
         var counter = 1;
         var vehiclesInRadius = vehicles.filter(function(item){
-                var cell_item = new s2.S2CellId(item.cell_id+"");
+            logger.log(JSON.stringify(item));
+                logger.log(item.cell_id[0]);
+                var cell_item = new s2.S2CellId(item.cell_id[0]);
+                logger.log("filter test = "+cell_item.id +"-"+ item.cell_id[0]);
             return cellsRegion.contains(cell_item);
         });
 
@@ -255,15 +259,16 @@ var tripRequest = (function(){
     tripRequest.callGetVehiclesNear = function(lat,lon,rider_radius,grid,cb)
     {
         var start_time = new Date().getTime();
+        var vehicle_no = 0;
         //tripRequest.getVehiclesNearRider(lat, lon,grid,rider_radius, function (vehicles, cells, cells_12) {
-        tripRequest.getAllVehiclesInGrid(lat, lon,grid,rider_radius, function (vehicles, cells, radius_cells) {
-
+        tripRequest.getAllVehiclesInGrid(lat, lon,grid,rider_radius, function (allvehicles, cells, radius_cells) {
+            var vehicles = allvehicles.filter(function(e){return e}); //remove empty elements
             tripRequest.filterVehiclesInRadius(vehicles, radius_cells, function (filteredVehicles) {
                 var tstamp = new Date().getTime();
                 logger.log("time elapsed = "+ (new Date().getTime() - start_time));
                 if (vehicles !== null) {
                     var vehicleLatLng = filteredVehicles.map(function (item) {
-                        //logger.log("get vehicles near = " + JSON.stringify(item));
+                        logger.log("get vehicles near = " +item.cell_id[0] );
                         var cell_id_ = item.cell_id[0];
                         var latlon = new s2.S2CellId(cell_id_).toLatLng();
                         var lat = parseFloat(latlon.latDegrees.toFixed(6));
@@ -278,12 +283,17 @@ var tripRequest = (function(){
                     logger.log("No. of vehicles = " + vehicles.length + "- new size = " + vehicleLatLng.length);
                     var filename = "S2_vehicles_" + tstamp + ".kml";
                     var rider_latlng = lon +","+lat;
-                    var rider_geofence = s2common.createCellRectArray(radius_cells);
-                    xmlBuilderFactory.buildVehicleLocations(filename,rider_latlng,vehicleLatLng);
+                    vehicle_no = vehicleLatLng.length;
+                    if(vehicleLatLng.length > 0 ) {
+                        var rider_geofence = s2common.createCellRectArray(radius_cells);
+                        xmlBuilderFactory.buildVehicleLocations(filename, rider_latlng, vehicleLatLng);
+                    }
                     cb(vehicleLatLng);
                 }
-                var file = "S2_cells_" + tstamp + ".kml";
-                xmlBuilderFactory.buildCells(file,rider_geofence,null,"ffff6c91","2.1");
+                if(vehicle_no > 0) {
+                    var file = "S2_cells_" + tstamp + ".kml";
+                    xmlBuilderFactory.buildCells(file, rider_geofence, null, "ffff6c91", "2.1");
+                }
             });
         });
     }
