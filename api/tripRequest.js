@@ -96,7 +96,6 @@ var tripRequest = (function(){
      */
     tripRequest.filterVehiclesInRadius = function(vehicles, cellsB, cb){
         var s2_cellsB = cellsB.map(function(item){
-            //logger.log("filter map = "+item)
             return new s2.S2CellId(item);
         });
         var cellsRegion = new s2.S2CellUnion();
@@ -109,8 +108,8 @@ var tripRequest = (function(){
 
         var counter = 1;
         var vehiclesInRadius = vehicles.filter(function(item){
-            logger.log(JSON.stringify(item));
-                var cell_item = new s2.S2CellId(item.cell_id[0]);
+            var cell_item = new s2.S2CellId(item.cell_id[0]);
+            //var cell_item = new s2.S2CellId(item.cell_id);
             return cellsRegion.contains(cell_item);
         });
 
@@ -131,15 +130,15 @@ var tripRequest = (function(){
      * @param cb
      */
     tripRequest.getIntersectRadiusCells = function(min,max,no_of_cells,lat,lon,cityRegion,radius,cb){
-            //logger.log("centrePoint = "+lat+","+lon);
+
             var riderSphere = s2circle.S2CircleCoverer.getCovering(lat,lon,radius,min,max,no_of_cells);
 
             //can we keep this in memory to avoid initializing s2 region for each geo-radius query?
-
             var riderRegion = new s2.S2CellUnion();
             riderRegion.initRawCellIds(riderSphere);
             riderRegion.normalize();
 
+            //console.log("rider cells = "+riderRegion);
             var intersect_union = new s2.S2CellUnion();
             var union = intersect_union.getIntersectionUU(cityRegion,riderRegion); //Google S2 bug fixed
 
@@ -147,6 +146,7 @@ var tripRequest = (function(){
                 cb(intersect_union);
             }else
             {
+                //should we send an empty cell structure here to avoid current error
                 logger.log("No intersection cells?");
                 cb(null);
             }
@@ -211,7 +211,6 @@ var tripRequest = (function(){
                     });
 
                     redis.redisVehiclesInCellArray(cellArray,lua_script,function(err, data){
-                        //logger.log("Response from LUA = " + data.length);
                         cb(data,cellArray,cells_12);
                     });
                 });
@@ -241,8 +240,6 @@ var tripRequest = (function(){
                 });
 
                 redis.redisVehiclesInCellArray(quad_cells,lua_script,function(err, data){
-                    logger.log("Response from LUA = " + JSON.stringify(data));
-                    //logger.log(util.inspect(data, {depth: null, colors: true}))
                     cb(data,quad_cells,rider_cells);
                 });
             });
@@ -261,27 +258,24 @@ var tripRequest = (function(){
         var vehicle_no = 0;
         //tripRequest.getVehiclesNearRider(lat, lon,grid,rider_radius, function (vehicles, cells, cells_12) {
         tripRequest.getAllVehiclesInGrid(lat, lon,grid,rider_radius, function (allvehicles, cells, radius_cells) {
-            var vehicles = allvehicles.filter(function(e){
+            var vehicles = allvehicles /*.filter(function(e){
                 return e
-            }); //remove empty elements
+            }); //remove empty elements*/
 
-            //logger.log("removed null values = " + JSON.stringify(vehicles));
             logger.log(util.inspect(vehicles, {depth: null, colors: true}))
             tripRequest.filterVehiclesInRadius(vehicles, radius_cells, function (filteredVehicles) {
                 var tstamp = new Date().getTime();
                 logger.log("time elapsed = "+ (new Date().getTime() - start_time));
                 if (vehicles !== null) {
                     var vehicleLatLng = filteredVehicles.map(function (item) {
-                        //logger.log("get vehicles near = " +item.cell_id[0] );
                         var cell_id_ = item.cell_id[0];
+                        //var cell_id_ = item.cell_id;
                         var latlon = new s2.S2CellId(cell_id_).toLatLng();
                         var lat = parseFloat(latlon.latDegrees.toFixed(6));
                         var lon = parseFloat(latlon.lngDegrees.toFixed(6));
 
                         var vehicle = new vehiclePosition(item.vehicle_id,cell_id_,lat,lon);
-                        //logger.log("vehicle_obj = "+item.vehicle_id + "/"+cell_id_+"/"+lat+","+lon);
                         return vehicle;
-                        //return item.cell_id[0].convertToLatLng();
                     });
 
                     logger.log("No. of vehicles = " + vehicles.length + "- new size = " + vehicleLatLng.length);
@@ -289,14 +283,14 @@ var tripRequest = (function(){
                     var rider_latlng = lon +","+lat;
                     vehicle_no = vehicleLatLng.length;
                     if(vehicleLatLng.length > 0 ) {
-                        var rider_geofence = s2common.createCellRectArray(radius_cells);
-                        xmlBuilderFactory.buildVehicleLocations(filename, rider_latlng, vehicleLatLng);
+                        //var rider_geofence = s2common.createCellRectArray(radius_cells);
+                        //xmlBuilderFactory.buildVehicleLocations(filename, rider_latlng, vehicleLatLng);
                     }
                     cb(vehicleLatLng);
                 }
                 if(vehicle_no > 0) {
                     var file = "S2_cells_" + tstamp + ".kml";
-                    xmlBuilderFactory.buildCells(file, rider_geofence, null, "ffff6c91", "2.1");
+                    //xmlBuilderFactory.buildCells(file, rider_geofence, null, "ffff6c91", "2.1");
                 }
             });
         });
