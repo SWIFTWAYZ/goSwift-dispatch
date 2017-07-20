@@ -11,6 +11,7 @@ var s2       = require("nodes2ts");
 var s2common = require("../s2geometry/s2common").s2common;
 var logger   = require("../config/logutil").logger;
 var serialize = require("node-serialize");
+var msgpack = require("msgpack-lite");
 
 var total_millis = 0;
 
@@ -554,7 +555,14 @@ var provider = (function () {
                 }
                 else {
                     var obj = serialize.unserialize(results);//JSON.parse(results);
+                    //logger.log(results);
                     var arr = [];
+                    /*results.forEach(function(result_item) {
+                        var array = result_item.split('-');
+                        var item = {"vehicle_id":array[1],"cell_id":array[0]};
+                        arr.push(item);
+
+                    });*/
                     for( var i in obj ) {
                         if( obj.hasOwnProperty( i ) ){
                             //logger.log("hasOwnProperty : " +i +"-"+ obj[i]);
