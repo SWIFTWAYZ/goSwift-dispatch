@@ -1,6 +1,6 @@
 
 local cell_count = KEYS[1]
-local break_count = 0
+local cell_count2 = KEYS[2]
 local cell_vehicles = {}
 --[[or (ARGV[1] == nil) or(isnumber(ARGV[1] == true)]]
 --[[hello
@@ -8,16 +8,15 @@ local cell_vehicles = {}
 >> redis-cli SCRIPT LOAD "$(cat geo-radius.lua)"
 ]]
 
-local unpacked_var = unpack(ARGV)
+--[[local unpacked_var = unpack(ARGV)]]
 
---[[print (cell_count .. ARGV[1])]]
+print ("script args 333 = " .. cell_count2 .."/" .. ARGV[1])
 if (cell_count == nil) or (ARGV[1] == nil) then
 	return nil
-end 
---[[redis.log(redis.LOG_WARNING,"ZRANGE, cell: count" .. cell_count)
-redis.log(redis.LOG_WARNING,"ZRANGE, cell: count" .. ARGV[1])]]
+end
 
-local total = 0 
+local total = 0
+local result_lua = {}
 
 for index=1, tonumber(cell_count) do 
 	local convert = tonumber(ARGV[index])
@@ -25,9 +24,7 @@ for index=1, tonumber(cell_count) do
 	if convert ~= nil  then
 		local cell_id = ARGV[index]
 		local vehicle_id = redis.call("ZRANGE","cell:" .. cell_id,0,-1)
-		--[[cell_vehicles[index] = {}]]
 
-		--[[redis.log(redis.LOG_WARNING,"--------------------------")]]
 		--[[redis.log(redis.LOG_WARNING,#vehicle_id .. " = vehicles in cell = " .. cell_id)]]
 
 		--[[ total number of vehicles in cell, using #vehicle_id]]
@@ -39,9 +36,7 @@ for index=1, tonumber(cell_count) do
 			if(vehicle_id_str ~= nil) then
 				
 				--[[get vehicle position key and assign to vehicle_pos]]
-
 				local vehicle_pos = redis.call("ZREVRANGE","vehicle:" .. vehicle_id_str,0,2)
-				--[[ bombs out if we retrieve more than 1 element i.e. vehicle_id_str,0,10]]
 
 				--[[take the 1st element in list of vehicle positions]]
 				local vehicle_s2 = vehicle_pos[1]
@@ -56,7 +51,10 @@ for index=1, tonumber(cell_count) do
 						 --[[cell_vehicles[vehicle_id_str] = {} ... added]]
 						vehicle_pos_count = vehicle_pos_count + 1
 						cell_vehicles[vehicle_id_str] = {}
+						--[[cell_vehicles[vehicle_id_str][s2_pos_index] = vehicle_s2]]
 						cell_vehicles[vehicle_id_str][s2_pos_index] = vehicle_s2
+						--[[table.insert(result_lua,vehicle_s2 .. "-" .. vehicle_id_str);]]
+						redis.log(redis.LOG_WARNING,vehicle_s2 .. "-" .. vehicle_id_str);
 					end 
 					total = total + 1
 					--comment [[redis.log(redis.LOG_WARNING,"s2 position = " .. vehicle_s2)]]
@@ -67,14 +65,10 @@ for index=1, tonumber(cell_count) do
 		end 
 	else
 		redis.log(redis.LOG_WARNING, "nil")
-	end 
-	break_count = break_count + 1
-	if break_count == 100 then
 		break
-	end 
+	end
 end 
---[[redis.log(redis.LOG_WARNING,"items = " .. total)]]
-
---[[print("------------" .. #cell_vehicles)]]
 
 return cjson.encode(cell_vehicles)
+--[[return cmsgpack.pack(cell_vehicles)]]
+--[[return result_lua]]

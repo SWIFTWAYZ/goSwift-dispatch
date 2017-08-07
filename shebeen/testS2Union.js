@@ -3,7 +3,7 @@
  */
 
 var s2 = require("nodes2ts");
-
+var s2common = require("../s2geometry/s2common").s2common;
 
 //var cellId_one = "2203794929858117632";
 //var cellId_one = "2203794792419164160";
@@ -63,4 +63,7 @@ makeS2Union = function(){
     }
 }
 
-makeS2Union();
+
+
+//makeS2Union();
+

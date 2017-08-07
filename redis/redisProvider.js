@@ -514,14 +514,14 @@ var provider = (function () {
      * @param s2_cellid
      * @param cb
      */
-    provider.redisAddDriverPosition = function(script, vehicle_id, startTime, new_cellid, s2_cellid, cb){
+    provider.redisAddDriverPosition = function(script, vehicle_id, startTime, new_cellid, s2_key, cb){
         client.defineCommand("logDriverPosition2", {
                 numberOfKeys: 1,
                 lua: script}
                 );
         var vcell_key = "vcell:"+vehicle_id;
-        logger.log(vcell_key+"|"+ vehicle_id +"|"+ new_cellid +"|"+ s2_cellid+"|"+startTime );
-        client.logDriverPosition2(vcell_key,startTime,vehicle_id, new_cellid,s2_cellid,
+        logger.log("cell:"+ new_cellid+"|"+ vehicle_id +"|"+s2_key +"|"+ startTime );
+        client.logDriverPosition2(vcell_key,startTime,vehicle_id, new_cellid,s2_key,
             function (error, results) {
                 if(error){
                     cb(error,null)
@@ -542,13 +542,13 @@ var provider = (function () {
      */
     provider.redisVehiclesInCellArray = function(cell_array,code_string,cb){
         //logger.log("LUA Script cell Array = "+cell_array.length);
-        client.defineCommand("getVehiclesInArray2",{
+        client.defineCommand("getVehiclesInArray",{
             numberOfKeys: 1,
             lua: code_string
         });
 
         var length = cell_array.length;
-        client.getVehiclesInArray2(length,cell_array,function(error,results){
+        client.getVehiclesInArray(length,cell_array,function(error,results){
                 if(error) {
                     logger.log("lua results = " + error)
                     cb(error, null)

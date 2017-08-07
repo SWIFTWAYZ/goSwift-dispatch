@@ -11,7 +11,7 @@ var commons = require("../commonUtil");
 var path = require("path");
 var fs = require("fs");
 var logger = require("../config/logutil").logger;
-var randomGeo = require("../shebeen/gpsRandomGenerator").randomGeo;
+var randomGeo = require("../shebeen/testGPSRandomGenerator").randomGeo;
 var script = null;
 
 const Promise = require('bluebird');
@@ -138,11 +138,9 @@ var driverLocation = (function () {
      */
     driverLocation.currentVehicleCell = function(vehicle_id, lat, lon){
         return new Promise(function(resolve,reject) {
-            //logger.log(vehicle_id +"-"+lat+","+lon);
             redis.getCurrentCellByVehicleId(vehicle_id).then(function (current_cell) {
                 var s2_cellid = s2common.s2CellIdKeyFromLatLng(lat, lon);
                 var new_cellid = s2common.getParentIdAtLevel(12, s2_cellid);
-                //logger.log("------------------CURR-VEHICLE-CELL = " + s2_cellid + "|"+new_cellid);
 
                 var tstamp = new Date().getTime();
                 var results_data = function (location_key, new_cell, cur_cell, vehicle_id, tstamp) {
@@ -164,13 +162,9 @@ var driverLocation = (function () {
 
     driverLocation.changeCellPos = function(position) {
         return new Promise(function (resolve, reject) {
-            //function (results) {
             //check new-cell and compare with current-cell, if not the same, changeCellLocation
             if (position.new_cellid !== position.current_cell) {
 
-                /*position.new_cellid === position.current_cell ?
-                    logger.log("No changes to cell: " + position.new_cellid)
-                    :logger.log("Changed cells from = " + position.current_cell + " to > " + position.new_cellid);*/
                     redis.changeCellPosition(position.current_cell, position.new_cellid, position.id, position.timestamp)
                     .then(function(data){
                         //logger.log("changeCellPos = " + data);
@@ -211,14 +205,17 @@ var driverLocation = (function () {
                 logger.log("Error in getCurrentCellByVehicleId : " + error.stack);
             });
             //resolve();
-         //});
+      //});
     }*/
 
     driverLocation.logDriverLocation = function(vehicle_id,lat,lon){
+        if(isNaN(vehicle_id)){
+            throw Exception("vehicle_id invalid, vehicle_id = "+vehicle_id);
+        }
         var s2_cellid = s2common.s2CellIdKeyFromLatLng(lat,lon);
         var new_cellid = s2common.getParentIdAtLevel(12, s2_cellid);
         var startTime = new Date().getTime();
-        console.log("script = "+script.length);
+        //console.log("script = "+script.length);
         redis.redisAddDriverPosition(script,vehicle_id,startTime,new_cellid,s2_cellid,function(error,results){
             if(error){
                 console.log(error);
@@ -226,7 +223,7 @@ var driverLocation = (function () {
             else{
                 console.log("Driver position added latlng = "+lat+","+lon+"->"+results);
             }
-        })
+        });
     }
 
     return driverLocation;

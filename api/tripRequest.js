@@ -14,7 +14,7 @@ var constant = require('../constants');
 var s2circle = require("../s2geometry/s2circlecoverer");
 var s2common = require("../s2geometry/s2common").s2common;
 var logger = require("../config/logutil").logger;
-var randomGeo = require("../shebeen/gpsRandomGenerator").randomGeo;
+var randomGeo = require("../shebeen/testGPSRandomGenerator").randomGeo;
 var xmlBuilderFactory = require("../shebeen/xmlBuilderFactory").xmlBuilderFactory;
 const util = require('util');
 
@@ -95,6 +95,7 @@ var tripRequest = (function(){
      * @param cb
      */
     tripRequest.filterVehiclesInRadius = function(vehicles, cellsB, cb){
+        logger.log("filtervehicles in radius = "+vehicles.length + "-"+cellsB.length);
         var s2_cellsB = cellsB.map(function(item){
             return new s2.S2CellId(item);
         });
@@ -111,6 +112,7 @@ var tripRequest = (function(){
             var cell_item = new s2.S2CellId(item.cell_id[0]);
             //var cell_item = new s2.S2CellId(item.cell_id);
             return cellsRegion.contains(cell_item);
+            //return true;
         });
 
         logger.log("Vehicles within radius (cell-12) = "+ vehicles.length
@@ -217,6 +219,33 @@ var tripRequest = (function(){
             });
     }
 
+
+    tripRequest.getAllVehiclesInGrid2 = function(lat,lon,grid,rider_radius,cb){
+        tripRequest.getIntersectRadiusCells(12,12,12,lat,lon,grid,rider_radius,function(cells){
+            if(cells === null || cells.size() === 0) {
+                return;
+            };
+            var quad_cells = cells.getCellIds().map(function(item){
+                return item.pos().toString();
+            });
+            tripRequest.getIntersectRadiusCells(12,16,100,lat,lon,grid,rider_radius, function(cells12){
+                var rider_cells = cells12.getCellIds().map(function(item){
+                    return item.pos().toString();
+                });
+
+                var data = [];
+                var counter = ["5829","5843","5869","5901","5911"];
+                var cell_counter = ["2203797555964646705","2203797669892647555","2203797387157605615",
+                    "2203797177891969223","2203797344276998849","2203841226192937227"];
+                for(var i = 0; i < 5 ; i++){
+                    var item = {"vehicle_id":counter[i],"cell_id":cell_counter[i]};
+                    data.push(item);
+                }
+            cb(data,quad_cells,rider_cells);
+
+            });
+        });
+    }
     /**
      * get all vehicles in city grid
      * @param lat
@@ -309,6 +338,7 @@ var centerPoint = {
  * testing ......
  */
 
+//tripRequest.filterVehiclesInRadius();
 var distance = 22000;//in meters
 /*randomGeo.createRandomGPSPositions(centerPoint,distance,1,function(data){
     redis.getCityGrid().then(function(grid){

@@ -77,20 +77,13 @@ thriftChannel.register(server, "tripService::updateDriverLocation", context, add
  * @param callback
  */
 function getVehiclesNearRider(context, req, head, body, callback) {
-    logger.log("Thrift::->tripServices fired...");
-    console.log("req:" + req);
-    console.log("head" + JSON.stringify(head));
-    console.log("body" + JSON.stringify(body));
+    //logger.log("Thrift::->tripServices fired...");
+    //console.log("req:" + req);
+    //console.log("head" + JSON.stringify(head));
+    //console.log("body" + JSON.stringify(body));
     //console.log(constant.RIDER_GEO_RADIUS + "/"+body.lat+"/"+body.lon+"/"+global.grid.length);
     tripRequest.callGetVehiclesNear(body.lat, body.lon, constant.RIDER_GEO_RADIUS, cityRegion, function (vehicles) {
-        /*if(vehicles.length === 0){
-            logger.log("no vehicles near :" + body.lat+","+body.lon);
-            callback(null,{
-                ok: true,
-                head: head,
-                body:vehicles
-            })
-        }*/
+
         callback(null, {
             ok: true,
             head: head,
